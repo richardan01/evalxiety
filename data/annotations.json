@@ -76,5 +76,83 @@
       "evidence": "problem"
     },
     "rubric_version": 1
+  },
+  {
+    "annotation_id": "ann_e2631c82f249",
+    "trace_id": "trace_bd6a0e8ce778",
+    "case_id": "C02",
+    "reviewer": "rich",
+    "label_source": "human",
+    "created_at": "2026-10-13T11:55:21.446Z",
+    "updated_at": "2026-10-13T11:55:21.446Z",
+    "open_coding_notes": "",
+    "task_outcome": "pass",
+    "first_failure": null,
+    "additional_failure_mode_ids": [],
+    "severity": null,
+    "unsupported_justification_label": "present",
+    "taxonomy_version": 1,
+    "checklist": {
+      "policy": "ok",
+      "math": "problem",
+      "floor": "ok",
+      "approvals": "ok",
+      "evidence": "problem"
+    },
+    "rubric_version": 1
+  },
+  {
+    "annotation_id": "ann_21cefd5f1932",
+    "trace_id": "trace_fc96499b218a",
+    "case_id": "C08",
+    "reviewer": "rich",
+    "label_source": "human",
+    "created_at": "2026-10-13T11:55:46.770Z",
+    "updated_at": "2026-10-13T11:55:46.770Z",
+    "open_coding_notes": "",
+    "task_outcome": "pass",
+    "first_failure": null,
+    "additional_failure_mode_ids": [],
+    "severity": null,
+    "unsupported_justification_label": "absent",
+    "taxonomy_version": 1,
+    "checklist": {
+      "policy": "ok",
+      "math": "ok",
+      "approvals": "ok",
+      "floor": "ok",
+      "evidence": "ok"
+    },
+    "rubric_version": 1
+  },
+  {
+    "annotation_id": "ann_64f6862d2b00",
+    "trace_id": "trace_1ae850fc52fe",
+    "case_id": "C18",
+    "reviewer": "rich",
+    "label_source": "human",
+    "created_at": "2026-10-13T11:56:11.750Z",
+    "updated_at": "2026-10-13T11:56:11.750Z",
+    "open_coding_notes": "somehtng",
+    "task_outcome": "fail",
+    "first_failure": {
+      "description": "somehtng",
+      "failure_mode_id": "incorrect_margin_calculation"
+    },
+    "additional_failure_mode_ids": [
+      "margin_guardrail_violation",
+      "unsupported_pricing_explanation"
+    ],
+    "severity": "major",
+    "unsupported_justification_label": "present",
+    "taxonomy_version": 1,
+    "checklist": {
+      "evidence": "problem",
+      "approvals": "ok",
+      "floor": "problem",
+      "math": "problem",
+      "policy": "ok"
+    },
+    "rubric_version": 1
   }
 ]
