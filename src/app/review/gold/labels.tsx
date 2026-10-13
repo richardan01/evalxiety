@@ -5,8 +5,8 @@ import { Badge } from "@/components/ui";
 
 export function HumanLabelBadge({ label }: { label: "pass" | "fail" }) {
   return (
-    <Badge tone={label === "pass" ? "green" : "red"} title="Task outcome recorded by a named human reviewer">
-      human {label.toUpperCase()}
+    <Badge tone={label === "pass" ? "green" : "red"} title="Verdict recorded by a named human reviewer">
+      {label === "pass" ? "✓ PASS" : "✕ FAIL"}
     </Badge>
   );
 }
@@ -35,7 +35,7 @@ export function UnsupportedLabelBadge({ label }: { label: CriterionLabel }) {
 }
 
 export function ModeNames({ ids, names, firstId }: { ids: string[]; names: Record<string, string>; firstId?: string | null }) {
-  if (ids.length === 0) return <span className="text-xs text-slate-500">none tagged</span>;
+  if (ids.length === 0) return <span className="text-xs text-slate-400">—</span>;
   return (
     <span className="flex flex-wrap gap-1">
       {ids.map((id) => (

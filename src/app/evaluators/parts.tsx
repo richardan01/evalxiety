@@ -2,36 +2,35 @@
  * Small presentational helpers local to the Evaluators tab (built on src/components/ui.tsx).
  */
 import type { ReactNode } from "react";
-import { Badge, cx } from "@/components/ui";
+import { Badge, InfoTip, cx } from "@/components/ui";
 
-export function SectionHeading({ step, title, phase, children }: { step: number; title: string; phase?: string; children?: ReactNode }) {
+/** Section title with an optional ⓘ and a right-hand slot. InfoTip sits outside the heading (it renders a <details>). */
+export function SectionTitle({ id, title, info, infoLabel, right }: {
+  id?: string;
+  title: ReactNode;
+  info?: ReactNode;
+  infoLabel?: string;
+  right?: ReactNode;
+}) {
   return (
-    <div className="flex items-start gap-3">
-      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
-        {step}
-      </span>
-      <div>
-        <h2 className="text-base font-semibold text-slate-900">
-          {title} {phase && <span className="ml-1 align-middle text-xs font-normal text-slate-500">{phase}</span>}
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex items-center gap-2">
+        <h2 id={id} className="text-base font-semibold text-slate-900">
+          {title}
         </h2>
-        {children && <div className="mt-0.5 max-w-4xl text-sm text-slate-600">{children}</div>}
+        {info && <InfoTip label={infoLabel}>{info}</InfoTip>}
       </div>
+      {right && <div className="flex flex-wrap items-center gap-3">{right}</div>}
     </div>
   );
 }
 
-export function Steps({ items }: { items: ReactNode[] }) {
+/** Shared <InfoTip> whose popup opens leftwards — for icons near the right edge of the page. */
+export function InfoTipLeft({ children, label }: { children: ReactNode; label?: string }) {
   return (
-    <ol className="space-y-1.5 text-sm text-slate-700">
-      {items.map((item, i) => (
-        <li key={i} className="flex gap-2">
-          <span className="mt-px flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[11px] font-semibold text-slate-700 ring-1 ring-inset ring-slate-300">
-            {i + 1}
-          </span>
-          <span>{item}</span>
-        </li>
-      ))}
-    </ol>
+    <span className="inline-flex [&>details>div]:right-0 [&>details>div]:left-auto">
+      <InfoTip label={label}>{children}</InfoTip>
+    </span>
   );
 }
 
@@ -43,6 +42,26 @@ export function ExperimentalBadge() {
   );
 }
 
+/** "CODE · validated by tests" / "AI JUDGE · experimental" */
+export function CheckTag({ kind }: { kind: "code-tested" | "code-experimental" | "judge" }) {
+  if (kind === "judge") {
+    return (
+      <Badge tone="purple" title="LLM judge. Experimental: its findings need human review and it is never gold truth.">
+        AI JUDGE · experimental
+      </Badge>
+    );
+  }
+  return kind === "code-tested" ? (
+    <Badge tone="green" title="Deterministic code check with pass/fail/boundary unit tests">
+      CODE · validated by tests
+    </Badge>
+  ) : (
+    <Badge tone="amber" title="Deterministic code check without unit-test validation">
+      CODE · experimental
+    </Badge>
+  );
+}
+
 export function Segmented<T extends string>({ label, value, options, onChange }: {
   label: string;
   value: T;
@@ -50,8 +69,8 @@ export function Segmented<T extends string>({ label, value, options, onChange }:
   onChange: (v: T) => void;
 }) {
   return (
-    <div role="radiogroup" aria-label={label} className="flex flex-wrap items-center gap-2">
-      <span className="text-xs font-medium text-slate-500">{label}</span>
+    <div role="radiogroup" aria-label={label} className="flex items-center gap-1.5">
+      <span className="text-[11px] font-medium text-slate-500">{label}</span>
       <div className="inline-flex overflow-hidden rounded-md ring-1 ring-inset ring-slate-300">
         {options.map((o) => (
           <button
@@ -62,7 +81,7 @@ export function Segmented<T extends string>({ label, value, options, onChange }:
             title={o.hint}
             onClick={() => onChange(o.value)}
             className={cx(
-              "border-l border-slate-300 px-3 py-1.5 text-xs font-medium first:border-l-0",
+              "border-l border-slate-300 px-2.5 py-1 text-xs font-medium first:border-l-0",
               o.value === value ? "bg-slate-900 text-white" : "bg-white text-slate-700 hover:bg-slate-50",
             )}
           >
@@ -95,24 +114,5 @@ export function FilterSelect({ label, value, options, onChange }: {
         ))}
       </select>
     </label>
-  );
-}
-
-/** "3/12" with the denominator always visible. */
-export function Count({ n, of, label, tone }: { n: number; of: number; label: string; tone?: "green" | "red" | "amber" | "purple" | "slate" }) {
-  const color = {
-    green: "text-emerald-700",
-    red: "text-rose-700",
-    amber: "text-amber-700",
-    purple: "text-violet-700",
-    slate: "text-slate-600",
-  }[tone ?? "slate"];
-  return (
-    <div className="flex items-baseline justify-between gap-2 text-xs">
-      <span className="text-slate-500">{label}</span>
-      <span className={cx("font-semibold tabular-nums", n > 0 ? color : "text-slate-400")}>
-        {n}/{of}
-      </span>
-    </div>
   );
 }

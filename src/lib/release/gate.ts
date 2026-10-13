@@ -10,6 +10,7 @@
  */
 import type { ExperimentRun, FrozenSet, JudgeVerdict, ReleaseApproval, ReleaseStatus, Severity } from "../domain/schemas";
 import { compareRuns, summarizeRun, type CaseEvaluation } from "../metrics/experiments";
+import { DETERMINISTIC_EVALUATORS } from "../evaluators/deterministic";
 import { REVIEW_TARGET } from "../domain/review";
 
 export const PASS_ALL_THRESHOLD = 0.9;
@@ -22,6 +23,8 @@ export interface GateAnnotation {
   task_outcome: "pass" | "fail";
   severity: Severity | null;
   reviewer: string;
+  /** the human's answer to the judge's criterion; required to resolve a judge flag */
+  unsupported_justification_label?: "present" | "absent" | "not_assessed";
 }
 
 export interface GateInput {
@@ -144,13 +147,24 @@ export function evaluateReleaseGate(input: GateInput): GateResult {
   // PASS can miss a failure just as a FAIL can be wrong. Every candidate case therefore needs
   // a human annotation on that exact trace before the candidate can be eligible.
   const annotatedTraces = new Set(input.candidate_annotations.map((a) => a.trace_id));
+  // A judge flag is resolved only by a human who actually answered the judge's question on that trace.
+  const assessedTraces = new Set(
+    input.candidate_annotations
+      .filter((a) => a.unsupported_justification_label === "present" || a.unsupported_justification_label === "absent")
+      .map((a) => a.trace_id),
+  );
+  const needsHuman = (e: CaseEvaluation) =>
+    !annotatedTraces.has(e.trace_id!) ||
+    (e.judge_verdict !== null && JUDGE_NEEDS_REVIEW.includes(e.judge_verdict) && !assessedTraces.has(e.trace_id!));
   const unresolved = evals
-    .filter((e) => e.trace_id && !annotatedTraces.has(e.trace_id))
+    .filter((e) => e.trace_id && needsHuman(e))
     .map((e) => ({
       trace_id: e.trace_id!,
       case_id: e.case_id,
       reason:
-        e.judge_verdict === null
+        annotatedTraces.has(e.trace_id!)
+          ? `Judge flagged ${e.judge_verdict}; the reviewer has not answered the evidence question on this trace`
+          : e.judge_verdict === null
           ? "No human review yet (judge not run)"
           : JUDGE_NEEDS_REVIEW.includes(e.judge_verdict)
             ? `Experimental judge verdict ${e.judge_verdict} requires human review`
@@ -196,6 +210,26 @@ export function evaluateReleaseGate(input: GateInput): GateResult {
       [...new Set(humanCritical.map((a) => a.case_id))],
     );
   }
+  const humanUnsupported = input.candidate_annotations.filter((a) => a.unsupported_justification_label === "present");
+  if (humanUnsupported.length) {
+    add(
+      "human_found_unsupported_claim",
+      "WARNING",
+      `A reviewer found an unsupported pricing claim on ${humanUnsupported.length} candidate trace(s).`,
+      [...new Set(humanUnsupported.map((a) => a.case_id))],
+    );
+  }
+  // Objective blocking checks must all pass (critical ones are reported above as policy violations).
+  const blockingIds = new Set(DETERMINISTIC_EVALUATORS.filter((d) => d.blocking && d.severity !== "critical").map((d) => d.evaluator_id));
+  const blockingFails = evals.filter((e) => e.results.some((r) => r.outcome === "FAIL" && blockingIds.has(r.evaluator_id)));
+  if (blockingFails.length) {
+    add(
+      "blocking_check_failed",
+      "NO_SHIP",
+      `A blocking objective check failed in ${blockingFails.length} case(s).`,
+      blockingFails.map((e) => e.case_id),
+    );
+  }
   const humanOther = input.candidate_annotations.filter((a) => a.task_outcome === "fail" && a.severity !== "critical");
   if (humanOther.length) {
     add(
@@ -214,6 +248,17 @@ export function evaluateReleaseGate(input: GateInput): GateResult {
       `Pass-all ${(rate * 100).toFixed(1)}% is below the ${PASS_ALL_THRESHOLD * 100}% demo threshold.`,
       evals.filter((e) => e.pass_all === false).map((e) => e.case_id),
     );
+  }
+
+  // Mock output is never evidence: failures found in it stay visible but cannot decide NO SHIP.
+  const mockEvidence = evals.some((e) => e.execution_mode === "mock") || (baseline?.evals ?? []).some((e) => e.execution_mode === "mock");
+  if (mockEvidence) {
+    for (const r of reasons) {
+      if (r.level === "NO_SHIP") {
+        r.level = "WARNING";
+        r.message = `(mock — not evidence) ${r.message}`;
+      }
+    }
   }
 
   // ---- Status -------------------------------------------------------------

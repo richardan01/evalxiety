@@ -4,9 +4,9 @@ import { handle, ok } from "@/lib/api/http";
 import type { Trace } from "@/lib/domain/schemas";
 import { splitOf } from "@/lib/domain/scenarios";
 import { DETERMINISTIC_EVALUATORS, evaluateTrace } from "@/lib/evaluators/deterministic";
-import { JUDGE_ID, JUDGE_PROMPT_VERSION, JUDGE_QUESTION, JUDGE_SYSTEM_PROMPT, judgeVersion } from "@/lib/judge/judge";
+import { JUDGE_ID, JUDGE_PROMPT_VERSION, JUDGE_QUESTION, buildJudgeSystemPrompt, judgeVersion } from "@/lib/judge/judge";
 import { latestJudgeByTrace } from "@/lib/services";
-import { listJudgeResults, listTraces } from "@/lib/storage/repos";
+import { latestRubric, listJudgeResults, listTraces } from "@/lib/storage/repos";
 import type { EvaluatorCell, EvaluatorsResponse, JudgeCell } from "@/app/evaluators/types";
 
 const Query = z.object({ run_id: z.string().trim().min(1).max(200).optional() });
@@ -43,8 +43,9 @@ export async function GET(req: NextRequest) {
   await connection();
   return handle(async () => {
     const { run_id } = Query.parse({ run_id: req.nextUrl.searchParams.get("run_id") || undefined });
-    const [traces, judgeResults] = await Promise.all([listTraces(), listJudgeResults()]);
-    const latest = latestJudgeByTrace(judgeResults, traces);
+    const [traces, judgeResults, rubric] = await Promise.all([listTraces(), listJudgeResults(), latestRubric()]);
+    const criterion = rubric.judge_criterion;
+    const latest = latestJudgeByTrace(judgeResults, traces, criterion);
     const runIds = [...new Set(traces.map((t) => t.experiment_run_id).filter((x): x is string => Boolean(x)))].sort();
     const scoped = run_id ? traces.filter((t) => t.experiment_run_id === run_id) : traces;
 
@@ -53,10 +54,10 @@ export async function GET(req: NextRequest) {
       judge: {
         id: JUDGE_ID,
         question: JUDGE_QUESTION,
-        system_prompt: JUDGE_SYSTEM_PROMPT,
+        system_prompt: buildJudgeSystemPrompt(criterion),
         prompt_version: JUDGE_PROMPT_VERSION,
-        live_version: judgeVersion("live"),
-        mock_version: judgeVersion("mock"),
+        live_version: judgeVersion("live", criterion),
+        mock_version: judgeVersion("mock", criterion),
         status: "experimental",
       },
       results: scoped.map((t) => {

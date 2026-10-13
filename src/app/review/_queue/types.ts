@@ -28,5 +28,5 @@ export interface EvaluationsResponse {
   current_judge_version: string;
   judge_question: string;
   judge_locked: { reason: string } | null;
-  judge_call: { mode: "live" | "mock"; estimated_usd: number };
+  judge_call: { mode: "live" | "mock"; estimated_usd: number; can_run?: boolean; unavailable_reason?: string | null };
 }

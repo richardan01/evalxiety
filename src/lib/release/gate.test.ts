@@ -100,6 +100,15 @@ describe("pass-all", () => {
 });
 
 describe("paired comparison", () => {
+  it("an execution error is incomplete evidence, not a regression", () => {
+    const base = [passingEval("C02")];
+    const errored = evaluateCase("C02", makeTrace("C02", () => null), "PASS");
+    const cmp = compareRuns(base, [errored]);
+    expect(cmp.new_critical_regressions).toEqual([]);
+    expect(cmp.new_regressions).toEqual([]);
+    expect(cmp.incomplete).toEqual(["C02"]);
+  });
+
   it("identifies fixed cases, regressions and new critical regressions", () => {
     const base = [staleEval("C01"), passingEval("C02")];
     const cand = [passingEval("C01"), staleEval("C02")];
@@ -208,8 +217,34 @@ describe("release gate", () => {
     const g = evaluateReleaseGate(input);
     expect(g.evaluation_status).toBe("INSUFFICIENT_EVIDENCE");
     expect(g.unresolved_reviews).toHaveLength(1);
+    // A label that skips the judge's question does not resolve a judge flag...
     input.candidate_annotations = reviewed;
+    expect(evaluateReleaseGate(input).evaluation_status).toBe("INSUFFICIENT_EVIDENCE");
+    // ...answering it does.
+    input.candidate_annotations = reviewed.map((a) => (a.trace_id === e.trace_id ? { ...a, unsupported_justification_label: "absent" as const } : a));
     expect(evaluateReleaseGate(input).evaluation_status).toBe("ELIGIBLE_FOR_DEMO_APPROVAL");
+  });
+
+  it("mock results never produce NO SHIP — failures in mock output are shown as warnings only", () => {
+    const cand = FULL.case_ids.map((id) => passingEval(id, "mock"));
+    const base = FULL.case_ids.map((id) => passingEval(id, "mock"));
+    cand[0] = evaluateCase(cand[0].case_id, makeTrace(cand[0].case_id, (r) => ({ ...r, selected_policy_id: "PRC-2026.1" }), { execution_mode: "mock" }), "PASS");
+    const input = eligibleInput({
+      candidate: { run: run("run_c", "c", cand, "mock"), evals: cand },
+      baseline: { run: run("run_b", "b", base, "mock"), evals: base },
+    });
+    const g = evaluateReleaseGate(input);
+    expect(g.evaluation_status).toBe("INSUFFICIENT_EVIDENCE");
+    const crit = g.reasons.find((r) => r.code === "critical_policy_violation")!;
+    expect(crit.level).toBe("WARNING");
+    expect(crit.message).toMatch(/mock — not evidence/);
+  });
+
+  it("a human-found unsupported claim is surfaced to the approver", () => {
+    const input = eligibleInput();
+    input.candidate_annotations = reviewAll(input).map((a, i) => (i === 0 ? { ...a, unsupported_justification_label: "present" as const } : a));
+    const g = evaluateReleaseGate(input);
+    expect(g.reasons.map((r) => r.code)).toContain("human_found_unsupported_claim");
   });
 
   it("a judge PASS does not exempt a case from human review", () => {

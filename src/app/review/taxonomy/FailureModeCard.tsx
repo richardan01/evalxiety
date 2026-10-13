@@ -1,82 +1,49 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { postJSON } from "@/lib/client/api";
 import type { ExecutionMode, FailureMode, Severity } from "@/lib/domain/schemas";
 import type { ModeFrequency } from "@/lib/taxonomy/ops";
-import { Badge, Button, KeyValue, MockBadge, SeverityBadge, cx } from "@/components/ui";
+import { Badge, Button, MockBadge, SeverityBadge, cx } from "@/components/ui";
 import { ChangeForm, Field, Select, TextArea, TextInput } from "./_shared/forms";
-import { modeSplit } from "./derive";
+import { FrequencyBar, SeenCount } from "./FrequencyTable";
 import type { EvaluatorOption, TaxonomyOp } from "./types";
 
 const SEVERITIES: Severity[] = ["critical", "major", "minor"];
 
+/** Badge for types that are no longer assignable. Active types show their count instead. */
 export function StatusBadge({ mode, modes }: { mode: FailureMode; modes: FailureMode[] }) {
-  switch (mode.status) {
-    case "observed":
-      return (
-        <Badge tone="green" title="At least one human reviewer tagged this category on a reviewed trace">
-          OBSERVED
-        </Badge>
-      );
-    case "merged": {
-      const target = modes.find((m) => m.failure_mode_id === mode.merged_into);
-      return (
-        <Badge tone="slate" title="Kept for history; its observations roll up into the target">
-          MERGED → {target?.name ?? mode.merged_into}
-        </Badge>
-      );
-    }
-    case "retired":
-      return (
-        <Badge tone="neutral" title="No longer assignable; kept for history">
-          RETIRED
-        </Badge>
-      );
-    default:
-      return (
-        <Badge tone="amber" title="No human-reviewed trace is tagged with this category yet">
-          PROVISIONAL hypothesis
-        </Badge>
-      );
+  if (mode.status === "merged") {
+    const target = modes.find((m) => m.failure_mode_id === mode.merged_into);
+    return (
+      <Badge tone="slate" title="Kept for history; its observations count under the target">
+        merged → {target?.name ?? mode.merged_into}
+      </Badge>
+    );
   }
+  if (mode.status === "retired") {
+    return (
+      <Badge tone="neutral" title="No longer assignable; kept for history">
+        retired
+      </Badge>
+    );
+  }
+  return null;
 }
 
-export function OriginBadge({ mode }: { mode: FailureMode }) {
-  return mode.origin === "seed_hypothesis" ? (
-    <Badge tone="purple" title="Written from the project brief before any trace was read">
-      seed hypothesis
-    </Badge>
-  ) : (
-    <Badge tone="blue" title="Added by a named reviewer during axial coding">
-      reviewer-added
-    </Badge>
-  );
-}
-
-export function ModeMix({ traceIds, traceModes }: { traceIds: string[]; traceModes: Record<string, ExecutionMode> }) {
-  const s = modeSplit(traceIds, traceModes);
-  if (traceIds.length === 0) return null;
+function Meta({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <span className="inline-flex flex-wrap items-center gap-1 text-xs text-slate-600">
-      {s.live > 0 && (
-        <span className="inline-flex items-center gap-1">
-          <MockBadge mode="live" /> {s.live}
-        </span>
-      )}
-      {s.mock > 0 && (
-        <span className="inline-flex items-center gap-1">
-          <MockBadge mode="mock" /> {s.mock}
-        </span>
-      )}
-      {s.unknown > 0 && <Badge tone="red" title="Trace file not found">{s.unknown} missing</Badge>}
+    <span className="inline-flex items-center gap-1.5">
+      <span className="text-[11px] font-medium uppercase tracking-wide text-slate-400">{label}</span>
+      {children}
     </span>
   );
 }
 
 type Action = null | "edit" | "merge" | "retire" | "attach";
 
+/** One failure type: name, frequency bar, human-observed count. Actions sit behind "Edit". */
 export function FailureModeCard({
   mode,
   modes,
@@ -98,10 +65,12 @@ export function FailureModeCard({
   evaluators: EvaluatorOption[];
   reload: () => void;
 }) {
+  const [open, setOpen] = useState(false);
   const [action, setAction] = useState<Action>(null);
   const active = mode.status !== "merged" && mode.status !== "retired";
   const anyCount = freq?.any_count ?? 0;
   const firstCount = freq?.first_failure_count ?? 0;
+  const seen = anyCount > 0;
   const evaluator = evaluators.find((e) => e.evaluator_id === mode.linked_evaluator_id);
 
   const submit = (op: TaxonomyOp) => async ({ author, note }: { author: string; note: string }) => {
@@ -116,119 +85,135 @@ export function FailureModeCard({
   };
 
   return (
-    <article className={cx("flex flex-col rounded-lg border bg-white p-4 shadow-sm", active ? "border-slate-200" : "border-dashed border-slate-300 opacity-90")}>
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <h3 className="text-sm font-semibold text-slate-900">{mode.name}</h3>
-          <code className="font-mono text-[11px] text-slate-500">{mode.failure_mode_id}</code>
-        </div>
-        <div className="flex flex-wrap items-center gap-1">
+    <li className="py-2">
+      <div className="grid grid-cols-[minmax(0,15rem)_minmax(5rem,1fr)_minmax(0,17rem)_3rem] items-center gap-x-4">
+        <span
+          className={cx("truncate text-sm font-medium", seen && active ? "text-slate-900" : "text-slate-400")}
+          title={mode.definition}
+        >
+          {mode.name}
+        </span>
+        <FrequencyBar count={anyCount} reviewed={reviewed} muted={!active} />
+        {mode.status === "merged" ? (
           <StatusBadge mode={mode} modes={modes} />
-          <SeverityBadge severity={mode.severity} />
-          <OriginBadge mode={mode} />
-        </div>
+        ) : (
+          <span className="inline-flex items-center gap-1.5">
+            <SeenCount count={anyCount} reviewed={reviewed} traceIds={freq?.trace_ids ?? []} traceModes={traceModes} />
+            {mode.status === "retired" && <StatusBadge mode={mode} modes={modes} />}
+          </span>
+        )}
+        {active ? (
+          <button
+            type="button"
+            aria-expanded={open}
+            onClick={() => {
+              setOpen((o) => !o);
+              setAction(null);
+            }}
+            className="justify-self-end text-xs font-medium text-sky-700 hover:underline"
+          >
+            {open ? "Close" : "Edit"}
+          </button>
+        ) : (
+          <span />
+        )}
       </div>
 
-      <p className="mt-2 text-sm text-slate-800">{mode.definition}</p>
-
-      <div className="mt-3">
-        <KeyValue
-          rows={[
-            [
-              "Observed (human labels)",
-              mode.status === "merged" ? (
-                <span key="o" className="text-slate-500">Counted under the merge target</span>
-              ) : anyCount === 0 ? (
-                <span key="o" className="font-medium text-amber-800">
-                  0 observed — hypothesis
-                  <span className="block text-xs font-normal text-slate-500">
-                    No reviewer has tagged this on any of the {reviewed} human-reviewed trace{reviewed === 1 ? "" : "s"}.
-                  </span>
-                </span>
+      {open && active && (
+        <div className="mt-2 space-y-2 rounded-md bg-slate-50 p-3">
+          <p className="text-sm text-slate-700">{mode.definition}</p>
+          <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-600">
+            <Meta label="Severity">
+              <SeverityBadge severity={mode.severity} />
+            </Meta>
+            <Meta label="Origin">
+              {mode.origin === "seed_hypothesis" ? (
+                <Badge tone="purple" title="Written from the project brief before any trace was read">
+                  seed hypothesis
+                </Badge>
               ) : (
-                <span key="o">
-                  First failure in <b>{firstCount}</b> trace{firstCount === 1 ? "" : "s"} · mentioned in <b>{anyCount}</b> trace
-                  {anyCount === 1 ? "" : "s"}
-                  <span className="block text-xs text-slate-500">of {reviewed} human-reviewed traces</span>
-                  <span className="mt-0.5 block">
-                    <ModeMix traceIds={freq?.trace_ids ?? []} traceModes={traceModes} />
-                  </span>
-                </span>
-              ),
-            ],
-            [
-              "Linked evaluator",
-              mode.linked_evaluator_id ? (
-                <span key="e" className="inline-flex flex-wrap items-center gap-1">
-                  <code className="font-mono text-xs">{mode.linked_evaluator_id}</code>
-                  {evaluator?.experimental ? (
-                    <Badge tone="amber" title="LLM judge — not yet validated against enough human labels">LLM judge · EXPERIMENTAL</Badge>
-                  ) : evaluator ? (
-                    <Badge>deterministic</Badge>
-                  ) : (
-                    <Badge tone="red">unknown evaluator</Badge>
+                <span>reviewer-added</span>
+              )}
+            </Meta>
+            <Meta label="First failure">
+              <span className="tabular-nums">
+                {firstCount} of {reviewed}
+              </span>
+            </Meta>
+            <Meta label="Check">
+              {mode.linked_evaluator_id ? (
+                <>
+                  <code className="font-mono">{mode.linked_evaluator_id}</code>
+                  {evaluator?.experimental && (
+                    <Badge tone="amber" title="LLM judge — not yet validated against enough human labels">
+                      EXPERIMENTAL
+                    </Badge>
                   )}
-                </span>
+                  {!evaluator && <Badge tone="red">unknown</Badge>}
+                </>
               ) : (
-                <span key="e" className="text-slate-500">none — no automated check yet</span>
-              ),
-            ],
-            [
-              "Representative traces",
-              mode.representative_trace_ids.length === 0 ? (
-                <span key="r" className="text-slate-500">none attached</span>
+                <span className="text-slate-400">none</span>
+              )}
+            </Meta>
+            <Meta label="Examples">
+              {mode.representative_trace_ids.length === 0 ? (
+                <span className="text-slate-400">none</span>
               ) : (
-                <span key="r" className="flex flex-wrap gap-x-3 gap-y-1">
-                  {mode.representative_trace_ids.map((id) => (
-                    <span key={id} className="inline-flex items-center gap-1">
-                      {traceModes[id] ? <MockBadge mode={traceModes[id]} /> : <Badge tone="red">missing</Badge>}
-                      <Link href={`/review/${id}`} className="font-mono text-xs text-sky-700 hover:underline">
-                        {id}
-                      </Link>
-                    </span>
-                  ))}
-                </span>
-              ),
-            ],
-          ]}
-        />
-      </div>
+                mode.representative_trace_ids.map((id) => (
+                  <span key={id} className="inline-flex items-center gap-1">
+                    {traceModes[id] ? <MockBadge mode={traceModes[id]} /> : <Badge tone="red">missing</Badge>}
+                    <Link href={`/review/${id}`} className="text-sky-700 hover:underline">
+                      {traceCases[id] ?? id}
+                    </Link>
+                  </span>
+                ))
+              )}
+            </Meta>
+          </div>
 
-      {active && action === null && (
-        <div className="mt-3 flex flex-wrap gap-1.5 border-t border-slate-100 pt-3">
-          <Button variant="secondary" onClick={() => setAction("edit")}>Edit</Button>
-          <Button variant="secondary" onClick={() => setAction("merge")}>Merge into…</Button>
-          <Button variant="secondary" onClick={() => setAction("attach")}>Attach representative trace</Button>
-          <Button variant="ghost" onClick={() => setAction("retire")}>Retire</Button>
+          {action === null && (
+            <div className="flex flex-wrap gap-1.5">
+              <Button variant="secondary" onClick={() => setAction("edit")}>
+                Edit details
+              </Button>
+              <Button variant="secondary" onClick={() => setAction("merge")}>
+                Merge…
+              </Button>
+              <Button variant="secondary" onClick={() => setAction("attach")}>
+                Attach example
+              </Button>
+              <Button variant="ghost" onClick={() => setAction("retire")}>
+                Retire
+              </Button>
+            </div>
+          )}
+
+          {action === "edit" && <EditForm mode={mode} evaluators={evaluators} onSubmit={submit} onCancel={() => setAction(null)} />}
+          {action === "merge" && <MergeForm mode={mode} modes={modes} onSubmit={submit} onCancel={() => setAction(null)} />}
+          {action === "attach" && (
+            <AttachForm
+              mode={mode}
+              observed={freq?.trace_ids ?? []}
+              firstFailureTraceIds={firstFailureTraceIds}
+              traceModes={traceModes}
+              traceCases={traceCases}
+              onSubmit={submit}
+              onCancel={() => setAction(null)}
+            />
+          )}
+          {action === "retire" && (
+            <ChangeForm
+              title={`Retire “${mode.name}”`}
+              help="Kept in history; existing human tags still count. No new notes can use it."
+              submitLabel="Retire"
+              submitVariant="danger"
+              onSubmit={submit({ type: "retire", failure_mode_id: mode.failure_mode_id })}
+              onCancel={() => setAction(null)}
+            />
+          )}
         </div>
       )}
-
-      {action === "edit" && <EditForm mode={mode} evaluators={evaluators} onSubmit={submit} onCancel={() => setAction(null)} />}
-      {action === "merge" && <MergeForm mode={mode} modes={modes} onSubmit={submit} onCancel={() => setAction(null)} />}
-      {action === "attach" && (
-        <AttachForm
-          mode={mode}
-          observed={freq?.trace_ids ?? []}
-          firstFailureTraceIds={firstFailureTraceIds}
-          traceModes={traceModes}
-          traceCases={traceCases}
-          onSubmit={submit}
-          onCancel={() => setAction(null)}
-        />
-      )}
-      {action === "retire" && (
-        <div className="mt-3">
-          <ChangeForm
-            title={`Retire “${mode.name}”`}
-            help="Retired categories stay in the version history and cannot be assigned to new notes. Existing human tags are kept and still counted."
-            submitLabel="Retire category"
-            submitVariant="danger"
-            onSubmit={submit({ type: "retire", failure_mode_id: mode.failure_mode_id })}
-            onCancel={() => setAction(null)}
-          />
-        </div>
-      )}
-    </article>
+    </li>
   );
 }
 
@@ -240,41 +225,38 @@ function EditForm({ mode, evaluators, onSubmit, onCancel }: { mode: FailureMode;
   const [severity, setSeverity] = useState<Severity>(mode.severity);
   const [evaluator, setEvaluator] = useState<string>(mode.linked_evaluator_id ?? "");
   return (
-    <div className="mt-3">
-      <ChangeForm
-        title={`Edit “${mode.name}”`}
-        help="The id stays the same so existing human tags keep pointing at this category."
-        submitLabel="Save as new version"
-        onCancel={onCancel}
-        onSubmit={onSubmit({
-          type: "edit",
-          failure_mode_id: mode.failure_mode_id,
-          name,
-          definition,
-          severity,
-          linked_evaluator_id: evaluator || null,
-        })}
-      >
-        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_10rem]">
-          <Field label="Name">
-            <TextInput value={name} onChange={setName} />
-          </Field>
-          <Field label="Severity">
-            <Select value={severity} onChange={setSeverity} options={SEVERITIES.map((s) => ({ value: s, label: s }))} />
-          </Field>
-        </div>
-        <Field label="Definition (one observable sentence)">
-          <TextArea value={definition} onChange={setDefinition} rows={2} />
+    <ChangeForm
+      title={`Edit “${mode.name}”`}
+      submitLabel="Save as new version"
+      onCancel={onCancel}
+      onSubmit={onSubmit({
+        type: "edit",
+        failure_mode_id: mode.failure_mode_id,
+        name,
+        definition,
+        severity,
+        linked_evaluator_id: evaluator || null,
+      })}
+    >
+      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_10rem]">
+        <Field label="Name">
+          <TextInput value={name} onChange={setName} />
         </Field>
-        <Field label="Linked evaluator" hint="Which automated check is meant to detect this failure. The LLM judge is experimental.">
-          <Select
-            value={evaluator}
-            onChange={setEvaluator}
-            options={[{ value: "", label: "none" }, ...evaluators.map((e) => ({ value: e.evaluator_id, label: e.label }))]}
-          />
+        <Field label="Severity">
+          <Select value={severity} onChange={setSeverity} options={SEVERITIES.map((s) => ({ value: s, label: s }))} />
         </Field>
-      </ChangeForm>
-    </div>
+      </div>
+      <Field label="Definition (one observable sentence)">
+        <TextArea value={definition} onChange={setDefinition} rows={2} />
+      </Field>
+      <Field label="Automated check">
+        <Select
+          value={evaluator}
+          onChange={setEvaluator}
+          options={[{ value: "", label: "none" }, ...evaluators.map((e) => ({ value: e.evaluator_id, label: e.label }))]}
+        />
+      </Field>
+    </ChangeForm>
   );
 }
 
@@ -282,27 +264,25 @@ function MergeForm({ mode, modes, onSubmit, onCancel }: { mode: FailureMode; mod
   const targets = modes.filter((m) => m.failure_mode_id !== mode.failure_mode_id && m.status !== "merged" && m.status !== "retired");
   const [target, setTarget] = useState<string>(targets[0]?.failure_mode_id ?? "");
   return (
-    <div className="mt-3">
-      <ChangeForm
-        title={`Merge “${mode.name}” into another category`}
-        help="Use when two categories describe the same root cause. This category is kept for history as MERGED; its human tags and representative traces roll up into the target. Annotations are not rewritten."
-        submitLabel="Merge"
-        onCancel={onCancel}
-        onSubmit={
-          target
-            ? onSubmit({ type: "merge", source_id: mode.failure_mode_id, target_id: target })
-            : async () => "There is no active category to merge into"
-        }
-      >
-        <Field label="Merge into">
-          <Select
-            value={target}
-            onChange={setTarget}
-            options={targets.length ? targets.map((m) => ({ value: m.failure_mode_id, label: `${m.name} (${m.failure_mode_id})` })) : [{ value: "", label: "no active category available" }]}
-          />
-        </Field>
-      </ChangeForm>
-    </div>
+    <ChangeForm
+      title={`Merge “${mode.name}” into…`}
+      help="Same root cause? Its tags and examples roll up into the target. Annotations are not rewritten."
+      submitLabel="Merge"
+      onCancel={onCancel}
+      onSubmit={
+        target
+          ? onSubmit({ type: "merge", source_id: mode.failure_mode_id, target_id: target })
+          : async () => "There is no active type to merge into"
+      }
+    >
+      <Field label="Merge into">
+        <Select
+          value={target}
+          onChange={setTarget}
+          options={targets.length ? targets.map((m) => ({ value: m.failure_mode_id, label: m.name })) : [{ value: "", label: "no active type available" }]}
+        />
+      </Field>
+    </ChangeForm>
   );
 }
 
@@ -327,36 +307,32 @@ function AttachForm({
   const [traceId, setTraceId] = useState<string>(options[0] ?? "");
   if (options.length === 0) {
     return (
-      <div className="mt-3 space-y-2 rounded-md border border-slate-300 bg-slate-50 p-3 text-sm text-slate-700">
-        <p>
-          {observed.length === 0
-            ? "No human-reviewed trace is tagged with this category yet, so there is nothing to attach. Assign a reviewer note to it first (Step 1)."
-            : "Every observed trace is already attached."}
-        </p>
-        <Button variant="ghost" onClick={onCancel}>Close</Button>
+      <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-white p-3 text-xs text-slate-600">
+        {observed.length === 0 ? "No reviewed trace is tagged with this type yet." : "Every tagged trace is already attached."}
+        <Button variant="ghost" onClick={onCancel}>
+          Close
+        </Button>
       </div>
     );
   }
   return (
-    <div className="mt-3">
-      <ChangeForm
-        title={`Attach a representative trace to “${mode.name}”`}
-        help="Only traces a human reviewer tagged with this category are offered. Prefer a LIVE trace where the failure is clear."
-        submitLabel="Attach trace"
-        onCancel={onCancel}
-        onSubmit={onSubmit({ type: "attach_trace", failure_mode_id: mode.failure_mode_id, trace_id: traceId })}
-      >
-        <Field label="Observed trace">
-          <Select
-            value={traceId}
-            onChange={setTraceId}
-            options={options.map((id) => ({
-              value: id,
-              label: `${id} · case ${traceCases[id] ?? "?"} · ${(traceModes[id] ?? "missing").toUpperCase()}${firstFailureTraceIds.includes(id) ? " · first failure" : " · additional failure"}`,
-            }))}
-          />
-        </Field>
-      </ChangeForm>
-    </div>
+    <ChangeForm
+      title={`Attach an example to “${mode.name}”`}
+      help="Only traces a human tagged with this type. Prefer a LIVE one."
+      submitLabel="Attach"
+      onCancel={onCancel}
+      onSubmit={onSubmit({ type: "attach_trace", failure_mode_id: mode.failure_mode_id, trace_id: traceId })}
+    >
+      <Field label="Trace">
+        <Select
+          value={traceId}
+          onChange={setTraceId}
+          options={options.map((id) => ({
+            value: id,
+            label: `${traceCases[id] ?? "?"} · ${(traceModes[id] ?? "missing").toUpperCase()}${firstFailureTraceIds.includes(id) ? " · first failure" : ""} · ${id}`,
+          }))}
+        />
+      </Field>
+    </ChangeForm>
   );
 }

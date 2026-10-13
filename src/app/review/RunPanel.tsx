@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { getJSON, getReviewer, postJSON } from "@/lib/client/api";
 import type { MerchantScenario, Trace } from "@/lib/domain/schemas";
 import type { AgentConfig } from "@/lib/agent/configs";
-import { Button, Card, SplitBadge, fmtRate } from "@/components/ui";
+import { Button, InfoTip, SplitBadge, cx, fmtRate } from "@/components/ui";
 
 type ScenarioRow = MerchantScenario & { split: "dev" | "heldout" | null };
 
@@ -15,8 +15,40 @@ function customTemplate(row: ScenarioRow): string {
   return JSON.stringify(scenario, null, 2);
 }
 
-/** Execute ONE pricing case (single API call). Batches live in the Experiments tab and require confirmation. */
-export function RunPanel({ onRan }: { onRan?: (t: Trace) => void }) {
+const labelCls = "mb-1 block text-[11px] font-medium uppercase tracking-wide text-slate-400";
+const selectCls = "w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm";
+
+/**
+ * Collapsed "Run a new case" panel. Executes ONE pricing case (single API call) and opens it for review.
+ * Batches live in the Experiments tab and require confirmation.
+ */
+export function RunPanel({ onRan, defaultOpen = false }: { onRan?: (t: Trace) => void; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
+      <div className="flex items-center gap-2 px-4 py-2.5">
+        <button
+          type="button"
+          aria-expanded={open}
+          onClick={() => setOpen((o) => !o)}
+          className="flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-slate-900"
+        >
+          <span aria-hidden className={cx("inline-block text-xs text-slate-400 transition-transform", open && "rotate-90")}>
+            ▶
+          </span>
+          Run a new case
+        </button>
+        <InfoTip>
+          Runs the agent once on one case, saves the answer and opens it for review. Live mode makes one Claude API call
+          (identical requests are cached and cost $0). Batches live in Experiments.
+        </InfoTip>
+      </div>
+      {open && <RunForm onRan={onRan} />}
+    </section>
+  );
+}
+
+function RunForm({ onRan }: { onRan?: (t: Trace) => void }) {
   const router = useRouter();
   const [scenarios, setScenarios] = useState<ScenarioRow[]>([]);
   const [configs, setConfigs] = useState<AgentConfig[]>([]);
@@ -49,7 +81,7 @@ export function RunPanel({ onRan }: { onRan?: (t: Trace) => void }) {
         try {
           scenario = JSON.parse(customJson);
         } catch (e) {
-          throw new Error(`Custom scenario is not valid JSON: ${e instanceof Error ? e.message : String(e)}`);
+          throw new Error(`Custom case is not valid JSON: ${e instanceof Error ? e.message : String(e)}`);
         }
       }
       const actor = getReviewer() || undefined;
@@ -67,16 +99,13 @@ export function RunPanel({ onRan }: { onRan?: (t: Trace) => void }) {
   }
 
   return (
-    <Card
-      title="Execute a pricing case"
-      subtitle="Runs the agent once on one scenario, saves the trace and opens it for review. One Claude API call in live mode (cached identical requests cost $0)."
-    >
-      {loadError && <p className="mb-2 text-sm text-rose-700">Could not load scenarios: {loadError}</p>}
-      <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
+    <div className="border-t border-slate-100 px-4 py-3">
+      {loadError && <p className="mb-2 text-sm text-rose-700">Couldn&apos;t load cases: {loadError}</p>}
+      <div className="grid gap-3 md:grid-cols-[1fr_14rem_auto] md:items-end">
         <label className="text-sm">
-          <span className="mb-1 block text-xs font-medium text-slate-500">Scenario</span>
+          <span className={labelCls}>Case</span>
           <select
-            className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm"
+            className={selectCls}
             value={custom ? "__custom" : caseId}
             onChange={(e) => {
               if (e.target.value === "__custom") setCustom(true);
@@ -88,48 +117,39 @@ export function RunPanel({ onRan }: { onRan?: (t: Trace) => void }) {
           >
             {scenarios.map((s) => (
               <option key={s.case_id} value={s.case_id}>
-                {s.case_id} — {s.title} {s.split === "heldout" ? "[HELD-OUT]" : ""}
+                {s.case_id} — {s.title}
+                {s.split === "heldout" ? " · held-out" : ""}
               </option>
             ))}
-            <option value="__custom">Custom scenario (JSON)…</option>
+            <option value="__custom">Custom JSON…</option>
           </select>
         </label>
         <label className="text-sm">
-          <span className="mb-1 block text-xs font-medium text-slate-500">Agent configuration</span>
-          <select
-            className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm"
-            value={configId}
-            onChange={(e) => setConfigId(e.target.value)}
-          >
+          <span className={labelCls}>Version</span>
+          <select className={selectCls} value={configId} onChange={(e) => setConfigId(e.target.value)}>
             {configs.map((c) => (
-              <option key={c.config_id} value={c.config_id}>
-                {c.label} — {c.config_id}
+              <option key={c.config_id} value={c.config_id} title={c.config_id}>
+                {c.label}
               </option>
             ))}
           </select>
         </label>
         <Button onClick={run} disabled={busy || scenarios.length === 0}>
-          {busy ? "Running…" : "Run agent"}
+          {busy ? "Running…" : "Run once"}
         </Button>
       </div>
       {selected && !custom && (
         <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-          <SplitBadge split={selected.split} /> decision date {selected.decision_date} · requested{" "}
-          {fmtRate(selected.request.requested_pricing.rate_bps, selected.request.requested_pricing.per_txn_fee_usd)} ·{" "}
-          {selected.variation && Object.values(selected.variation).join(" · ")}
-          {selected.split === "heldout" && (
-            <span className="text-violet-700">· held-out: label it, but do not use it for prompt tuning</span>
-          )}
+          <SplitBadge split={selected.split} />
+          {selected.decision_date} · asks{" "}
+          {fmtRate(selected.request.requested_pricing.rate_bps, selected.request.requested_pricing.per_txn_fee_usd)}
         </p>
       )}
       {custom && (
         <>
-          <p className="mt-2 text-xs text-slate-500">
-            Custom scenarios are tagged user-supplied with a CUSTOM- id. They are outside the frozen dev/held-out split, so they
-            never join frozen sets or the gold dataset.
-          </p>
+          <p className="mt-2 text-xs text-slate-500">Custom cases sit outside dev/held-out and never become gold.</p>
           <textarea
-            className="mt-2 h-64 w-full rounded-md border border-slate-300 p-2 font-mono text-xs"
+            className="mt-1 h-64 w-full rounded-md border border-slate-300 p-2 font-mono text-xs"
             value={customJson}
             onChange={(e) => setCustomJson(e.target.value)}
             spellCheck={false}
@@ -137,6 +157,6 @@ export function RunPanel({ onRan }: { onRan?: (t: Trace) => void }) {
         </>
       )}
       {error && <p className="mt-2 text-sm text-rose-700">{error}</p>}
-    </Card>
+    </div>
   );
 }

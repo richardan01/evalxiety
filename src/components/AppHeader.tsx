@@ -29,8 +29,8 @@ export function AppHeader() {
     let alive = true;
     const load = () =>
       fetch("/api/mode", { cache: "no-store" })
-        .then((r) => r.json())
-        .then((m) => alive && setMode(m))
+        .then((r) => (r.ok ? r.json() : null))
+        .then((m) => alive && m && typeof m.mode === "string" && m.ledger && setMode(m))
         .catch(() => undefined);
     load();
     const t = setInterval(load, 15_000);

@@ -40,7 +40,7 @@ export const DETERMINISTIC_EVALUATORS: EvaluatorDefinition[] = [
       "Revenue, cost and gross profit within max($1, 0.1%) and gross margin within 0.10 pp of the recomputed values; transaction count and volume match the source; cost basis is the merchant's data (or the selected policy's default when data is missing); the meets-minimum flag is consistent with the agent's own numbers.",
     fail_rule: "Any component outside tolerance, wrong inputs, or a meets-minimum flag that contradicts the agent's own margin and floor.",
     validation_status: "validated_unit_tests",
-    blocking: true,
+    blocking: false, // counts toward pass-all (≥90% bar) but does not block release on its own
   },
   {
     evaluator_id: "stale_policy_used",

@@ -185,10 +185,25 @@ export async function executeRun(run: ExperimentRun, opts: StartRunOptions): Pro
 }
 
 /** Judge every trace of a run that lacks a result for the current judge version. */
+export interface JudgeMissingResult {
+  judged: number;
+  skipped: number;
+  already_current: number;
+  skipped_live_in_mock_mode: number;
+}
+
+/** Serialised per run, so two concurrent clicks cannot judge (and pay for) the same traces twice. */
 export async function judgeMissing(
   runId: string,
   opts: { actor: string; confirm_paid_batch?: boolean },
-): Promise<{ judged: number; skipped: number }> {
+): Promise<JudgeMissingResult> {
+  return withLock(`judge-batch/${runId}`, () => judgeMissingUnlocked(runId, opts));
+}
+
+async function judgeMissingUnlocked(
+  runId: string,
+  opts: { actor: string; confirm_paid_batch?: boolean },
+): Promise<JudgeMissingResult> {
   const run = await getExperimentRun(runId);
   if (!run) throw new Error(`Unknown run ${runId}`);
   const existing = await listJudgeResults();
@@ -219,5 +234,10 @@ export async function judgeMissing(
     await saveJudgeResult(await runJudge(t, { criterion }));
   });
   await audit(opts.actor, "judge.batch", { run_id: runId, judged: runnable.length, skipped_live_in_mock_mode: todo.length - runnable.length });
-  return { judged: runnable.length, skipped: traces.length - runnable.length };
+  return {
+    judged: runnable.length,
+    skipped: traces.length - runnable.length,
+    already_current: traces.length - todo.length,
+    skipped_live_in_mock_mode: todo.length - runnable.length,
+  };
 }

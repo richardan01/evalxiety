@@ -194,7 +194,15 @@ export function TraceDetail({ traceId, notice }: { traceId: string; notice: Noti
 
   async function save(andNext: boolean) {
     if (!trace || !rubric || saveState.status === "saving") return;
+    const loadedFor = loadedKey?.split("|")[0] ?? "";
     const name = reviewer.commit().trim();
+    if (own && name !== loadedFor) {
+      // The form shows another reviewer's saved answers; never re-save them under a new name.
+      setDirty(false);
+      setLoadedKey(null);
+      setSaveState({ status: "info", message: `Switched reviewer to ${name || "(none)"} — answers reset. Check and save again.` });
+      return;
+    }
     const v = validateQuick(form, name, rubric);
     if (Object.keys(v).length > 0) {
       setShowErrors(true);

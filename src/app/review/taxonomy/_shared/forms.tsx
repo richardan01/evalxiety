@@ -33,71 +33,32 @@ export function useReviewer(): [string, (name: string) => void] {
   return [name, update];
 }
 
-/** "Acting as" bar. Every mutation on these screens records this name. */
-export function ReviewerBar({ purpose }: { purpose: string }) {
-  const [reviewer, saveReviewer] = useReviewer();
-  const [draft, setDraft] = useState<string | null>(null);
-  const value = draft ?? reviewer;
-  const dirty = draft !== null && draft.trim() !== reviewer;
-  return (
-    <div
-      className={cx(
-        "flex flex-wrap items-center gap-3 rounded-lg border px-4 py-2.5 text-sm",
-        reviewer ? "border-slate-200 bg-white" : "border-amber-300 bg-amber-50",
-      )}
-    >
-      <label htmlFor="reviewer-name" className="font-medium text-slate-700">
-        Your name
-      </label>
-      <input
-        id="reviewer-name"
-        value={value}
-        onChange={(e) => setDraft(e.target.value)}
-        placeholder="e.g. Dana (pricing reviewer)"
-        className="w-64 rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
-      />
-      <Button
-        variant="secondary"
-        disabled={!dirty || !value.trim()}
-        onClick={() => {
-          saveReviewer(value);
-          setDraft(null);
-        }}
-      >
-        Save name
-      </Button>
-      <span className="text-xs text-slate-500">
-        {reviewer ? (
-          <>
-            Acting as <b className="text-slate-800">{reviewer}</b>. {purpose}
-          </>
-        ) : (
-          <>A named human is required before you can change anything here. {purpose}</>
-        )}
-      </span>
-    </div>
-  );
-}
-
 // ---------------------------------------------------------------------------
 // Inputs
 // ---------------------------------------------------------------------------
 
-const inputCls = "w-full rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none";
+const inputCls = "w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm focus:border-slate-500 focus:outline-none";
+export const labelCls = "mb-0.5 block text-[11px] font-medium uppercase tracking-wide text-slate-400";
 
 export function Field({ label, hint, children }: { label: string; hint?: ReactNode; children: ReactNode }) {
   return (
     <label className="block text-sm">
-      <span className="mb-0.5 block text-xs font-medium text-slate-600">{label}</span>
+      <span className={labelCls}>{label}</span>
       {children}
       {hint && <span className="mt-0.5 block text-xs text-slate-500">{hint}</span>}
     </label>
   );
 }
 
-export function TextInput(props: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+export function TextInput(props: { value: string; onChange: (v: string) => void; placeholder?: string; ariaLabel?: string; className?: string }) {
   return (
-    <input value={props.value} onChange={(e) => props.onChange(e.target.value)} placeholder={props.placeholder} className={inputCls} />
+    <input
+      value={props.value}
+      aria-label={props.ariaLabel}
+      onChange={(e) => props.onChange(e.target.value)}
+      placeholder={props.placeholder}
+      className={cx(inputCls, props.className)}
+    />
   );
 }
 
@@ -117,9 +78,16 @@ export function Select<T extends string>(props: {
   value: T;
   onChange: (v: T) => void;
   options: Array<{ value: T; label: string; disabled?: boolean }>;
+  ariaLabel?: string;
+  className?: string;
 }) {
   return (
-    <select value={props.value} onChange={(e) => props.onChange(e.target.value as T)} className={inputCls}>
+    <select
+      value={props.value}
+      aria-label={props.ariaLabel}
+      onChange={(e) => props.onChange(e.target.value as T)}
+      className={cx(inputCls, props.className)}
+    >
       {props.options.map((o) => (
         <option key={o.value} value={o.value} disabled={o.disabled}>
           {o.label}
@@ -131,16 +99,17 @@ export function Select<T extends string>(props: {
 
 export function ErrorText({ error }: { error: string | null }) {
   if (!error) return null;
-  return <p className="text-sm text-rose-700">{error}</p>;
+  return <p className="text-xs text-rose-700">{error}</p>;
 }
 
 /**
- * Author + change-note fields for an audited change. Author is prefilled with
- * the saved reviewer name; editing it here does not change the saved name
- * unless no name has been saved yet.
+ * Author for an audited change. Prefilled with the saved reviewer name; editing it here does not
+ * change the saved name unless no name has been saved yet. `saved` is the committed name — use it
+ * (not `author`) to decide whether to show a name field, so the field doesn't vanish mid-typing.
  */
 export function useAuthor(): {
   author: string;
+  saved: string;
   setAuthor: (v: string) => void;
   remember: () => void;
 } {
@@ -149,6 +118,7 @@ export function useAuthor(): {
   const author = draft ?? reviewer;
   return {
     author,
+    saved: reviewer,
     setAuthor: setDraft,
     remember: () => {
       if (!reviewer && author.trim()) saveReviewer(author);
@@ -156,6 +126,7 @@ export function useAuthor(): {
   };
 }
 
+/** An audited change: optional fields, then the author's name and a one-line reason. */
 export function ChangeForm({
   title,
   help,
@@ -180,19 +151,19 @@ export function ChangeForm({
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const missing = !author.trim() ? "Enter your name" : requireNote && !note.trim() ? "Enter a change note" : null;
+  const missing = !author.trim() ? "Enter your name" : requireNote && !note.trim() ? "Say why" : null;
   return (
-    <div className="space-y-2 rounded-md border border-slate-300 bg-slate-50 p-3">
+    <div className="space-y-2 rounded-md border border-slate-200 bg-white p-3">
       <div className="text-sm font-semibold text-slate-800">{title}</div>
-      {help && <div className="text-xs text-slate-600">{help}</div>}
+      {help && <div className="text-xs text-slate-500">{help}</div>}
       {children}
-      <div className="grid gap-2 sm:grid-cols-[minmax(0,14rem)_1fr]">
-        <Field label="Author (named human)">
-          <TextInput value={author} onChange={setAuthor} placeholder="Your name" />
+      <div className="grid gap-2 sm:grid-cols-[minmax(0,12rem)_1fr]">
+        <Field label="Your name">
+          <TextInput value={author} onChange={setAuthor} placeholder="Required" />
         </Field>
         {requireNote && (
-          <Field label="Change note (why?)">
-            <TextInput value={note} onChange={setNote} placeholder="e.g. Three reviewer notes describe the same root cause" />
+          <Field label="Why?">
+            <TextInput value={note} onChange={setNote} placeholder="e.g. three notes describe the same cause" />
           </Field>
         )}
       </div>
@@ -216,7 +187,7 @@ export function ChangeForm({
         <Button variant="ghost" onClick={onCancel} disabled={busy}>
           Cancel
         </Button>
-        {missing && <span className="text-xs text-slate-500">{missing} to continue.</span>}
+        {missing && <span className="text-xs text-slate-400">{missing}</span>}
       </div>
     </div>
   );

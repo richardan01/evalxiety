@@ -1,241 +1,188 @@
 "use client";
 
+/**
+ * Overview = the answer first. One verdict, four numbers, one chart, the next step.
+ * Every number comes from stored traces, human labels and runs (see /api/overview).
+ */
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getJSON } from "@/lib/client/api";
-import { Badge, Callout, Card, KeyValue, MockBadge, Ratio, Stat, cx, fmtUsd } from "@/components/ui";
-import { STATUS_META, topReason } from "@/app/release/status";
-import { demoSteps, type StepState } from "./demoPath";
+import { InfoTip, MockBadge, PageHeader, StatusPill, cx, fmtUsd } from "@/components/ui";
+import { topReason } from "@/app/release/status";
+import { QualityChart } from "./QualityChart";
 import type { ModeData, OverviewData } from "./types";
 
-const STEP_STYLE: Record<StepState, { icon: string; cls: string; word: string }> = {
-  done: { icon: "✓", cls: "bg-emerald-100 text-emerald-800", word: "done" },
-  todo: { icon: "○", cls: "bg-amber-50 text-amber-800 ring-1 ring-amber-300", word: "not done" },
-  neutral: { icon: "–", cls: "bg-slate-100 text-slate-500", word: "not tracked" },
-};
+function Tile({ label, value, sub, tone, info }: { label: string; value: React.ReactNode; sub?: React.ReactNode; tone?: "red" | "green" | "amber"; info?: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+      <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">
+        {label}
+        {info && <InfoTip>{info}</InfoTip>}
+      </div>
+      <div
+        className={cx(
+          "mt-1 text-3xl font-semibold tabular-nums",
+          tone === "red" && "text-rose-600",
+          tone === "green" && "text-emerald-600",
+          tone === "amber" && "text-amber-600",
+          !tone && "text-slate-900",
+        )}
+      >
+        {value}
+      </div>
+      {sub && <div className="mt-0.5 text-sm text-slate-500">{sub}</div>}
+    </div>
+  );
+}
 
 export function OverviewDashboard() {
-  const [data, setData] = useState<OverviewData | null>(null);
+  const [o, setO] = useState<OverviewData | null>(null);
   const [mode, setMode] = useState<ModeData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [modeError, setModeError] = useState(false);
 
   useEffect(() => {
-    let alive = true;
     getJSON<OverviewData>("/api/overview")
-      .then((d) => alive && setData(d))
-      .catch((e: unknown) => alive && setError(e instanceof Error ? e.message : String(e)));
-    getJSON<ModeData>("/api/mode")
-      .then((m) => alive && setMode(m))
-      .catch(() => alive && setModeError(true));
-    return () => {
-      alive = false;
-    };
+      .then(setO)
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)));
+    getJSON<ModeData>("/api/mode").then(setMode).catch(() => undefined);
   }, []);
 
+  if (error) return <p className="text-sm text-rose-700">Could not load the overview: {error}</p>;
+  if (!o) return <p className="text-sm text-slate-500">Loading…</p>;
+
+  const t = o.trend;
+  const base = t.points.find((p) => p.role === "baseline") ?? null;
+  const fix = t.points.find((p) => p.role === "corrected") ?? null;
+  const reviewed = o.review.reviewed_traces;
+  const minReviews = o.review.target_min;
+  const fullRunDone = o.candidate_run !== null;
+  const critical = t.new_critical_regressions;
+
+  // One sentence: why the verdict is what it is.
+  const top = topReason(o.release_reasons);
+  const why =
+    o.release_status === "INSUFFICIENT_EVIDENCE" && !fullRunDone && critical.length > 0
+      ? `Not decided yet — but development results already show ${critical.length} critical regression${critical.length > 1 ? "s" : ""} (${critical.map((c) => c.case_id).join(", ")}).`
+      : o.release_status === "INSUFFICIENT_EVIDENCE" && !fullRunDone
+        ? "Not decided yet — the final check on all 20 cases hasn't run."
+        : (top?.message ?? "All release conditions are met.");
+
+  // The single next step.
+  const next =
+    reviewed < minReviews
+      ? { href: "/review", label: `Review answers (${reviewed}/${minReviews})` }
+      : !fullRunDone
+        ? { href: "/experiments", label: "Run the final check" }
+        : { href: "/release", label: "Open the release gate" };
+
+  const steps = [
+    { label: `Review ${minReviews}–${o.review.target_max} agent answers`, done: reviewed >= minReviews, href: "/review", detail: `${reviewed} reviewed` },
+    { label: "Run the final check on all 20 cases", done: fullRunDone, href: "/experiments", detail: fullRunDone ? "done" : "not run" },
+    { label: "Decide: ship or not", done: o.release_status === "APPROVED_FOR_DEMO", href: "/release", detail: o.release_status.replace(/_/g, " ").toLowerCase() },
+  ];
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-slate-900">Overview</h1>
-        <p className="max-w-3xl text-sm text-slate-500">
-          Where the merchant-pricing agent stands on the path from its first trace to a demo release decision. Every number below is computed
-          from stored traces, human annotations and runs — hover or read the note under each tile for where it comes from.
-        </p>
+    <div className="space-y-5">
+      <PageHeader
+        title="Overview"
+        question="Is the pricing agent ready to ship?"
+        info="AgentTrust tests a Claude pricing agent on 20 synthetic merchant cases. Code checks verify policy rules; people label answers; an experimental AI judge checks the explanations; the release gate combines it all. Results describe a small test set — not production reliability."
+      />
+
+      {/* Verdict */}
+      <section className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white px-6 py-5 shadow-sm">
+        <div className="flex flex-wrap items-center gap-4">
+          <StatusPill status={o.release_status} />
+          <p className="text-base text-slate-800">{why}</p>
+        </div>
+        <Link href={next.href} className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
+          {next.label} →
+        </Link>
+      </section>
+
+      {/* Four numbers */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Tile
+          label="Cases passing every check"
+          value={fix ? `${fix.pass_all_count}/${fix.n_cases}` : "—"}
+          sub={fix && base ? `Corrected · was ${base.pass_all_count}/${base.n_cases} before the fix` : "Run both versions in Experiments"}
+          tone={fix ? (fix.pass_all_rate !== null && fix.pass_all_rate >= 0.9 ? "green" : "amber") : undefined}
+          info="Share of test cases where every code check passes (policy, margin math, margin floor, approvals). The AI judge is not part of this number."
+        />
+        <Tile
+          label="Critical failures"
+          value={fix ? fix.critical_failures : "—"}
+          sub={critical.length ? `New regression: ${critical.map((c) => c.case_id).join(", ")}` : fix ? "in the corrected version" : undefined}
+          tone={fix ? (fix.critical_failures > 0 ? "red" : "green") : undefined}
+          info="Cases where the corrected agent broke a policy rule: wrong policy, margin below the floor, or a missing required approval."
+        />
+        <Tile
+          label="Human reviews"
+          value={`${reviewed}`}
+          sub={
+            <span className="flex items-center gap-2">
+              of {minReviews} minimum
+              <span className="h-1.5 w-20 overflow-hidden rounded-full bg-slate-100">
+                <span className="block h-full rounded-full bg-slate-700" style={{ width: `${Math.min(100, (reviewed / minReviews) * 100)}%` }} />
+              </span>
+            </span>
+          }
+          tone={reviewed >= minReviews ? "green" : "amber"}
+          info="People label agent answers with a 5-question checklist. These labels are the reference for checking the AI judge."
+        />
+        <Tile
+          label="API spend"
+          value={mode ? fmtUsd(mode.ledger.total_estimated_usd) : "—"}
+          sub={mode ? `of ${fmtUsd(mode.spend_cap_usd, 0)} cap · ${mode.ledger.live_calls} calls` : undefined}
+          info="Estimated Claude API spend from the local ledger. Re-running identical cases is served from cache and costs nothing."
+        />
       </div>
 
-      {error && (
-        <Callout tone="red" title="Could not load the overview">
-          {error}
-        </Callout>
-      )}
-      {!data && !error && <p className="text-sm text-slate-500">Loading overview…</p>}
+      {/* Chart */}
+      <section className="rounded-xl border border-slate-200 bg-white px-6 py-5 shadow-sm">
+        <div className="mb-3 flex items-center gap-2">
+          <h2 className="text-base font-semibold text-slate-900">Does the fix work?</h2>
+          <InfoTip>
+            Each point is one agent version run on the same frozen test cases. The big line is the share of cases passing every code
+            check; the small charts show each check. The dashed line is the 90% bar for a demo release.
+          </InfoTip>
+          {t.fixed.length > 0 && <span className="ml-auto text-sm text-emerald-700">✓ {t.fixed.length} cases fixed</span>}
+          {t.regressed.length > 0 && <span className="text-sm text-rose-700">✕ {t.regressed.length} broke ({t.regressed.join(", ")})</span>}
+        </div>
+        <QualityChart trend={t} />
+      </section>
 
-      {data && (
-        <>
-          {data.executions.live === 0 && (
-            <Callout tone="amber" title="All results so far are MOCK and cannot support a release decision.">
-              {data.executions.total === 0 ? "No executions have been recorded yet. " : `All ${data.executions.total} recorded execution(s) used the mock agent. `}
-              Mock output is deterministic test scaffolding, not evidence about the real model. Live runs need <code>MOCK_MODE=false</code> and an
-              API key; spend is capped
-              {mode ? ` at ${fmtUsd(mode.spend_cap_usd)}` : ""}.
-            </Callout>
-          )}
-
-          <StatTiles data={data} />
-
-          <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
-            <DemoPath data={data} />
-            <ContextCard data={data} mode={mode} modeError={modeError} />
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-function StatTiles({ data }: { data: OverviewData }) {
-  const e = data.executions;
-  const r = data.review;
-  const run = data.candidate_run;
-  const s = data.candidate_summary;
-  const status = STATUS_META[data.release_status];
-  const top = topReason(data.release_reasons);
-  return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-      <Stat
-        label="Test executions"
-        value={e.total}
-        hint={
-          <>
-            <b>{e.live}</b> live · <b>{e.mock}</b> mock · <b className={cx(e.errors > 0 && "text-rose-700")}>{e.errors}</b> with errors. Every agent
-            run (single case or experiment) is stored as a trace.
-          </>
-        }
-      />
-      <Stat
-        label="Human-reviewed coverage"
-        value={
-          <>
-            {r.reviewed_traces} <span className="text-base font-normal text-slate-500">of {e.total}</span>
-          </>
-        }
-        tone={r.reviewed_traces < r.target_min ? "amber" : undefined}
-        hint={
-          <>
-            Traces with a human annotation. Target {r.target_min}–{r.target_max}; {r.unreviewed} unreviewed. Gold labels: {r.gold_dev} dev /{" "}
-            {r.gold_heldout} held-out.
-          </>
-        }
-      />
-      <Stat
-        label="Pass-all rate"
-        value={run ? <Ratio value={data.pass_all_rate} undefinedReason="The candidate run has no cases" /> : <span className="text-base font-medium text-slate-500">No candidate run yet</span>}
-        hint={
-          run && s ? (
-            <>
-              Latest corrected run on the frozen release set: {s.pass_all_count} of {s.n_cases} cases pass every validated deterministic check.{" "}
-              <code className="font-mono">{run.run_id}</code> <MockBadge mode={run.execution_mode} />
-            </>
-          ) : (
-            "Run the corrected configuration on all frozen cases (Experiments tab) to measure it."
-          )
-        }
-      />
-      <Stat
-        label="Critical failures"
-        value={run && data.critical_failures !== null ? data.critical_failures : "—"}
-        tone={data.critical_failures ? "red" : undefined}
-        hint={
-          run && s ? (
-            <>
-              Failed critical policy checks across {s.cases_with_critical_failure.length} case(s) of{" "}
-              <code className="font-mono">{run.run_id}</code> <MockBadge mode={run.execution_mode} />
-            </>
-          ) : (
-            "No candidate run yet, so nothing has been measured. “—” means unknown, not zero."
-          )
-        }
-      />
-      <Stat
-        label="Release status"
-        value={<span className={cx("text-base font-bold tracking-wide", status.text)}>{status.label}</span>}
-        hint={
-          <>
-            {top ? top.message : status.explanation} {run && <MockBadge mode={run.execution_mode} />}{" "}
-            <Link href="/release" className="font-medium text-sky-700 hover:underline">
-              Open the release gate →
-            </Link>
-          </>
-        }
-      />
-    </div>
-  );
-}
-
-function DemoPath({ data }: { data: OverviewData }) {
-  const steps = demoSteps(data);
-  const done = steps.filter((s) => s.state === "done").length;
-  return (
-    <Card
-      title="Demo path"
-      subtitle={`${done} of ${steps.length} steps confirmed by stored data. “Not tracked” steps can't be confirmed from the data, so they are never shown as done.`}
-    >
-      <ol className="divide-y divide-slate-100">
-        {steps.map((s) => {
-          const st = STEP_STYLE[s.state];
-          return (
-            <li key={s.n} className="flex items-start gap-3 py-2">
-              <span
-                className={cx("mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold", st.cls)}
-                title={st.word}
-                aria-label={st.word}
-              >
-                {st.icon}
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-semibold text-slate-400">{s.n}</span>
-                  <Link href={s.href} className="text-sm font-medium text-slate-900 hover:text-sky-700 hover:underline">
-                    {s.title}
-                  </Link>
-                  <span className={cx("text-[11px]", s.state === "done" ? "text-emerald-700" : s.state === "todo" ? "text-amber-700" : "text-slate-400")}>
-                    {st.word}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500">{s.detail}</p>
-              </div>
-            </li>
-          );
-        })}
-      </ol>
-    </Card>
-  );
-}
-
-function ContextCard({ data, mode, modeError }: { data: OverviewData; mode: ModeData | null; modeError: boolean }) {
-  return (
-    <Card title="Spend and failure taxonomy" subtitle="Context for reading the tiles above.">
-      <KeyValue
-        rows={[
-          [
-            "Live API spend (estimated)",
-            mode ? (
-              <span key="spend">
-                <b>{fmtUsd(mode.ledger.total_estimated_usd)}</b> of {fmtUsd(mode.spend_cap_usd)} cap · {mode.ledger.live_calls} live call(s)
-              </span>
-            ) : modeError ? (
-              <span key="spend" className="text-slate-500">unavailable (could not load /api/mode)</span>
-            ) : (
-              <span key="spend" className="text-slate-500">loading…</span>
-            ),
-          ],
-          [
-            "Execution mode now",
-            mode ? (
-              <span key="mode" className="inline-flex flex-wrap items-center gap-1">
-                <MockBadge mode={mode.mode} /> <span className="text-xs text-slate-500">{mode.reason}</span>
-              </span>
-            ) : (
-              "—"
-            ),
-          ],
-          [
-            "Observed failure modes",
-            <span key="fm">
-              <b>{data.observed_failure_modes}</b> · taxonomy v{data.taxonomy_version}{" "}
-              <Link href="/review/taxonomy" className="text-sky-700 hover:underline">
-                view
+      {/* Next steps */}
+      <section className="rounded-xl border border-slate-200 bg-white px-6 py-4 shadow-sm">
+        <h2 className="mb-2 text-base font-semibold text-slate-900">Next steps</h2>
+        <ol className="grid gap-2 md:grid-cols-3">
+          {steps.map((s, i) => (
+            <li key={i}>
+              <Link href={s.href} className="flex items-center gap-3 rounded-lg border border-slate-200 px-3 py-2 hover:bg-slate-50">
+                <span
+                  className={cx(
+                    "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-semibold",
+                    s.done ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-600",
+                  )}
+                  aria-label={s.done ? "done" : "to do"}
+                >
+                  {s.done ? "✓" : i + 1}
+                </span>
+                <span className="text-sm text-slate-800">
+                  {s.label}
+                  <span className="block text-xs text-slate-500">{s.detail}</span>
+                </span>
               </Link>
-            </span>,
-          ],
-          ["Gold examples", `${data.review.gold_examples} (${data.review.gold_dev} dev / ${data.review.gold_heldout} held-out)`],
-          ["Frozen scenarios", <span key="sc">{data.scenario_count} synthetic merchant cases <Badge>SYNTHETIC</Badge></span>],
-        ]}
-      />
-      <p className="mt-3 text-xs text-slate-500">
-        Failure-mode counts come only from human annotations. Seed taxonomy categories are hypotheses until a reviewer observes them in a trace.
-        Spend comes from the local spend ledger (estimated from token usage; cached replays cost nothing).
-      </p>
-    </Card>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {o.executions.live === 0 && o.executions.total > 0 && (
+        <p className="flex items-center gap-2 text-xs text-amber-800">
+          <MockBadge mode="mock" /> All results so far are mock and cannot support a release decision.
+        </p>
+      )}
+    </div>
   );
 }

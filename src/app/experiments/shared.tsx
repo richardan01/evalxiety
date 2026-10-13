@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { Badge, Button, MockBadge, fmtUsd } from "@/components/ui";
-import type { CaseChange } from "@/lib/metrics/experiments";
+import { Badge, Button, MockBadge, cx, fmtUsd } from "@/components/ui";
+import type { CaseChange, RunSummary } from "@/lib/metrics/experiments";
 import type { BatchEstimate } from "./types";
 import { saveReviewer, useReviewer } from "./reviewer";
 
@@ -15,93 +15,174 @@ export const fmtInt = (n: number | null | undefined) => (n === null || n === und
 
 export const humanize = (id: string) => id.replace(/_/g, " ");
 
-/** Numbered section heading with plain-language helper text. */
-export function SectionHeading({ n, id, title, children }: { n: number; id: string; title: string; children?: ReactNode }) {
+/** Estimated agent spend of a run; mock runs never spend. */
+export const agentCost = (s: RunSummary, mode: "live" | "mock") => (mode === "mock" ? "$0 (mock)" : fmtUsd(s.total_cost_usd, 4));
+
+/** Where the audited held-out reveal lives (the held-out view of the calibration panel). */
+export const HELDOUT_REVEAL_HREF = "/evaluators?split=heldout#calibration";
+
+/** Short, positively phrased check names for table headers; the full question is in the tooltip. */
+const CHECK_LABELS: Record<string, string> = {
+  margin_calculation_error: "Margin math",
+  stale_policy_used: "Right policy",
+  missing_mandatory_approval: "Approvals",
+  margin_guardrail_violation: "Margin floor",
+};
+export const checkLabel = (id: string) => CHECK_LABELS[id] ?? humanize(id);
+
+// ---------------------------------------------------------------------------
+// Outcome dots — icon + colour, never colour alone
+// ---------------------------------------------------------------------------
+
+const DOT: Record<string, { icon: string; label: string; cls: string }> = {
+  PASS: { icon: "✓", label: "pass", cls: "bg-emerald-500 text-white" },
+  FAIL: { icon: "✕", label: "fail", cls: "bg-rose-600 text-white" },
+  NOT_APPLICABLE: { icon: "–", label: "not applicable", cls: "bg-slate-100 text-slate-500 ring-1 ring-inset ring-slate-200" },
+  ERROR: { icon: "!", label: "error (counts as not passing)", cls: "bg-violet-600 text-white" },
+  REQUIRES_REVIEW: { icon: "?", label: "needs human review (not a pass)", cls: "bg-amber-400 text-amber-950" },
+};
+
+export function Dot({ outcome, side }: { outcome: string | null | undefined; side?: string }) {
+  const m = outcome ? DOT[outcome] : undefined;
+  const label = m?.label ?? (outcome ? humanize(outcome).toLowerCase() : "no result");
+  const text = side ? `${side}: ${label}` : label;
   return (
-    <div id={id} className="scroll-mt-6">
-      <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
-        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">
-          {n}
+    <span
+      role="img"
+      aria-label={text}
+      title={text}
+      className={cx(
+        "inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full text-[11px] leading-none font-bold",
+        m?.cls ?? "border border-dashed border-slate-300 text-slate-400",
+      )}
+    >
+      {m?.icon ?? "·"}
+    </span>
+  );
+}
+
+/** Baseline dot → candidate dot. */
+export function DotPair({ from, to }: { from: string | null | undefined; to: string | null | undefined }) {
+  return (
+    <span className="inline-flex items-center gap-1">
+      <Dot outcome={from} side="Baseline" />
+      <span aria-hidden className="text-[10px] text-slate-300">
+        →
+      </span>
+      <Dot outcome={to} side="Corrected" />
+    </span>
+  );
+}
+
+export function DotLegend() {
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500">
+      {(["PASS", "FAIL", "NOT_APPLICABLE", "ERROR", "REQUIRES_REVIEW"] as const).map((o) => (
+        <span key={o} className="inline-flex items-center gap-1">
+          <Dot outcome={o} /> {DOT[o].label.replace(/ \(.*\)$/, "")}
         </span>
-        {title}
-      </h2>
-      {children && <div className="mt-1 max-w-4xl text-sm text-slate-600">{children}</div>}
+      ))}
+      <span className="inline-flex items-center gap-1">
+        <Dot outcome={null} /> no trace
+      </span>
     </div>
   );
 }
 
-/** Compact evaluator outcome badge (NOT_APPLICABLE → N/A). */
-export function OutcomeChip({ outcome }: { outcome: string | null }) {
-  if (outcome === null) return <Badge tone="neutral" title="No result: the case has no trace in this run">—</Badge>;
-  const tone = outcome === "PASS" ? "green" : outcome === "FAIL" ? "red" : outcome === "ERROR" ? "purple" : outcome === "REQUIRES_REVIEW" ? "amber" : "neutral";
-  const label = outcome === "NOT_APPLICABLE" ? "N/A" : outcome === "REQUIRES_REVIEW" ? "REVIEW" : outcome;
-  return (
-    <Badge tone={tone} title={outcome.replace(/_/g, " ")}>
-      {label}
-    </Badge>
-  );
-}
+// ---------------------------------------------------------------------------
+// Case change
+// ---------------------------------------------------------------------------
 
-const CHANGE_META: Record<CaseChange, { label: string; tone: "green" | "red" | "amber" | "neutral" | "purple"; help: string }> = {
-  fixed: { label: "FIXED", tone: "green", help: "Failed pass-all in the baseline run, passes in the candidate run" },
-  regressed: { label: "REGRESSED", tone: "red", help: "Passed pass-all in the baseline run, fails in the candidate run" },
-  still_failing: { label: "STILL FAILING", tone: "amber", help: "Fails pass-all in both runs" },
-  still_passing: { label: "STILL PASSING", tone: "neutral", help: "Passes pass-all in both runs" },
-  incomplete: {
-    label: "INCOMPLETE",
-    tone: "purple",
-    help: "Missing trace, execution error or evaluator error in either run — cannot be classified",
-  },
+const CHANGE_META: Record<CaseChange, { label: string; icon: string; tone: "green" | "red" | "amber" | "neutral" | "purple"; help: string }> = {
+  fixed: { label: "Fixed", icon: "↑", tone: "green", help: "Failed pass-all before, passes now" },
+  regressed: { label: "Regressed", icon: "↓", tone: "red", help: "Passed pass-all before, fails now" },
+  still_failing: { label: "Still failing", icon: "✕", tone: "amber", help: "Fails pass-all in both runs" },
+  still_passing: { label: "Same", icon: "=", tone: "neutral", help: "Passes pass-all in both runs" },
+  incomplete: { label: "Incomplete", icon: "?", tone: "purple", help: "Missing trace or an error in either run — not classified" },
 };
 
 export function ChangeBadge({ change }: { change: CaseChange }) {
   const m = CHANGE_META[change];
   return (
     <Badge tone={m.tone} title={m.help}>
+      <span aria-hidden>{m.icon}</span>
       {m.label}
     </Badge>
   );
 }
 
-export const changeHelp = (c: CaseChange) => CHANGE_META[c].help;
+// ---------------------------------------------------------------------------
+// Layout
+// ---------------------------------------------------------------------------
 
-export function ModePair({ baseline, candidate }: { baseline: "live" | "mock"; candidate: "live" | "mock" }) {
+/** Collapsed-by-default secondary section. Pass `open` + `onOpenChange` to control it. */
+export function Disclosure({
+  id,
+  title,
+  meta,
+  open,
+  onOpenChange,
+  children,
+}: {
+  id?: string;
+  title: string;
+  meta?: ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  children: ReactNode;
+}) {
   return (
-    <span className="inline-flex items-center gap-1 text-xs text-slate-500">
-      baseline <MockBadge mode={baseline} /> · candidate <MockBadge mode={candidate} />
-    </span>
+    <details
+      id={id}
+      open={open}
+      onToggle={onOpenChange ? (e) => onOpenChange(e.currentTarget.open) : undefined}
+      className="group scroll-mt-6 rounded-lg border border-slate-200 bg-white shadow-sm"
+    >
+      <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-2.5 text-sm hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
+        <span aria-hidden className="text-xs text-slate-400 transition-transform group-open:rotate-90">
+          ▶
+        </span>
+        <span className="font-medium text-slate-900">{title}</span>
+        {meta && <span className="truncate text-xs text-slate-500">{meta}</span>}
+      </summary>
+      <div className="border-t border-slate-100 px-4 py-3">{children}</div>
+    </details>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Reviewer + spend confirmation
+// ---------------------------------------------------------------------------
 
 /**
  * Who is acting. Runs and judge batches are written to the audit log with this
  * name; actions stay disabled until a name is saved.
  */
-export function ReviewerField({ purpose }: { purpose: string }) {
+export function ReviewerInline() {
   const reviewer = useReviewer();
   const [draft, setDraft] = useState("");
   const [editing, setEditing] = useState(false);
 
   if (reviewer && !editing) {
     return (
-      <div className="flex flex-wrap items-center gap-2 text-sm text-slate-700">
-        Acting as <b className="text-slate-900">{reviewer}</b>
-        <span className="text-xs text-slate-500">({purpose})</span>
-        <Button
-          variant="ghost"
+      <span className="text-xs text-slate-500" title="Recorded in the audit log with the run">
+        as <b className="font-medium text-slate-800">{reviewer}</b>{" "}
+        <button
+          type="button"
+          className="underline hover:text-slate-800"
           onClick={() => {
             setDraft(reviewer);
             setEditing(true);
           }}
         >
-          Change
-        </Button>
-      </div>
+          change
+        </button>
+      </span>
     );
   }
   return (
     <form
-      className="flex flex-wrap items-end gap-2"
+      className="flex items-center gap-1"
       onSubmit={(e) => {
         e.preventDefault();
         if (!draft.trim()) return;
@@ -109,23 +190,16 @@ export function ReviewerField({ purpose }: { purpose: string }) {
         setEditing(false);
       }}
     >
-      <label className="text-sm">
-        <span className="mb-1 block text-xs font-medium text-slate-500">Your name (required — {purpose})</span>
-        <input
-          className="w-64 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-          placeholder="e.g. Pricing reviewer name"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-        />
-      </label>
+      <input
+        aria-label="Your name (required, recorded in the audit log)"
+        className="w-40 rounded-md border border-slate-300 px-2 py-1 text-sm"
+        placeholder="Your name (required)"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+      />
       <Button type="submit" variant="secondary" disabled={!draft.trim()}>
-        Save name
+        Save
       </Button>
-      {editing && (
-        <Button variant="ghost" onClick={() => setEditing(false)}>
-          Cancel
-        </Button>
-      )}
     </form>
   );
 }
@@ -153,7 +227,7 @@ export function PaidBatchDialog({
           <h3 id="paid-batch-title" className="text-sm font-semibold text-slate-900">
             {title}
           </h3>
-          <p className="mt-0.5 text-xs text-slate-500">This batch makes real Claude API calls and spends API credits.</p>
+          <p className="mt-0.5 text-xs text-slate-500">Real Claude API calls — this spends API credits.</p>
         </div>
         <div className="space-y-3 px-5 py-4 text-sm">
           <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1">

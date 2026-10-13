@@ -200,12 +200,9 @@ export function compareRuns(baseline: CaseEvaluation[], candidate: CaseEvaluatio
     const evaluator_changes: EvaluatorChange[] = DETERMINISTIC_EVALUATORS.map((d) => {
       const from = b.results.find((r) => r.evaluator_id === d.evaluator_id)?.outcome ?? null;
       const to = c.results.find((r) => r.evaluator_id === d.evaluator_id)?.outcome ?? null;
+      // ERROR means "no evidence", so PASS→ERROR is incomplete, not a regression (and ERROR→PASS is not a fix).
       const kind: EvaluatorChange["kind"] =
-        from === "PASS" && (to === "FAIL" || to === "ERROR")
-          ? "regressed"
-          : (from === "FAIL" || from === "ERROR") && to === "PASS"
-            ? "fixed"
-            : "unchanged";
+        from === "PASS" && to === "FAIL" ? "regressed" : from === "FAIL" && to === "PASS" ? "fixed" : "unchanged";
       return { evaluator_id: d.evaluator_id, severity: d.severity, from, to, kind };
     });
     let change: CaseChange;

@@ -19,6 +19,7 @@ function overview(over: Partial<OverviewData> = {}): OverviewData {
     observed_failure_modes: 0,
     taxonomy_version: 1,
     scenario_count: 20,
+    trend: { frozen_set_id: null, points: [], fixed: [], regressed: [], new_critical_regressions: [], still_failing: [] },
     ...over,
   };
 }

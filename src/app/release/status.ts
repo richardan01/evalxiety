@@ -3,10 +3,11 @@
  * Overview tile). Everything here is derived from the gate result only — no
  * numbers or verdicts are invented in the UI.
  */
-import type { GateReason, GateResult, ReasonLevel } from "@/lib/release/gate";
+import type { GateCheck, GateReason, GateResult, ReasonLevel } from "@/lib/release/gate";
 import type { ReleaseStatus } from "@/lib/domain/schemas";
 
-export const DEMO_DISCLAIMER = "Demo release decision for a synthetic prototype set — not a production certification.";
+export const demoDisclaimer = (caseCount: number) =>
+  `Demo decision on a synthetic ${caseCount}-case set — not a production certification.`;
 
 export interface StatusMeta {
   label: string;
@@ -56,6 +57,14 @@ export const STATUS_META: Record<ReleaseStatus, StatusMeta> = {
   },
 };
 
+/** Same words as <StatusPill>, so the caption and the pill never disagree. */
+export const PLAIN_STATUS: Record<ReleaseStatus, string> = {
+  NO_SHIP: "No ship",
+  INSUFFICIENT_EVIDENCE: "Not enough evidence",
+  ELIGIBLE_FOR_DEMO_APPROVAL: "Ready for approval",
+  APPROVED_FOR_DEMO: "Approved for demo",
+};
+
 export const APPROVAL_STATE_LABEL: Record<GateResult["approval_state"], string> = {
   none: "none",
   approved: "approved",
@@ -72,22 +81,15 @@ export const APPROVAL_STATE_HELP: Record<GateResult["approval_state"], string> =
 
 export const LEVEL_ORDER: ReasonLevel[] = ["NO_SHIP", "INSUFFICIENT_EVIDENCE", "WARNING"];
 
-export const LEVEL_META: Record<ReasonLevel, { title: string; help: string; tone: "red" | "amber" | "slate" }> = {
-  NO_SHIP: {
-    title: "Blocking failures (NO SHIP)",
-    help: "Confirmed failures. Any one of these blocks the release regardless of other results.",
-    tone: "red",
-  },
+export const LEVEL_META: Record<ReasonLevel, { title: string; icon: string; help: string; tone: "red" | "amber" | "slate" }> = {
+  NO_SHIP: { title: "Blocking", icon: "✕", help: "Confirmed failures. Any one blocks the release.", tone: "red" },
   INSUFFICIENT_EVIDENCE: {
-    title: "Missing evidence (INSUFFICIENT EVIDENCE)",
-    help: "The gate cannot decide until these are resolved. They are not failures of the agent, but they are not passes either.",
+    title: "Missing evidence",
+    icon: "…",
+    help: "The gate cannot decide until these are closed. Not a failure — but not a pass either.",
     tone: "amber",
   },
-  WARNING: {
-    title: "Warnings (shown to the approver)",
-    help: "Do not block on their own, but the human approver should read them before deciding.",
-    tone: "slate",
-  },
+  WARNING: { title: "Warnings", icon: "!", help: "Do not block on their own; the approver should read them.", tone: "slate" },
 };
 
 export function groupReasons(reasons: GateReason[]): Array<{ level: ReasonLevel; reasons: GateReason[] }> {
@@ -103,67 +105,144 @@ export function topReason(reasons: GateReason[]): GateReason | null {
   return null;
 }
 
-export interface Recommendation {
-  tone: "red" | "amber" | "blue";
-  headline: string;
-  next_step: string;
+/** First clause of a gate message: drops " — …" asides and trailing "(…)" qualifiers. Full text stays in a tooltip. */
+export function shortMessage(message: string): string {
+  const head = message.trim().split(" — ")[0].replace(/\s*\([^()]*\)\.?$/, "").replace(/\.$/, "");
+  return `${head}.`;
 }
 
-const join = (rs: GateReason[], n: number) =>
-  rs
-    .slice(0, n)
-    .map((r) => r.message.trim().replace(/\.?$/, "."))
-    .join(" ");
+const lcFirst = (s: string) => (/^[A-Z]([a-z]|\s)/.test(s) ? s[0].toLowerCase() + s.slice(1) : s);
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
-const more = (rs: GateReason[], n: number, noun: string) =>
-  rs.length > n ? ` (+${rs.length - n} more ${noun}${rs.length - n === 1 ? "" : "s"} below.)` : "";
+// ---------------------------------------------------------------------------
+// Verdict: one sentence + one next action, derived from the gate's reasons
+// ---------------------------------------------------------------------------
+
+export interface NextAction {
+  label: string;
+  href: string;
+}
+
+export interface Verdict {
+  sentence: string;
+  action: NextAction | null;
+}
+
+export interface VerdictInput {
+  reasons: GateReason[];
+  approval_state: GateResult["approval_state"];
+  /** Name on the latest approval record (for approved / rejected wording). */
+  approver: string | null;
+  /** Number of cases in the required frozen set. */
+  case_count: number;
+  /** case_id → candidate trace_id, for "inspect the failing case" links. */
+  trace_by_case: Map<string, string>;
+}
+
+const RUN_FINAL: NextAction = { label: "Run final check", href: "/experiments" };
+
+/** Plain-English reason (no trailing period) and the action that closes it, by gate reason code. */
+function explain(r: GateReason, input: VerdictInput): { why: string; action: NextAction } {
+  const n = input.case_count;
+  const fallbackWhy = lcFirst(shortMessage(r.message).replace(/\.$/, ""));
+  switch (r.code) {
+    case "no_candidate_run":
+      return { why: `run the final check on all ${n} cases`, action: RUN_FINAL };
+    case "no_baseline":
+      return { why: `run the baseline on the same ${n} cases to compare against`, action: { label: "Run baseline", href: "/experiments" } };
+    case "judge_not_run":
+      return { why: fallbackWhy, action: { label: "Run the judge", href: "/experiments" } };
+    case "insufficient_human_review":
+      return { why: fallbackWhy, action: { label: "Review traces", href: "/review" } };
+    case "unresolved_required_reviews":
+      return { why: fallbackWhy, action: { label: `Review ${plural(r.case_ids.length, "case")}`, href: "/review" } };
+    case "candidate_run_incomplete":
+    case "candidate_not_on_required_set":
+    case "frozen_set_mismatch":
+    case "frozen_set_modified":
+    case "required_tests_incomplete":
+    case "mock_results":
+    case "baseline_set_mismatch":
+    case "mode_mismatch":
+      return { why: fallbackWhy, action: RUN_FINAL };
+  }
+  if (r.level === "NO_SHIP") {
+    const first = r.case_ids.find((id) => input.trace_by_case.has(id));
+    return {
+      why: fallbackWhy,
+      action: first
+        ? { label: `Inspect ${first}`, href: `/review/${input.trace_by_case.get(first)}` }
+        : { label: "Fix and re-run", href: "/experiments" },
+    };
+  }
+  return { why: fallbackWhy, action: { label: "Open experiments", href: "/experiments" } };
+}
 
 /**
- * Plain-language recommendation derived ONLY from the gate's reasons.
- * Approval state is reported separately (evaluation ≠ approval).
+ * The one-sentence "why" and single next action for the verdict block.
+ * Evaluation comes only from the gate's reasons; approval state is reported
+ * separately (evaluation ≠ approval) and only matters once nothing blocks.
  */
-export function recommendationFromReasons(reasons: GateReason[]): Recommendation {
-  const noShip = reasons.filter((r) => r.level === "NO_SHIP");
+export function verdictFor(input: VerdictInput): Verdict {
+  const { reasons } = input;
+  const blocking = reasons.filter((r) => r.level === "NO_SHIP");
   const missing = reasons.filter((r) => r.level === "INSUFFICIENT_EVIDENCE");
   const warnings = reasons.filter((r) => r.level === "WARNING");
-  if (noShip.length) {
-    return {
-      tone: "red",
-      headline: `Do not ship: ${join(noShip, 2)}${more(noShip, 2, "blocking reason")}`,
-      next_step:
-        "Fix the agent configuration, rerun the frozen cases, and re-check the gate." +
-        (missing.length ? ` ${missing.length} evidence gap(s) also need to be closed.` : ""),
-    };
+
+  if (blocking.length) {
+    const { why, action } = explain(blocking[0], input);
+    const more = blocking.length > 1 ? ` (+${blocking.length - 1} more)` : "";
+    return { sentence: `${plural(blocking.length, "blocking failure")}: ${why}${more}.`, action };
   }
   if (missing.length) {
-    return {
-      tone: "amber",
-      headline: `Do not ship yet — not enough evidence to decide: ${join(missing, 2)}${more(missing, 2, "evidence gap")}`,
-      next_step: "Close each evidence gap listed below, then re-check. A gate with missing evidence is not a pass.",
-    };
+    const { why, action } = explain(missing[0], input);
+    const more = missing.length > 1 ? ` (+${missing.length - 1} more ${missing.length - 1 === 1 ? "gap" : "gaps"})` : "";
+    return { sentence: `Not decided yet — ${why}${more}.`, action };
   }
-  if (warnings.length) {
-    return {
-      tone: "blue",
-      headline: `No blocking reasons found. Read ${warnings.length} warning(s) before deciding: ${join(warnings, 1)}${more(warnings, 1, "warning")}`,
-      next_step: "A named human may approve this candidate for demo use after reviewing the evidence and warnings.",
-    };
+
+  const approve: NextAction = { label: "Approve below", href: "#approval" };
+  const warn = warnings.length ? ` Read ${plural(warnings.length, "warning")} first.` : "";
+  const who = input.approver ?? "a named human";
+  switch (input.approval_state) {
+    case "approved":
+      return { sentence: `No blockers — approved for the demo by ${who} on this exact evidence.`, action: null };
+    case "rejected":
+      return { sentence: `No blockers, but ${who} rejected it on this evidence.`, action: { label: "Decide again", href: "#approval" } };
+    case "stale":
+      return {
+        sentence: `No blockers — the last decision is stale because the evidence changed.${warn}`,
+        action: { label: "Decide again", href: "#approval" },
+      };
+    case "none":
+      return { sentence: `No blockers — a named human can now approve it for the demo.${warn}`, action: approve };
   }
-  return {
-    tone: "blue",
-    headline: "No blocking reasons found by the gate.",
-    next_step: "A named human may approve this candidate for demo use after reviewing the evidence below.",
-  };
 }
 
-/** Why the Approve button is disabled, or null when approval is allowed. */
-export function approveBlockedReason(gate: Pick<GateResult, "evaluation_status" | "reasons">, hasCandidate: boolean): string | null {
-  if (!hasCandidate) return "There is no candidate run to approve. Run the corrected configuration on FROZEN-FULL-v1 first.";
+// ---------------------------------------------------------------------------
+// Checklist + approval helpers
+// ---------------------------------------------------------------------------
+
+const CHECK_SHORT: Record<string, string> = {
+  candidate_complete: "Candidate ran every case",
+  frozen_integrity: "Test cases unchanged",
+  live_execution: "Live model, not mock",
+  baseline_comparison: "Baseline to compare",
+  no_critical: "No critical violations",
+  no_regression: "No new critical regressions",
+  judge_run: "Judge ran on every case",
+  reviews_resolved: "Every case human-reviewed",
+};
+
+/** Short checklist label; thresholds stay in the gate's own wording (e.g. "Pass-all ≥ 90%"). */
+export function checkLabel(c: Pick<GateCheck, "id" | "label">): string {
+  return CHECK_SHORT[c.id] ?? c.label.replace(/ on validated checks$/, "");
+}
+
+/** Why the Approve button is disabled (one line), or null when approval is allowed. */
+export function approveBlockedReason(gate: Pick<GateResult, "evaluation_status">, hasCandidate: boolean): string | null {
+  if (!hasCandidate) return "Nothing to approve yet — no candidate run.";
   if (gate.evaluation_status === "ELIGIBLE_FOR_DEMO_APPROVAL") return null;
-  const top = topReason(gate.reasons);
-  return `Approval is only possible when the evaluation status is ELIGIBLE FOR DEMO APPROVAL. It is currently ${STATUS_META[gate.evaluation_status].label}${
-    top ? ` — ${top.message.trim()}` : "."
-  }`;
+  return `Approve unlocks at “${PLAIN_STATUS.ELIGIBLE_FOR_DEMO_APPROVAL}” — now “${PLAIN_STATUS[gate.evaluation_status]}”.`;
 }
 
 export const shortHash = (h: string | null | undefined, n = 12) => (h ? h.slice(0, n) : "—");

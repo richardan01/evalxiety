@@ -116,7 +116,8 @@ export function requiredApprovals(
   const out: RequiredApproval[] = [];
 
   const discount = discountVsListPct(scenario, policy, price);
-  if (discount > policy.discount_approval_threshold_pct) {
+  // Tolerance: a discount of exactly the threshold must not trip on floating-point noise (10.000000000000004).
+  if (discount > policy.discount_approval_threshold_pct + 1e-9) {
     out.push({
       approver_role: "regional_pricing_manager",
       reason: `Discount vs list ${discount.toFixed(2)}% exceeds ${policy.discount_approval_threshold_pct}%`,

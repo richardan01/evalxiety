@@ -5,7 +5,7 @@ import { ChecklistItem, JudgeCriterion } from "@/lib/rubric/rubric";
 import { buildJudgeSystemPrompt, judgeVersion } from "@/lib/judge/judge";
 import { POLICIES } from "@/lib/domain/policies";
 import { DETERMINISTIC_EVALUATORS } from "@/lib/evaluators/deterministic";
-import { appendRubricVersion, audit, latestTaxonomy, listRubricVersions, RubricConflictError } from "@/lib/storage/repos";
+import { appendRubricVersion, audit, getHeldoutState, latestTaxonomy, listRubricVersions, RubricConflictError } from "@/lib/storage/repos";
 
 /** GET /api/rubric → the current rubric, its history, the judge prompt it produces, and the (read-only) policy thresholds. */
 export async function GET() {
@@ -59,6 +59,13 @@ export async function POST(req: Request) {
     const ids = body.review_checklist.map((c) => c.id);
     if (new Set(ids).size !== ids.length) return fail(400, "Checklist item ids must be unique");
     const before = (await listRubricVersions()).at(-1)!;
+    const judgeEdit = JSON.stringify(before.judge_criterion) !== JSON.stringify(body.judge_criterion);
+    if (judgeEdit && (await getHeldoutState()).revealed) {
+      return fail(
+        409,
+        "The held-out cases have been revealed, so the judge criterion is frozen: a judge tuned after seeing held-out results would make the held-out check meaningless. Checklist wording can still change.",
+      );
+    }
     let created;
     try {
       created = await appendRubricVersion(body.author, body.change_note, body, body.base_version);

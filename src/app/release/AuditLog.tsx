@@ -38,8 +38,8 @@ export function AuditLog({ reloadToken }: { reloadToken: number }) {
       className="rounded-lg border border-slate-200 bg-white shadow-sm"
       onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}
     >
-      <summary className="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-slate-900">
-        Recent audit log <span className="font-normal text-slate-500">— every run, annotation, reveal and release decision (latest 200, newest first)</span>
+      <summary className="cursor-pointer select-none px-4 py-2.5 text-sm font-medium text-slate-700">
+        Audit log <span className="font-normal text-slate-400">· latest 200</span>
       </summary>
       <div className="border-t border-slate-100 px-4 py-3">
         <div className="mb-2 flex flex-wrap items-center gap-3 text-sm">
@@ -52,14 +52,14 @@ export function AuditLog({ reloadToken }: { reloadToken: number }) {
           </Button>
           {result?.data && (
             <span className="text-xs text-slate-500">
-              Showing {events.length} of {result.data.total} recorded event(s).
+              {events.length} of {result.data.total}
             </span>
           )}
         </div>
         {result?.error && <p className="text-sm text-rose-700">{result.error}</p>}
         {result?.data && events.length === 0 && (
           <p className="text-sm text-slate-500">
-            {releaseOnly ? "No release decisions or blocked approval attempts have been recorded yet." : "The audit log is empty."}
+            {releaseOnly ? "No release decisions yet." : "The audit log is empty."}
           </p>
         )}
         {events.length > 0 && (

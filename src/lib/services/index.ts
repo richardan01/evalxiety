@@ -17,8 +17,8 @@ import { judgeVersion } from "../judge/judge";
 import { DEFAULT_RUBRIC, type JudgeCriterion } from "../rubric/rubric";
 import { calibrationReport, type CalibrationPair } from "../metrics/calibration";
 import { compareRuns, evaluateCase, summarizeRun, type CaseEvaluation } from "../metrics/experiments";
-import { evaluateReleaseGate } from "../release/gate";
-import { getAgentConfig } from "../agent/configs";
+import { evaluateReleaseGate, MIN_REVIEWED_TRACES } from "../release/gate";
+import { AGENT_CONFIGS, getAgentConfig } from "../agent/configs";
 import { getFrozenSet, runMatchesFrozenContent, verifyFrozenSet } from "../experiments/frozen";
 import { REVIEW_TARGET } from "../domain/review";
 import { recoverOrphanedRuns } from "../experiments/runner";
@@ -320,10 +320,12 @@ export async function compareRunIds(baselineRunId: string, candidateRunId: strin
 // Release gate
 // ---------------------------------------------------------------------------
 
+/** Default run for a role: newest completed run on the set, preferring LIVE over mock (mock is never evidence). */
 function latestCompleted(runs: ExperimentRun[], role: "baseline" | "corrected", frozenSetId: string): ExperimentRun | null {
-  return (
-    runs.find((r) => r.status === "completed" && r.frozen_set_id === frozenSetId && getAgentConfig(r.agent_config_id).role === role) ?? null
+  const matching = runs.filter(
+    (r) => r.status === "completed" && r.frozen_set_id === frozenSetId && getAgentConfig(r.agent_config_id).role === role,
   );
+  return matching.find((r) => r.execution_mode === "live") ?? matching[0] ?? null;
 }
 
 export async function releaseView(opts: { candidate_run_id?: string; baseline_run_id?: string } = {}) {
@@ -346,7 +348,16 @@ export async function releaseView(opts: { candidate_run_id?: string; baseline_ru
   const candidateTraceIds = new Set(Object.values(candidateRun?.trace_ids ?? {}));
   const candidateAnnotations = annotations
     .filter((a) => candidateTraceIds.has(a.trace_id))
-    .map((a) => ({ trace_id: a.trace_id, case_id: a.case_id, task_outcome: a.task_outcome, severity: a.severity, reviewer: a.reviewer, annotation_id: a.annotation_id, updated_at: a.updated_at }));
+    .map((a) => ({
+      trace_id: a.trace_id,
+      case_id: a.case_id,
+      task_outcome: a.task_outcome,
+      severity: a.severity,
+      reviewer: a.reviewer,
+      unsupported_justification_label: a.unsupported_justification_label,
+      annotation_id: a.annotation_id,
+      updated_at: a.updated_at,
+    }));
   const mode = candidateRun?.execution_mode ?? "live";
   const rubric = await latestRubric();
   const devCal = await calibrationView({ split: "dev", mode });
@@ -361,8 +372,9 @@ export async function releaseView(opts: { candidate_run_id?: string; baseline_ru
     judge_version: judgeVersion(mode, rubric.judge_criterion),
     candidate: candidateEvals.map((e) => ({ c: e.case_id, t: e.trace_id, r: e.results.map((r) => r.outcome), j: e.judge_verdict })),
     baseline: baselineEvals.map((e) => ({ c: e.case_id, t: e.trace_id, r: e.results.map((r) => r.outcome) })),
-    candidate_annotations: candidateAnnotations.map((a) => [a.annotation_id, a.updated_at, a.task_outcome, a.severity]),
-    reviewed_count: reviewedCount,
+    candidate_annotations: candidateAnnotations.map((a) => [a.annotation_id, a.updated_at, a.task_outcome, a.severity, a.unsupported_justification_label]),
+    // Only the gate-relevant fact, so reviewing an unrelated trace does not make an approval stale.
+    review_coverage_met: reviewedCount >= MIN_REVIEWED_TRACES,
     judge_insufficient: judgeInsufficient,
   };
   const evidence_snapshot_hash = sha256(snapshot);
@@ -396,16 +408,92 @@ export async function releaseView(opts: { candidate_run_id?: string; baseline_ru
 }
 
 // ---------------------------------------------------------------------------
+// Trend: quality by agent version (dashboard line chart)
+// ---------------------------------------------------------------------------
+
+export interface TrendPoint {
+  config_id: string;
+  label: string;
+  role: "baseline" | "corrected";
+  run_id: string;
+  created_at: string;
+  execution_mode: "live" | "mock";
+  n_cases: number;
+  pass_all_count: number;
+  pass_all_rate: number | null;
+  checks: Array<{ evaluator_id: string; pass: number; total: number; rate: number | null }>;
+  critical_failures: number;
+  judge_flags: number;
+}
+
+/**
+ * One point per agent version (in config order): its latest completed run on the
+ * current content of a frozen set. Prefers the full 20-case set when every version
+ * has run on it, else the 12-case dev set. Live runs win over mock.
+ */
+export async function trendView() {
+  const [runs, judgeResults] = await Promise.all([listExperimentRuns(), listJudgeResults()]);
+  const usable = runs.filter((r) => r.status === "completed" && runMatchesFrozenContent(r));
+  const live = usable.filter((r) => r.execution_mode === "live");
+  const pool = live.length > 0 ? live : usable;
+  const latestFor = (configId: string, setId: string) =>
+    pool.find((r) => r.agent_config_id === configId && r.frozen_set_id === setId) ?? null;
+  const setId = AGENT_CONFIGS.every((c) => latestFor(c.config_id, "FROZEN-FULL-v1"))
+    ? "FROZEN-FULL-v1"
+    : "FROZEN-DEV-v1";
+  const points: TrendPoint[] = [];
+  const evalsByRun = new Map<string, CaseEvaluation[]>();
+  for (const c of AGENT_CONFIGS) {
+    const run = latestFor(c.config_id, setId);
+    if (!run) continue;
+    const evals = await caseEvaluationsForRun(run, judgeResults);
+    evalsByRun.set(run.run_id, evals);
+    const sum = summarizeRun(evals);
+    points.push({
+      config_id: c.config_id,
+      label: c.label,
+      role: c.role,
+      run_id: run.run_id,
+      created_at: run.created_at,
+      execution_mode: run.execution_mode,
+      n_cases: sum.n_cases,
+      pass_all_count: sum.pass_all_count,
+      pass_all_rate: sum.pass_all_rate,
+      checks: DETERMINISTIC_EVALUATORS.map((d) => {
+        const t = sum.per_evaluator[d.evaluator_id];
+        const total = t.pass + t.fail + t.error;
+        return { evaluator_id: d.evaluator_id, pass: t.pass, total, rate: total ? t.pass / total : null };
+      }),
+      critical_failures: sum.cases_with_critical_failure.length,
+      judge_flags: sum.judge.FAIL,
+    });
+  }
+  const b = points.find((p) => p.role === "baseline");
+  const c = points.find((p) => p.role === "corrected");
+  const comparison =
+    b && c && b.execution_mode === c.execution_mode ? compareRuns(evalsByRun.get(b.run_id)!, evalsByRun.get(c.run_id)!) : null;
+  return {
+    frozen_set_id: points.length ? setId : null,
+    points,
+    fixed: comparison?.fixed ?? [],
+    regressed: comparison?.regressed ?? [],
+    new_critical_regressions: comparison?.new_critical_regressions ?? [],
+    still_failing: comparison?.still_failing ?? [],
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Overview
 // ---------------------------------------------------------------------------
 
 export async function overviewView() {
-  const [traces, annotations, gold, release, tax] = await Promise.all([
+  const [traces, annotations, gold, release, tax, trend] = await Promise.all([
     listTraces(),
     listAnnotations(),
     listGold(),
     releaseView(),
     taxonomyView(),
+    trendView(),
   ]);
   const reviewed = new Set(annotations.map((a) => a.trace_id));
   return {
@@ -435,5 +523,6 @@ export async function overviewView() {
     observed_failure_modes: tax.frequencies.filter((f) => f.any_count > 0).length,
     taxonomy_version: tax.version,
     scenario_count: SCENARIOS.length,
+    trend,
   };
 }

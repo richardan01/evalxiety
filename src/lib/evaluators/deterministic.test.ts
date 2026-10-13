@@ -189,12 +189,24 @@ describe("C. missing_mandatory_approval", () => {
     expect(evalMissingApproval(at).details.required).toEqual(
       expect.not.arrayContaining([expect.objectContaining({ approver_role: "regional_pricing_manager" })]),
     );
-    const over = makeTrace(s, (r) => ({
+    const over = makeTrace(s, () => ({
       ...withPrice(s, { rate_bps: list.rate_bps, per_txn_fee_usd: feeAt - 0.01 })(),
       approvals_required: [],
       requires_human_approval: false,
     }));
     expect(evalMissingApproval(over).outcome).toBe("FAIL");
+  });
+
+  it("a discount of exactly the threshold does not trip on floating-point noise", async () => {
+    const { requiredApprovals, discountVsListPct } = await import("../domain/economics");
+    const s = getScenario("C02")!; // 2026.2: threshold 10%
+    const policy = selectEffectivePolicy(s.decision_date)!;
+    const list = policy.list_rates.small;
+    const listRevenue = (s.monthly_volume_usd * list.rate_bps) / 10_000 + s.monthly_transactions * list.per_txn_fee_usd;
+    const fee = (listRevenue * 0.9 - (s.monthly_volume_usd * list.rate_bps) / 10_000) / s.monthly_transactions;
+    const price = { rate_bps: list.rate_bps, per_txn_fee_usd: fee };
+    expect(discountVsListPct(s, policy, price)).toBeCloseTo(10, 9);
+    expect(requiredApprovals(s, policy, price).map((a) => a.approver_role)).not.toContain("regional_pricing_manager");
   });
 
   it("over-escalation is not a failure but is recorded", () => {

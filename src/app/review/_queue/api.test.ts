@@ -107,7 +107,7 @@ describe("review API", () => {
     const before = await (await getEvals(new NextRequest("http://localhost"), ctx(dev.trace_id))).json();
     expect(before.deterministic).toHaveLength(4);
     expect(before.judge_results).toEqual([]);
-    expect(before.judge_call).toEqual({ mode: "mock", estimated_usd: 0 });
+    expect(before.judge_call).toMatchObject({ mode: "mock", estimated_usd: 0, can_run: true });
     expect(before.judge_locked).toBeNull();
 
     expect((await postJudge(post({ trace_id: dev.trace_id, actor: "" }))).status).toBe(400);

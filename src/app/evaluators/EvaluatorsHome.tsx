@@ -2,19 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { getJSON } from "@/lib/client/api";
-import { Callout } from "@/components/ui";
+import { PageHeader } from "@/components/ui";
 import { EvaluatorDefinitions } from "./EvaluatorDefinitions";
-import { JudgeCalibration } from "./JudgeCalibration";
+import { JudgeCalibration, type Mode, type Split } from "./JudgeCalibration";
 import { ResultsMatrix } from "./ResultsMatrix";
 import type { EvaluatorsResponse } from "./types";
 
-const SECTIONS = [
-  { href: "#definitions", label: "What we check" },
-  { href: "#results", label: "Results on stored traces" },
-  { href: "#calibration", label: "Judge calibration" },
-];
-
-export function EvaluatorsHome({ initialRunId }: { initialRunId: string | null }) {
+export function EvaluatorsHome({ initialRunId, initialSplit, initialMode }: {
+  initialRunId: string | null;
+  initialSplit: Split;
+  initialMode: Mode;
+}) {
   const [data, setData] = useState<EvaluatorsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,38 +30,41 @@ export function EvaluatorsHome({ initialRunId }: { initialRunId: string | null }
     };
   }, []);
 
+  // The check cards load after first paint and push #calibration down; re-apply a deep link once they are in.
+  useEffect(() => {
+    if (!data) return;
+    const id = window.location.hash.slice(1);
+    if (id) document.getElementById(id)?.scrollIntoView();
+  }, [data]);
+
   return (
     <div className="space-y-8">
-      <header className="space-y-2">
-        <h1 className="text-xl font-semibold text-slate-900">Evaluators</h1>
-        <p className="max-w-4xl text-sm text-slate-600">
-          Evaluators turn failure modes found in human trace review into repeatable binary checks. This page shows what each
-          check asks, how it scored every stored trace, and — for the one LLM judge — how well it agrees with human reviewers.
-        </p>
-        <nav aria-label="Sections" className="flex flex-wrap gap-2 text-sm">
-          {SECTIONS.map((s, i) => (
-            <a key={s.href} href={s.href} className="rounded-md bg-white px-2.5 py-1 text-slate-700 ring-1 ring-inset ring-slate-200 hover:bg-slate-50">
-              <span className="mr-1 font-semibold text-slate-900">{i + 1}</span>
-              {s.label}
-            </a>
-          ))}
-        </nav>
-      </header>
+      <PageHeader
+        title="Checks"
+        question="What do we check automatically — and can we trust the AI judge?"
+        info={
+          <>
+            4 code checks re-run on every stored trace. 1 AI judge asks whether the agent&apos;s explanation makes claims the
+            evidence doesn&apos;t back — it stays experimental until it agrees with human labels.
+          </>
+        }
+      />
 
       {error ? (
-        <Callout tone="red" title="Could not load evaluators">
-          {error}
-        </Callout>
+        <p className="text-sm text-rose-700">Could not load checks: {error}</p>
       ) : !data ? (
-        <p className="text-sm text-slate-500">Loading evaluator definitions and results…</p>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5" aria-busy>
+          {Array.from({ length: 5 }, (_, i) => (
+            <div key={i} className="h-36 animate-pulse rounded-lg border border-slate-200 bg-white" />
+          ))}
+        </div>
       ) : (
-        <>
-          <EvaluatorDefinitions deterministic={data.deterministic} judge={data.judge} />
-          <ResultsMatrix data={data} initialRunId={initialRunId} />
-        </>
+        <EvaluatorDefinitions deterministic={data.deterministic} judge={data.judge} rows={data.results} />
       )}
 
-      <JudgeCalibration />
+      <JudgeCalibration initialSplit={initialSplit} initialMode={initialMode} />
+
+      {data && <ResultsMatrix data={data} initialRunId={initialRunId} />}
     </div>
   );
 }

@@ -44,6 +44,8 @@ export async function GET(_req: NextRequest, ctx: RouteContext<"/api/traces/[id]
         : null;
 
     const judgeMode = trace.execution_mode === "mock" ? "mock" : modeInfo().mode;
+    // A live trace can only be judged by the live judge (POST /api/judge refuses mock-judging it).
+    const canRunJudge = !(trace.execution_mode === "live" && judgeMode === "mock");
     return ok({
       deterministic: evals.deterministic,
       evaluator_definitions: DETERMINISTIC_EVALUATORS,
@@ -51,7 +53,12 @@ export async function GET(_req: NextRequest, ctx: RouteContext<"/api/traces/[id]
       current_judge_version: evals.current_judge_version,
       judge_question: JUDGE_QUESTION,
       judge_locked: judgeLocked,
-      judge_call: { mode: judgeMode, estimated_usd: judgeMode === "live" ? EST_JUDGE_CALL_USD : 0 },
+      judge_call: {
+        mode: judgeMode,
+        estimated_usd: judgeMode === "live" ? EST_JUDGE_CALL_USD : 0,
+        can_run: canRunJudge,
+        unavailable_reason: canRunJudge ? null : "This trace came from the live model; the judge needs live mode (MOCK_MODE=false).",
+      },
     });
   });
 }

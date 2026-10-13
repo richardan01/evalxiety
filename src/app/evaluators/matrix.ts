@@ -80,5 +80,24 @@ export function modeMix(rows: EvaluatorResultRow[]): { live: number; mock: numbe
   };
 }
 
-/** "margin_calculation_error" -> "margin calculation error" (column headers stay tied to the real ids). */
+/** "margin_calculation_error" -> "margin calculation error" (fallback when no plain name is defined). */
 export const humanizeId = (id: string) => id.replace(/_/g, " ");
+
+/** Plain-English names shown on screen; the technical id stays one click away. */
+export const CHECK_NAMES: Record<string, string> = {
+  stale_policy_used: "Right policy for the date",
+  margin_calculation_error: "Margin math",
+  margin_guardrail_violation: "Margin floor",
+  missing_mandatory_approval: "Required approvals",
+  unsupported_pricing_justification: "Reasons backed by evidence",
+};
+
+export const plainName = (id: string) => CHECK_NAMES[id] ?? humanizeId(id);
+
+const ORDER = Object.keys(CHECK_NAMES);
+
+/** Stable display order (policy → math → floor → approvals); unknown ids keep their order at the end. */
+export function orderChecks<T extends { evaluator_id: string }>(defs: T[]): T[] {
+  const rank = (id: string) => (ORDER.includes(id) ? ORDER.indexOf(id) : ORDER.length);
+  return [...defs].sort((a, b) => rank(a.evaluator_id) - rank(b.evaluator_id));
+}

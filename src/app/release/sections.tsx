@@ -5,17 +5,20 @@
  */
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Badge, Callout, MockBadge, OutcomeBadge, Ratio, SeverityBadge, Stat, cx, fmtDateTime } from "@/components/ui";
+import { Badge, InfoTip, MockBadge, OutcomeBadge, Ratio, SeverityBadge, StatusPill, cx, fmtDateTime } from "@/components/ui";
 import type { GateCheck } from "@/lib/release/gate";
 import {
   APPROVAL_STATE_HELP,
   APPROVAL_STATE_LABEL,
-  DEMO_DISCLAIMER,
   LEVEL_META,
+  PLAIN_STATUS,
   STATUS_META,
+  checkLabel,
+  demoDisclaimer,
   groupReasons,
-  recommendationFromReasons,
   shortHash,
+  shortMessage,
+  verdictFor,
 } from "./status";
 import type { ReleaseRunRow, ReleaseView } from "./types";
 
@@ -23,92 +26,194 @@ import type { ReleaseRunRow, ReleaseView } from "./types";
 // Small shared bits
 // ---------------------------------------------------------------------------
 
-export function StepHeading({ n, title, help, aside }: { n: number; title: string; help?: ReactNode; aside?: ReactNode }) {
-  return (
-    <div className="mb-3">
-      <h2 className="flex flex-wrap items-center gap-2 text-base font-semibold text-slate-900">
-        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">{n}</span>
-        {title}
-        {aside}
-      </h2>
-      {help && <p className="mt-1 max-w-3xl pl-8 text-sm text-slate-500">{help}</p>}
-    </div>
-  );
-}
-
 export function traceIndex(view: ReleaseView): Map<string, string> {
   const m = new Map<string, string>();
   for (const e of view.candidate_evals) if (e.trace_id) m.set(e.case_id, e.trace_id);
   return m;
 }
 
-export function CaseChips({ caseIds, traceByCase }: { caseIds: string[]; traceByCase: Map<string, string> }) {
+export function CaseChips({ caseIds, traceByCase, max = 6 }: { caseIds: string[]; traceByCase: Map<string, string>; max?: number }) {
   if (caseIds.length === 0) return null;
+  const shown = caseIds.slice(0, max);
   return (
-    <div className="mt-1.5 flex flex-wrap gap-1">
-      {caseIds.map((id) => {
+    <span className="inline-flex flex-wrap gap-1">
+      {shown.map((id) => {
         const traceId = traceByCase.get(id);
         return traceId ? (
           <Link
             key={id}
             href={`/review/${traceId}`}
-            title={`Open the candidate trace ${traceId} for ${id}`}
-            className="rounded border border-slate-300 bg-white px-1.5 py-0.5 font-mono text-[11px] text-sky-700 hover:border-sky-400 hover:underline"
+            title={`Open the candidate trace for ${id}`}
+            className="rounded border border-slate-300 bg-white px-1.5 font-mono text-[11px] leading-5 text-sky-700 hover:border-sky-400 hover:underline"
           >
-            {id} →
+            {id}
           </Link>
         ) : (
           <span
             key={id}
-            title="The candidate run has no trace for this case"
-            className="rounded border border-dashed border-slate-300 px-1.5 py-0.5 font-mono text-[11px] text-slate-500"
+            title="No candidate trace for this case"
+            className="rounded border border-dashed border-slate-300 px-1.5 font-mono text-[11px] leading-5 text-slate-400"
           >
-            {id} (no trace)
+            {id}
           </span>
+        );
+      })}
+      {caseIds.length > max && (
+        <span className="px-1 text-[11px] leading-5 text-slate-500" title={caseIds.slice(max).join(", ")}>
+          +{caseIds.length - max}
+        </span>
+      )}
+    </span>
+  );
+}
+
+export function SnapshotHash({ hash }: { hash: string }) {
+  return (
+    <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[11px] text-slate-700" title={hash}>
+      {shortHash(hash)}
+    </code>
+  );
+}
+
+const roleOf = (configId: string) => (configId.includes("baseline") ? "baseline" : configId.includes("corrected") ? "corrected" : configId);
+
+const ACTION_CLS =
+  "inline-flex shrink-0 items-center gap-1.5 rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700";
+
+// ---------------------------------------------------------------------------
+// Verdict block: status + one sentence + one action
+// ---------------------------------------------------------------------------
+
+export function Verdict({ view }: { view: ReleaseView }) {
+  const { gate } = view;
+  const caseCount = view.required_set.case_ids.length;
+  const v = verdictFor({
+    reasons: gate.reasons,
+    approval_state: gate.approval_state,
+    approver: gate.latest_approval?.approver ?? null,
+    case_count: caseCount,
+    trace_by_case: traceIndex(view),
+  });
+  return (
+    <section className={cx("rounded-xl border-2 px-6 py-5", STATUS_META[gate.status].banner)} aria-live="polite">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="min-w-0 space-y-2.5">
+          <div className="flex flex-wrap items-center gap-2 [&>span:first-child]:px-4 [&>span:first-child]:py-1.5 [&>span:first-child]:text-xl">
+            <StatusPill status={gate.status} />
+            {view.candidate_run && <MockBadge mode={view.candidate_run.execution_mode} />}
+          </div>
+          <p className="text-lg font-medium">{v.sentence}</p>
+        </div>
+        {v.action &&
+          (v.action.href.startsWith("#") ? (
+            <a href={v.action.href} className={ACTION_CLS}>
+              {v.action.label} ↓
+            </a>
+          ) : (
+            <Link href={v.action.href} className={ACTION_CLS}>
+              {v.action.label} →
+            </Link>
+          ))}
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs opacity-80">
+        <span title="Evaluation = automated checks on the evidence. Approval = a named human's decision. They are separate.">
+          Evaluation: <b>{PLAIN_STATUS[gate.evaluation_status]}</b> · Approval:{" "}
+          <b title={APPROVAL_STATE_HELP[gate.approval_state]}>{APPROVAL_STATE_LABEL[gate.approval_state]}</b> · Pass-all:{" "}
+          <b>
+            <Ratio value={gate.pass_all_rate} undefinedReason="No candidate run with traced cases" />
+          </b>
+        </span>
+        <span className="flex items-center gap-1.5">
+          {demoDisclaimer(caseCount)}
+          <InfoTip label="Limitations">
+            <ul className="list-disc space-y-1 pl-4">
+              {gate.limitations.map((l, i) => (
+                <li key={i}>{l}</li>
+              ))}
+            </ul>
+          </InfoTip>
+        </span>
+      </div>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// What's needed: checklist + grouped reasons
+// ---------------------------------------------------------------------------
+
+const CHECK_ICON: Record<GateCheck["status"], { icon: string; cls: string; word: string }> = {
+  pass: { icon: "✓", cls: "bg-emerald-100 text-emerald-700", word: "done" },
+  fail: { icon: "✕", cls: "bg-rose-100 text-rose-700", word: "failed" },
+  pending: { icon: "…", cls: "bg-slate-100 text-slate-500", word: "pending — not a pass" },
+};
+
+export function Checklist({ checks }: { checks: GateCheck[] }) {
+  return (
+    <ul className="divide-y divide-slate-100">
+      {checks.map((c) => {
+        const m = CHECK_ICON[c.status];
+        const detail = c.detail && c.detail !== "—" ? c.detail : "";
+        return (
+          <li key={c.id} className="flex items-center gap-2 py-1.5 text-sm" title={`${c.label} — ${m.word}${detail ? ` (${detail})` : ""}`}>
+            <span
+              aria-label={m.word}
+              className={cx("inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold", m.cls)}
+            >
+              {m.icon}
+            </span>
+            <span className={cx("truncate", c.status === "pending" ? "text-slate-500" : "text-slate-900")}>{checkLabel(c)}</span>
+            {detail && <span className="ml-auto max-w-[45%] shrink-0 truncate pl-2 text-xs text-slate-400">{detail}</span>}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+const LEVEL_CLS = {
+  red: { head: "text-rose-700", bar: "border-l-rose-500" },
+  amber: { head: "text-amber-700", bar: "border-l-amber-400" },
+  slate: { head: "text-slate-500", bar: "border-l-slate-300" },
+} as const;
+
+export function Reasons({ view }: { view: ReleaseView }) {
+  const groups = groupReasons(view.gate.reasons);
+  const traceByCase = traceIndex(view);
+  if (groups.length === 0) return <p className="py-1.5 text-sm text-emerald-700">✓ Nothing blocking, nothing missing.</p>;
+  return (
+    <div className="space-y-3">
+      {groups.map((g) => {
+        const meta = LEVEL_META[g.level];
+        const cls = LEVEL_CLS[meta.tone];
+        return (
+          <div key={g.level}>
+            <div className={cx("mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide", cls.head)}>
+              <span aria-hidden>{meta.icon}</span>
+              {meta.title} · {g.reasons.length}
+              <InfoTip label={meta.title}>{meta.help}</InfoTip>
+            </div>
+            <ul className="space-y-1">
+              {g.reasons.map((r, i) => (
+                <li
+                  key={`${r.code}-${i}`}
+                  className={cx("flex flex-wrap items-center gap-x-2 gap-y-1 border-l-[3px] py-0.5 pl-2.5 text-sm text-slate-800", cls.bar)}
+                  title={`${r.message} [${r.code}]`}
+                >
+                  <span>{shortMessage(r.message)}</span>
+                  <CaseChips caseIds={r.case_ids} traceByCase={traceByCase} />
+                </li>
+              ))}
+            </ul>
+          </div>
         );
       })}
     </div>
   );
 }
 
-const roleOf = (configId: string) => (configId.includes("baseline") ? "baseline" : configId.includes("corrected") ? "corrected" : configId);
-
 // ---------------------------------------------------------------------------
-// (a) Status banner
-// ---------------------------------------------------------------------------
-
-export function StatusBanner({ view }: { view: ReleaseView }) {
-  const { gate } = view;
-  const meta = STATUS_META[gate.status];
-  const evalMeta = STATUS_META[gate.evaluation_status];
-  return (
-    <section className={cx("rounded-lg border-2 px-5 py-4", meta.banner)} aria-live="polite">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className={cx("rounded-md px-3 py-1 text-lg font-bold tracking-wide", meta.pill)}>{meta.label}</span>
-        {view.candidate_run && <MockBadge mode={view.candidate_run.execution_mode} />}
-        <span className="text-xs font-medium uppercase tracking-wide opacity-70">Release gate status</span>
-      </div>
-      <p className="mt-2 text-sm font-medium">{meta.explanation}</p>
-      <p className="mt-1 text-sm">
-        Evaluation status: <b>{evalMeta.label}</b> · Human approval: <b>{APPROVAL_STATE_LABEL[gate.approval_state]}</b>
-        <span className="opacity-80"> — {APPROVAL_STATE_HELP[gate.approval_state]}</span>
-      </p>
-      <p className="mt-1 text-xs opacity-80">
-        Evaluation (automated checks on the evidence) and approval (a named human&apos;s decision) are separate. The status only becomes APPROVED
-        FOR DEMO when the evaluation is eligible <i>and</i> a human approved this exact evidence snapshot.
-      </p>
-      <p className="mt-2 text-xs font-semibold">{DEMO_DISCLAIMER}</p>
-      {view.candidate_run?.execution_mode === "mock" && (
-        <p className="mt-1 text-xs font-semibold text-amber-900">
-          The candidate&apos;s results come from the MOCK agent. Mock output is not evidence about the real model and cannot support a release decision.
-        </p>
-      )}
-    </section>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// (e) Run selection + candidate summary
+// Collapsed details: run selection + candidate summary
 // ---------------------------------------------------------------------------
 
 function runOptionLabel(r: ReleaseRunRow) {
@@ -117,7 +222,6 @@ function runOptionLabel(r: ReleaseRunRow) {
 
 function RunSelect({
   label,
-  help,
   value,
   autoLabel,
   runs,
@@ -127,7 +231,6 @@ function RunSelect({
   disabled,
 }: {
   label: string;
-  help: string;
   value: string;
   autoLabel: string;
   runs: ReleaseRunRow[];
@@ -151,7 +254,7 @@ function RunSelect({
       >
         <option value="">{autoLabel}</option>
         {preferred.length > 0 && (
-          <optgroup label={`${preferRole} config · completed on ${requiredSetId}`}>
+          <optgroup label={`${preferRole} · completed on ${requiredSetId}`}>
             {preferred.map((r) => (
               <option key={r.run_id} value={r.run_id}>
                 {runOptionLabel(r)}
@@ -169,7 +272,7 @@ function RunSelect({
           </optgroup>
         )}
         {rest.length > 0 && (
-          <optgroup label="other frozen sets or unfinished runs (cannot satisfy the gate)">
+          <optgroup label="other sets or unfinished (cannot satisfy the gate)">
             {rest.map((r) => (
               <option key={r.run_id} value={r.run_id}>
                 {runOptionLabel(r)}
@@ -178,7 +281,6 @@ function RunSelect({
           </optgroup>
         )}
       </select>
-      <span className="mt-1 block text-xs text-slate-500">{help}</span>
     </label>
   );
 }
@@ -197,13 +299,13 @@ export function RunSelectors({
   busy: boolean;
 }) {
   const reqId = view.required_set.frozen_set_id;
+  const auto = (run: ReleaseView["candidate_run"], chosen: string) => (!chosen ? (run ? ` (${run.run_id})` : " (none yet)") : "");
   return (
     <div className="grid gap-4 md:grid-cols-2">
       <RunSelect
-        label="Candidate run (the agent version you want to ship)"
-        help={`Default: the latest completed corrected-config run on ${reqId}. Only runs on ${reqId} can satisfy the gate.`}
+        label="Candidate (version to ship)"
         value={candidate}
-        autoLabel={`Latest completed corrected run on ${reqId}${!candidate && view.candidate_run ? ` (${view.candidate_run.run_id})` : !candidate ? " (none yet)" : ""}`}
+        autoLabel={`Latest corrected run on ${reqId}${auto(view.candidate_run, candidate)}`}
         runs={view.runs}
         requiredSetId={reqId}
         preferRole="corrected"
@@ -211,10 +313,9 @@ export function RunSelectors({
         onChange={(v) => onChange({ candidate: v, baseline })}
       />
       <RunSelect
-        label="Baseline run (what the candidate is compared against)"
-        help="Default: the latest completed baseline-config run on the same frozen set. Used to detect new critical regressions case by case."
+        label="Baseline (compared against)"
         value={baseline}
-        autoLabel={`Latest completed baseline run on ${reqId}${!baseline && view.baseline_run ? ` (${view.baseline_run.run_id})` : !baseline ? " (none yet)" : ""}`}
+        autoLabel={`Latest baseline run on ${reqId}${auto(view.baseline_run, baseline)}`}
         runs={view.runs}
         requiredSetId={reqId}
         preferRole="baseline"
@@ -235,7 +336,19 @@ function RunLine({ label, run }: { label: string; run: ReleaseView["candidate_ru
       <span>· {run.frozen_set_id}</span>
       <MockBadge mode={run.execution_mode} />
       <Badge tone={run.status === "completed" ? "neutral" : "amber"}>{run.status}</Badge>
-      <span>· started {fmtDateTime(run.created_at)}</span>
+      <span>· {fmtDateTime(run.created_at)}</span>
+    </div>
+  );
+}
+
+function MiniStat({ label, value, tone, tip }: { label: string; value: ReactNode; tone?: "red" | "amber"; tip?: ReactNode }) {
+  return (
+    <div className="rounded-md border border-slate-200 px-3 py-2">
+      <div className="flex items-center gap-1.5 text-xs text-slate-500">
+        {label}
+        {tip && <InfoTip label={label}>{tip}</InfoTip>}
+      </div>
+      <div className={cx("text-lg font-semibold tabular-nums", tone === "red" && "text-rose-700", tone === "amber" && "text-amber-700")}>{value}</div>
     </div>
   );
 }
@@ -243,83 +356,53 @@ function RunLine({ label, run }: { label: string; run: ReleaseView["candidate_ru
 export function CandidateSummary({ view }: { view: ReleaseView }) {
   const s = view.candidate_summary;
   const run = view.candidate_run;
-  if (!run || !s) return null;
+  if (!run || !s) return <p className="text-sm text-slate-500">No candidate run on {view.required_set.frozen_set_id} yet.</p>;
   const severity = new Map<string, string>();
   for (const e of view.candidate_evals) for (const r of e.results) severity.set(r.evaluator_id, r.severity);
   const cmp = view.comparison;
   const modes = s.execution_modes.length ? s.execution_modes : [run.execution_mode];
-  const traceByCase = traceIndex(view);
   const pairByCase = new Map((cmp?.pairs ?? []).map((p) => [p.case_id, p]));
-  const modeMismatch = view.baseline_run && view.baseline_run.execution_mode !== run.execution_mode;
 
   return (
     <div className="space-y-4">
       <div className="space-y-1 rounded-md bg-slate-50 px-3 py-2">
         <RunLine label="Candidate" run={run} />
         <RunLine label="Baseline" run={view.baseline_run} />
-        {!view.baseline_run && <p className="text-xs text-amber-800">No baseline run selected or available — regressions cannot be checked.</p>}
+        {!view.baseline_run && <p className="text-xs text-amber-800">No baseline run.</p>}
       </div>
 
-      <div className="grid gap-3 md:grid-cols-4">
-        <Stat
-          label="Pass-all rate (validated checks)"
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <MiniStat
+          label="Pass-all"
           value={<Ratio value={s.pass_all_rate} undefinedReason="The run has no cases" />}
-          hint={
-            <>
-              {s.pass_all_count} of {s.n_cases} cases pass every applicable deterministic check. Cases with no trace count as not passing. The
-              judge is not included. {modes.map((m) => <MockBadge key={m} mode={m} />)}
-            </>
-          }
+          tip={<>Cases passing every applicable deterministic check ({s.pass_all_count}/{s.n_cases}). No trace = not passing. Judge excluded.</>}
         />
-        <Stat
-          label="Critical check failures"
-          value={s.critical_failure_count}
-          tone={s.critical_failure_count > 0 ? "red" : undefined}
-          hint={
-            <>
-              Failed critical deterministic checks, across {s.cases_with_critical_failure.length} case(s).
-              <CaseChips caseIds={s.cases_with_critical_failure} traceByCase={traceByCase} />
-            </>
-          }
-        />
-        <Stat
-          label="Cases with complete evidence"
-          value={`${s.n_cases - s.n_incomplete} / ${s.n_cases}`}
-          tone={s.n_incomplete > 0 ? "amber" : undefined}
-          hint={`${s.n_with_trace} have a trace; ${s.n_incomplete} are incomplete (no trace, execution error or evaluator error).`}
-        />
-        <Stat
-          label="Paired vs baseline"
-          value={cmp ? `${cmp.fixed.length} fixed · ${cmp.regressed.length} regressed` : "—"}
+        <MiniStat label="Critical failures" value={s.critical_failure_count} tone={s.critical_failure_count > 0 ? "red" : undefined} />
+        <MiniStat label="Complete cases" value={`${s.n_cases - s.n_incomplete}/${s.n_cases}`} tone={s.n_incomplete > 0 ? "amber" : undefined} />
+        <MiniStat
+          label="vs baseline"
+          value={cmp ? `${cmp.fixed.length} fixed · ${cmp.regressed.length} regr.` : "—"}
           tone={cmp && cmp.regressed.length > 0 ? "red" : undefined}
-          hint={
-            cmp ? (
-              <>
-                Baseline pass-all <Ratio value={cmp.baseline_summary.pass_all_rate} />. {cmp.still_failing.length} still failing,{" "}
-                {cmp.still_passing.length} still passing, {cmp.incomplete.length} incomplete — same frozen cases, compared case by case.
-              </>
-            ) : view.baseline_run ? (
-              "Baseline ran on a different frozen set, so a paired comparison is not valid."
-            ) : (
-              "No baseline run to compare against."
-            )
+          tip={cmp ? <>Baseline pass-all <Ratio value={cmp.baseline_summary.pass_all_rate} />. Same cases, compared one by one.</> : "No valid baseline comparison."}
+        />
+        <MiniStat
+          label="Judge flags"
+          value={s.judge.FAIL + s.judge.REQUIRES_REVIEW + s.judge.ERROR}
+          tip={
+            <>
+              Experimental LLM judge: never counted in pass-all, never replaces human review. PASS {s.judge.PASS} · FAIL {s.judge.FAIL} · REVIEW{" "}
+              {s.judge.REQUIRES_REVIEW} · ERROR {s.judge.ERROR} · not run {s.judge.not_run}.{" "}
+              {modes.map((m) => (
+                <MockBadge key={m} mode={m} />
+              ))}
+            </>
           }
         />
       </div>
 
-      {modeMismatch && (
-        <Callout tone="amber" title="Baseline and candidate used different execution modes">
-          One run is LIVE and the other MOCK. The gate will not accept this comparison as evidence.
-        </Callout>
-      )}
-
-      <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-        <div>
-          <h3 className="mb-1 text-sm font-semibold text-slate-800">Per-check results on the candidate run</h3>
-          <p className="mb-2 text-xs text-slate-500">
-            Each deterministic check is binary and validated by unit tests. Pass rate = pass ÷ (pass + fail + error); N/A cases are excluded, so a
-            check that never applied shows <i>undefined</i>, not 100%.
-          </p>
+      <details className="rounded-md border border-slate-200">
+        <summary className="cursor-pointer select-none px-3 py-2 text-sm font-medium text-slate-700">Per-check pass rates</summary>
+        <div className="overflow-x-auto border-t border-slate-200 px-3 py-2">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
@@ -357,49 +440,19 @@ export function CandidateSummary({ view }: { view: ReleaseView }) {
             </tbody>
           </table>
         </div>
-
-        <div className="rounded-md border border-violet-200 bg-violet-50/40 px-3 py-2">
-          <div className="mb-1 flex flex-wrap items-center gap-2">
-            <h3 className="text-sm font-semibold text-slate-800">LLM judge tallies</h3>
-            <Badge tone="purple" title="Not validated well enough to stand alone; never part of pass-all">
-              EXPERIMENTAL
-            </Badge>
-            {modes.map((m) => (
-              <MockBadge key={m} mode={m} />
-            ))}
-          </div>
-          <p className="mb-2 text-xs text-slate-500">
-            Judge: unsupported pricing justification. Reported separately and never counted in pass-all. A FAIL, REQUIRES REVIEW or ERROR verdict
-            needs a human annotation on that trace before the gate can count it either way.
-          </p>
-          <ul className="space-y-1 text-sm">
-            {(["PASS", "FAIL", "REQUIRES_REVIEW", "ERROR"] as const).map((v) => (
-              <li key={v} className="flex items-center justify-between">
-                <OutcomeBadge outcome={v} />
-                <span className="tabular-nums">{s.judge[v]}</span>
-              </li>
-            ))}
-            <li className="flex items-center justify-between">
-              <Badge>NOT RUN</Badge>
-              <span className={cx("tabular-nums", s.judge.not_run > 0 && "font-semibold text-amber-700")}>{s.judge.not_run}</span>
-            </li>
-          </ul>
-        </div>
-      </div>
+      </details>
 
       <details className="rounded-md border border-slate-200">
-        <summary className="cursor-pointer select-none px-3 py-2 text-sm font-medium text-slate-700">
-          Case-by-case evidence ({view.candidate_evals.length} cases) — open any trace to inspect the request, recommendation and cited evidence
-        </summary>
+        <summary className="cursor-pointer select-none px-3 py-2 text-sm font-medium text-slate-700">Case by case ({view.candidate_evals.length})</summary>
         <div className="overflow-x-auto border-t border-slate-200 px-3 py-2">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
                 <th className="py-1">Case</th>
-                <th>Candidate trace</th>
+                <th>Trace</th>
                 <th>Pass-all</th>
                 <th>Failed checks</th>
-                <th>Judge (experimental)</th>
+                <th>Judge</th>
                 {cmp && <th>vs baseline</th>}
               </tr>
             </thead>
@@ -454,121 +507,9 @@ export function CandidateSummary({ view }: { view: ReleaseView }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// (b) + (c) Recommendation and grouped reasons
-// ---------------------------------------------------------------------------
-
-export function Recommendation({ view }: { view: ReleaseView }) {
-  const rec = recommendationFromReasons(view.gate.reasons);
-  const groups = groupReasons(view.gate.reasons);
-  const traceByCase = traceIndex(view);
-  return (
-    <div className="space-y-4">
-      <Callout tone={rec.tone} title="Recommendation">
-        <p className="text-base font-medium">{rec.headline}</p>
-        <p className="mt-1 text-sm">Next step: {rec.next_step}</p>
-        <p className="mt-1 text-xs opacity-75">Derived only from the gate&apos;s recorded reasons below.</p>
-      </Callout>
-      {groups.length === 0 ? (
-        <p className="text-sm text-slate-600">The gate recorded no blocking reasons, evidence gaps or warnings for this candidate.</p>
-      ) : (
-        groups.map((g) => (
-          <div key={g.level}>
-            <div className="mb-1 flex items-center gap-2">
-              <Badge tone={g.level === "NO_SHIP" ? "red" : g.level === "INSUFFICIENT_EVIDENCE" ? "amber" : "neutral"}>{g.reasons.length}</Badge>
-              <h3 className="text-sm font-semibold text-slate-800">{LEVEL_META[g.level].title}</h3>
-            </div>
-            <p className="mb-2 text-xs text-slate-500">{LEVEL_META[g.level].help}</p>
-            <ol className="space-y-2">
-              {g.reasons.map((r, i) => (
-                <li
-                  key={`${r.code}-${i}`}
-                  className={cx(
-                    "rounded-md border-l-4 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-slate-100",
-                    g.level === "NO_SHIP" ? "border-l-rose-500" : g.level === "INSUFFICIENT_EVIDENCE" ? "border-l-amber-400" : "border-l-slate-300",
-                  )}
-                >
-                  <div className="text-slate-900">{r.message}</div>
-                  <div className="mt-0.5 font-mono text-[11px] text-slate-400">{r.code}</div>
-                  {r.case_ids.length > 0 && (
-                    <>
-                      <div className="mt-1 text-xs text-slate-500">Affected cases — click to open the candidate trace:</div>
-                      <CaseChips caseIds={r.case_ids} traceByCase={traceByCase} />
-                    </>
-                  )}
-                </li>
-              ))}
-            </ol>
-          </div>
-        ))
-      )}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// (d) Evidence completeness checklist
-// ---------------------------------------------------------------------------
-
-const CHECK_ICON: Record<GateCheck["status"], { icon: string; cls: string; word: string }> = {
-  pass: { icon: "✓", cls: "bg-emerald-100 text-emerald-800", word: "pass" },
-  fail: { icon: "✗", cls: "bg-rose-100 text-rose-800", word: "fail" },
-  pending: { icon: "…", cls: "bg-slate-100 text-slate-500", word: "pending — cannot be checked yet" },
-};
-
-export function EvidenceChecklist({ checks }: { checks: GateCheck[] }) {
-  const passed = checks.filter((c) => c.status === "pass").length;
-  return (
-    <div>
-      <p className="mb-2 text-xs text-slate-500">
-        {passed} of {checks.length} items satisfied. “Pending” means the item cannot be evaluated yet (for example, there is no candidate or baseline
-        run) — it is not a pass.
-      </p>
-      <ul className="divide-y divide-slate-100">
-        {checks.map((c) => {
-          const m = CHECK_ICON[c.status];
-          return (
-            <li key={c.id} className="flex items-start gap-3 py-2">
-              <span
-                className={cx("mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold", m.cls)}
-                aria-label={m.word}
-                title={m.word}
-              >
-                {m.icon}
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="text-sm text-slate-900">{c.label}</div>
-                <div className="text-xs text-slate-500">{c.detail}</div>
-              </div>
-              <span className={cx("shrink-0 text-xs font-medium", c.status === "pass" ? "text-emerald-700" : c.status === "fail" ? "text-rose-700" : "text-slate-500")}>
-                {c.status.toUpperCase()}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// (g) Limitations
-// ---------------------------------------------------------------------------
-
-export function Limitations({ items }: { items: string[] }) {
-  return (
-    <ul className="list-disc space-y-1 pl-5 text-sm text-slate-700">
-      {items.map((l, i) => (
-        <li key={i}>{l}</li>
-      ))}
-    </ul>
-  );
-}
-
-export function SnapshotHash({ hash }: { hash: string }) {
-  return (
-    <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-slate-800" title={hash}>
-      {shortHash(hash)}
-    </code>
-  );
+/** One-line summary of which runs the gate is looking at (for the collapsed details header). */
+export function runsSummary(view: ReleaseView): string {
+  const c = view.candidate_run?.run_id ?? "none";
+  const b = view.baseline_run?.run_id ?? "none";
+  return `candidate ${c} · baseline ${b}`;
 }

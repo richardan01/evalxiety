@@ -25,7 +25,12 @@ export interface ModeInfo {
 }
 
 export function modeInfo(): ModeInfo {
-  const cap = Number(process.env.LIVE_SPEND_CAP_USD ?? "10");
+  const rawCap = Number(process.env.LIVE_SPEND_CAP_USD ?? "10");
+  // Fail closed: an unparseable or negative cap must never mean "no cap".
+  if (!Number.isFinite(rawCap) || rawCap < 0) {
+    return { mode: "mock", reason: "LIVE_SPEND_CAP_USD is not a valid non-negative number", spend_cap_usd: 0 };
+  }
+  const cap = rawCap;
   const mockFlag = (process.env.MOCK_MODE ?? "true").toLowerCase();
   const hasKey = Boolean(process.env.ANTHROPIC_API_KEY);
   if (mockFlag !== "false") return { mode: "mock", reason: "MOCK_MODE is not set to false", spend_cap_usd: cap };

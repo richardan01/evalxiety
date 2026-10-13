@@ -45,7 +45,9 @@ describe("render", () => {
     const view = (await calibrationView({ split: "dev", mode: "live" })) as CalibrationUnlocked;
     const html = renderToStaticMarkup(createElement(CalibrationBody, { view }));
     expect(html).toContain("Experimental — insufficient validation data.");
-    expect(html).toContain("No human-labelled examples with a binary judge verdict");
+    expect(html).toContain("EXPERIMENTAL");
+    expect(html).toContain("Label a few traces in");
+    expect(html).toContain("then this shows how often the judge agrees with you.");
     expect(html).not.toMatch(/\b(0|100)\.0%/);
   });
 
@@ -74,9 +76,15 @@ describe("render", () => {
     const view = (await calibrationView({ split: "dev", mode: "mock" })) as CalibrationUnlocked;
     const cal = renderToStaticMarkup(createElement(CalibrationBody, { view }));
     expect(cal).toContain("Experimental — insufficient validation data.");
-    expect(cal).toContain("Human (reference)");
+    expect(cal).toContain("You said");
+    expect(cal).toContain("Judge said");
+    for (const caption of ["Both found a problem", "Judge missed it", "False alarm", "Both said fine"]) expect(cal).toContain(caption);
+    expect(cal).toContain("Catches real problems");
+    expect(cal).toContain("Avoids false alarms");
     expect(cal).toContain("MOCK");
     expect(cal).toContain(`${view.report.matrix.tp}/${view.report.matrix.positives}`);
+    expect(cal).toContain(`${view.report.matrix.tn}/${view.report.matrix.negatives}`);
+    expect(cal).not.toMatch(/reliable|production certified/i);
 
     const traces = await listTraces();
     const latest = latestJudgeByTrace(await listJudgeResults(), traces);
@@ -99,16 +107,26 @@ describe("render", () => {
       filter: { run_id: null },
     };
     const matrix = renderToStaticMarkup(createElement(ResultsMatrix, { data, initialRunId: null }));
+    expect(matrix).toContain("Show results for every trace");
+    expect(matrix).not.toMatch(/<details[^>]*\sopen/); // collapsed by default
     expect(matrix).toContain(`/review/${traces[0].trace_id}`);
     expect(matrix).toContain("EXPERIMENTAL");
-    expect(matrix).toContain(`/${traces.length}`);
+    expect(renderToStaticMarkup(createElement(ResultsMatrix, { data, initialRunId: r.run_id }))).toMatch(/<details[^>]*\sopen/);
 
-    const defs = renderToStaticMarkup(createElement(EvaluatorDefinitions, { deterministic: DETERMINISTIC_EVALUATORS, judge: judgeDef }));
+    const defs = renderToStaticMarkup(createElement(EvaluatorDefinitions, { deterministic: DETERMINISTIC_EVALUATORS, judge: judgeDef, rows: data.results }));
+    for (const name of ["Right policy for the date", "Margin math", "Margin floor", "Required approvals", "Reasons backed by evidence"]) {
+      expect(defs).toContain(name);
+    }
+    expect(defs).toContain("CODE · validated by tests");
+    expect(defs).toContain("AI JUDGE · experimental");
+    expect(defs).toContain(`/${traces.length}`);
+    expect(defs).toContain("stale_policy_used"); // technical id kept behind the info tip
     expect(defs).toContain("never used as gold truth");
     expect(defs).toContain("src/lib/evaluators/deterministic.test.ts");
     expect(defs).toContain("REQUIRES REVIEW");
 
     const lock = renderToStaticMarkup(createElement(HeldoutReveal, { onRevealed: () => undefined }));
-    expect(lock).toContain("Reveal held-out for FINAL check");
+    expect(lock).toContain("Held-out is locked");
+    expect(lock).toContain("Reveal held-out (final check)");
   });
 });

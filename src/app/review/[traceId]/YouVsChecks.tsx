@@ -87,11 +87,12 @@ export function YouVsChecks(props: {
           </tbody>
         </table>
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          {judgeRow && !judge && !evals?.judge_locked && (
+          {judgeRow && !judge && !evals?.judge_locked && evals?.judge_call.can_run !== false && (
             <Button variant="secondary" onClick={onRunJudge} disabled={judgeBusy}>
               {judgeBusy ? "Running judge…" : "Run AI judge"}
             </Button>
           )}
+          {evals?.judge_call.can_run === false && <span className="text-xs text-slate-500">{evals.judge_call.unavailable_reason}</span>}
           {evals && !evals.judge_locked && (
             <span className="flex items-center gap-1 text-xs text-slate-500">
               <MockBadge mode={evals.judge_call.mode} /> {evals.judge_call.mode === "live" ? `≈$${evals.judge_call.estimated_usd.toFixed(2)} per judge call` : "no spend"}

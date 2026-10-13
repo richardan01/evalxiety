@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { postJSON } from "@/lib/client/api";
-import { Badge, Button, Callout, MockBadge, SeverityBadge, SplitBadge, fmtDateTime } from "@/components/ui";
-import { ErrorText, Field, TextArea, TextInput, attempt, useAuthor } from "../taxonomy/_shared/forms";
+import { Badge, Button, MockBadge, SeverityBadge, SplitBadge, fmtDateTime } from "@/components/ui";
+import { ErrorText, TextArea, TextInput, attempt, useAuthor } from "../taxonomy/_shared/forms";
+import { DetailRow, ExpandToggle, thCls } from "./GoldTable";
 import { HumanLabelBadge, ModeNames, UnsupportedLabelBadge } from "./labels";
 import type { GoldCandidate, GoldPostRequest } from "./types";
 
-export function CandidateCard({
+/** One candidate per row with a Promote button; the editable expected behaviour sits in the expanded row. */
+function CandidateRow({
   c,
   names,
   sameTraceCount,
@@ -21,13 +23,17 @@ export function CandidateCard({
 }) {
   const a = c.annotation;
   const preview = c.expected_behavior?.text ?? "";
+  const [open, setOpen] = useState(false);
   const [expected, setExpected] = useState(preview);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { author, setAuthor, remember } = useAuthor();
+  // Name field visibility follows the SAVED name so it doesn't unmount mid-typing.
+  const { author, saved, setAuthor, remember } = useAuthor();
   const firstId = a.first_failure?.failure_mode_id ?? null;
   const modeIds = [...new Set([firstId, ...a.additional_failure_mode_ids].filter((x): x is string => Boolean(x)))];
   const edited = expected.trim() !== preview.trim();
+  const updated = c.reason === "annotation_updated_since_promotion";
+  const blocked = !author.trim() ? "Enter your name first" : c.expected_behavior_error ? "Expected behaviour could not be derived" : edited && !expected.trim() ? "Expected behaviour is empty" : null;
 
   const promote = async () => {
     setBusy(true);
@@ -46,132 +52,149 @@ export function CandidateCard({
   };
 
   return (
-    <li className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
-        <Badge tone="slate">case {c.case_id}</Badge>
-        <SplitBadge split={c.split} />
-        <MockBadge mode={c.execution_mode} />
-        <Link href={`/review/${c.trace_id}`} className="font-mono text-sky-700 hover:underline">
-          {c.trace_id}
-        </Link>
-        <span>
-          · reviewed by <b className="text-slate-800">{a.reviewer}</b> · {fmtDateTime(a.updated_at)}
-        </span>
-        {c.reason === "annotation_updated_since_promotion" ? (
-          <Badge tone="amber" title={`Gold ${c.existing_gold_id} was promoted from an earlier version of this annotation`}>
-            annotation changed since promotion — re-promote to update gold
-          </Badge>
-        ) : (
-          <Badge tone="neutral">not yet gold</Badge>
-        )}
-      </div>
-
-      {sameTraceCount > 1 && (
-        <p className="mt-2 text-xs text-amber-800">
-          {sameTraceCount} reviewers labelled this trace. Only one annotation per trace becomes gold; once one is promoted the others leave
-          this queue.
-        </p>
-      )}
-
-      <div className="mt-3 grid gap-4 lg:grid-cols-2">
-        <div className="space-y-2 text-sm">
-          <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">What the human reviewer recorded</div>
-          <div className="flex flex-wrap items-center gap-2">
-            <HumanLabelBadge label={a.task_outcome} />
-            <SeverityBadge severity={a.severity} />
-            <UnsupportedLabelBadge label={a.unsupported_justification_label} />
-          </div>
-          <div>
-            <div className="text-xs text-slate-500">Failure modes</div>
-            <ModeNames ids={modeIds} names={names} firstId={firstId} />
-            {a.first_failure && !firstId && (
-              <p className="mt-1 text-xs text-amber-800">
-                The first failure has no category yet, so this gold example would carry no failure mode for it.{" "}
-                <Link href="/review/taxonomy" className="underline">
-                  Categorise it first
-                </Link>
-                .
-              </p>
-            )}
-          </div>
-          {a.first_failure && (
-            <div>
-              <div className="text-xs text-slate-500">First failure</div>
-              <blockquote className="border-l-4 border-rose-300 bg-rose-50/60 px-3 py-1.5 text-sm">{a.first_failure.description}</blockquote>
-            </div>
-          )}
-          {a.open_coding_notes.trim() && (
-            <div>
-              <div className="text-xs text-slate-500">Notes</div>
-              <p className="whitespace-pre-wrap text-sm text-slate-800">{a.open_coding_notes}</p>
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Expected behaviour (stored with the gold example)</div>
-          {c.expected_behavior_error ? (
-            <Callout tone="red" title="Expected behaviour could not be derived">
-              {c.expected_behavior_error}
-            </Callout>
+    <Fragment>
+      <tr className="border-t border-slate-100 align-middle">
+        <td className="py-2 pl-4 pr-3 font-semibold text-slate-900">
+          <Link href={`/review/${c.trace_id}`} className="hover:underline" title={c.trace_id}>
+            {c.case_id}
+          </Link>
+        </td>
+        <td className="pr-3">
+          <HumanLabelBadge label={a.task_outcome} />
+        </td>
+        <td className="pr-3">
+          {a.first_failure && !firstId ? (
+            <Link href="/review/taxonomy" title="First failure has no type yet — assign one first">
+              <Badge tone="amber">no type yet</Badge>
+            </Link>
           ) : (
-            <>
-              <TextArea value={expected} onChange={setExpected} rows={7} mono />
-              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                <span>
-                  Preview derived from the synthetic policy rules (not written by Claude). Edit it if a correct response needs something
-                  different.
-                </span>
-                {edited && (
-                  <>
-                    <Badge tone="blue">edited</Badge>
-                    <button type="button" className="text-sky-700 underline" onClick={() => setExpected(preview)}>
-                      reset to preview
-                    </button>
-                  </>
-                )}
-              </div>
-              <div className="text-xs text-slate-600">
-                Reference policies:{" "}
-                {c.expected_behavior?.reference_policy_ids.length ? (
-                  c.expected_behavior.reference_policy_ids.map((p) => (
-                    <code key={p} className="mr-1 font-mono">
-                      {p}
-                    </code>
-                  ))
-                ) : (
-                  <span className="text-slate-500">none effective on the decision date</span>
-                )}
-              </div>
-            </>
+            <ModeNames ids={modeIds} names={names} firstId={firstId} />
           )}
-        </div>
-      </div>
-
-      {c.split === "heldout" && (
-        <p className="mt-3 rounded-md bg-violet-50 px-3 py-2 text-xs text-violet-900">
-          Held-out case: once promoted it is reserved for the final check. Do not read it while tuning the agent prompt or the judge.
-        </p>
+        </td>
+        <td className="pr-3 text-slate-700">
+          {a.reviewer}
+          {sameTraceCount > 1 && (
+            <span className="ml-1 text-xs text-slate-400" title="Several reviewers labelled this trace; only one label per trace becomes gold">
+              +{sameTraceCount - 1}
+            </span>
+          )}
+        </td>
+        <td className="pr-3">
+          <SplitBadge split={c.split} />
+        </td>
+        <td className="pr-3">
+          <MockBadge mode={c.execution_mode} />
+        </td>
+        <td className="py-1.5 pr-3">
+          <span className="flex items-center justify-end gap-1.5">
+            {updated && (
+              <Badge tone="amber" title={`Label changed after promotion (gold ${c.existing_gold_id}); re-promote to update`}>
+                changed
+              </Badge>
+            )}
+            {!saved && <TextInput ariaLabel="Promoted by" className="w-32" value={author} onChange={setAuthor} placeholder="Your name" />}
+            <Button onClick={promote} disabled={busy || blocked !== null} title={blocked ?? undefined}>
+              {busy ? "Promoting…" : updated ? "Re-promote" : "Promote"}
+            </Button>
+            <ExpandToggle open={open} onClick={() => setOpen((o) => !o)} label="Review before promoting" />
+          </span>
+        </td>
+      </tr>
+      {error && (
+        <tr>
+          <td colSpan={7} className="px-4 pb-2 text-right">
+            <ErrorText error={error} />
+          </td>
+        </tr>
       )}
+      {open && (
+        <tr className="bg-slate-50/60">
+          <td colSpan={7} className="px-4 pb-3 pt-1">
+            <DetailRow label="Labelled">
+              <span className="flex flex-wrap items-center gap-1.5">
+                {a.reviewer} · {fmtDateTime(a.updated_at)}
+                <SeverityBadge severity={a.severity} />
+                <UnsupportedLabelBadge label={a.unsupported_justification_label} />
+              </span>
+            </DetailRow>
+            {a.first_failure && <DetailRow label="First failure">“{a.first_failure.description}”</DetailRow>}
+            {a.open_coding_notes.trim() && (
+              <DetailRow label="Notes">
+                <p className="whitespace-pre-wrap">{a.open_coding_notes}</p>
+              </DetailRow>
+            )}
+            <DetailRow label="Expected">
+              {c.expected_behavior_error ? (
+                <span className="text-rose-700">Couldn&apos;t derive expected behaviour: {c.expected_behavior_error}</span>
+              ) : (
+                <div className="space-y-1">
+                  <TextArea value={expected} onChange={setExpected} rows={6} mono />
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                    <span title="Derived from the synthetic policy rules — not written by Claude">Preview from policy rules · edit if needed</span>
+                    {edited && (
+                      <>
+                        <Badge tone="blue">edited</Badge>
+                        <button type="button" className="text-sky-700 underline" onClick={() => setExpected(preview)}>
+                          reset
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </DetailRow>
+            <DetailRow label="Policies">
+              {c.expected_behavior?.reference_policy_ids.length ? (
+                c.expected_behavior.reference_policy_ids.join(", ")
+              ) : (
+                <span className="text-slate-400">none effective on the decision date</span>
+              )}
+            </DetailRow>
+            <DetailRow label="Promoted by">
+              <TextInput ariaLabel="Promoted by" className="max-w-xs" value={author} onChange={setAuthor} placeholder="Your name (required)" />
+            </DetailRow>
+          </td>
+        </tr>
+      )}
+    </Fragment>
+  );
+}
 
-      <div className="mt-3 flex flex-wrap items-end gap-2 border-t border-slate-100 pt-3">
-        <div className="w-64">
-          <Field label="Promoted by (named human)">
-            <TextInput value={author} onChange={setAuthor} placeholder="Your name" />
-          </Field>
-        </div>
-        <Button
-          onClick={promote}
-          disabled={busy || !author.trim() || Boolean(c.expected_behavior_error) || (edited && !expected.trim())}
-          title={!author.trim() ? "Enter your name first" : undefined}
-        >
-          {busy ? "Promoting…" : c.reason === "annotation_updated_since_promotion" ? "Re-promote to gold" : "Promote to gold"}
-        </Button>
-        {!author.trim() && <span className="text-xs text-slate-500">A named human must promote every gold example.</span>}
-      </div>
-      <div className="mt-2">
-        <ErrorText error={error} />
-      </div>
-    </li>
+export function PromotionQueue({
+  candidates,
+  names,
+  reload,
+}: {
+  candidates: GoldCandidate[];
+  names: Record<string, string>;
+  reload: () => void;
+}) {
+  const traceCounts = new Map<string, number>();
+  for (const c of candidates) traceCounts.set(c.trace_id, (traceCounts.get(c.trace_id) ?? 0) + 1);
+  return (
+    <table className="w-full text-sm">
+      <thead>
+        <tr className={thCls}>
+          <th className="py-2 pl-4 pr-3">Case</th>
+          <th className="pr-3">Verdict</th>
+          <th className="pr-3">Failure type</th>
+          <th className="pr-3">Reviewer</th>
+          <th className="pr-3">Set</th>
+          <th className="pr-3">Mode</th>
+          <th className="pr-3" />
+        </tr>
+      </thead>
+      <tbody>
+        {candidates.map((c) => (
+          <CandidateRow
+            key={c.annotation.annotation_id}
+            c={c}
+            names={names}
+            sameTraceCount={traceCounts.get(c.trace_id) ?? 1}
+            reload={reload}
+          />
+        ))}
+      </tbody>
+    </table>
   );
 }

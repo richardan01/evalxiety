@@ -59,4 +59,8 @@ export interface JudgeMissingResult {
   run_id: string;
   judged: number;
   skipped: number;
+  /** traces that already had a result for the current judge version */
+  already_current?: number;
+  /** live traces the mock-mode server refused to judge (a mock verdict would never count) */
+  skipped_live_in_mock_mode?: number;
 }

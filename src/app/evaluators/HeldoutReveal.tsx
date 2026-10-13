@@ -1,35 +1,56 @@
 "use client";
 
 import { useState } from "react";
-import { getReviewer, postJSON, setReviewer } from "@/lib/client/api";
-import { Button, Callout } from "@/components/ui";
+import { getReviewer, setReviewer } from "@/lib/client/api";
+import { Button, InfoTip } from "@/components/ui";
 import type { HeldoutState } from "./types";
 
 const MIN_REASON = 10;
+
+/**
+ * POST the audited reveal. A 409 means someone already revealed it (irreversible), so return the current
+ * revealed state instead of failing — the caller then shows unlocked calibration and the revealed banner.
+ */
+export async function postReveal(actor: string, reason: string, fetcher: typeof fetch = fetch): Promise<HeldoutState> {
+  const res = await fetcher("/api/heldout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ actor: actor.trim(), reason: reason.trim() }),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (res.ok) return body as HeldoutState;
+  if (res.status === 409) {
+    const state = await fetcher("/api/heldout", { cache: "no-store" });
+    if (state.ok) return (await state.json()) as HeldoutState;
+  }
+  const details = Array.isArray(body?.details) ? `: ${body.details.join("; ")}` : "";
+  throw new Error((body?.error ?? `Reveal failed (${res.status})`) + details);
+}
 
 /** Locked held-out panel with an audited, irreversible reveal (actor + reason + explicit confirmation). */
 export function HeldoutReveal({ onRevealed }: { onRevealed: (state: HeldoutState) => void }) {
   const [formOpen, setFormOpen] = useState(false);
   return (
-    <div className="space-y-3 rounded-lg border-2 border-dashed border-violet-300 bg-violet-50/40 px-5 py-5">
-      <div className="flex items-start gap-3">
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-3 rounded-lg border-2 border-dashed border-violet-300 bg-violet-50/40 px-4 py-3">
         <LockIcon />
-        <div className="space-y-1 text-sm text-slate-700">
-          <p className="text-base font-semibold text-slate-900">Held-out calibration is locked</p>
-          <p>
-            The held-out split is reserved for <b>one final check</b> of the judge after its prompt is frozen. Iterate on the
-            dev split only. Looking at held-out results and then changing the judge prompt would leak the test set into the
-            prompt and make the final number meaningless.
-          </p>
-        </div>
+        <span className="text-sm text-slate-700">
+          <b className="text-slate-900">Held-out is locked</b> — saved for one final check of the judge.
+        </span>
+        <InfoTip label="Why it is locked">
+          Iterate on dev. Reveal held-out once, after the judge prompt is frozen: tuning after seeing it leaks the test set
+          into the prompt and makes the final number meaningless. The reveal is audited (name, time, reason) and cannot be
+          undone.
+        </InfoTip>
+        {!formOpen && (
+          <span className="ml-auto">
+            <Button variant="secondary" onClick={() => setFormOpen(true)}>
+              Reveal held-out (final check)
+            </Button>
+          </span>
+        )}
       </div>
-      {formOpen ? (
-        <RevealForm onCancel={() => setFormOpen(false)} onRevealed={onRevealed} />
-      ) : (
-        <Button variant="secondary" onClick={() => setFormOpen(true)}>
-          Reveal held-out for FINAL check
-        </Button>
-      )}
+      {formOpen && <RevealForm onCancel={() => setFormOpen(false)} onRevealed={onRevealed} />}
     </div>
   );
 }
@@ -54,8 +75,7 @@ function RevealForm({ onCancel, onRevealed }: { onCancel: () => void; onRevealed
     setError(null);
     try {
       setReviewer(actor);
-      const state = await postJSON<HeldoutState>("/api/heldout", { actor: actor.trim(), reason: reason.trim() });
-      onRevealed(state);
+      onRevealed(await postReveal(actor, reason));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
       setBusy(false);
@@ -63,50 +83,36 @@ function RevealForm({ onCancel, onRevealed }: { onCancel: () => void; onRevealed
   };
 
   return (
-    <div className="space-y-3 rounded-lg border border-slate-200 bg-white px-4 py-4">
-      <Callout tone="red" title="Audited and irreversible">
-        <ul className="list-disc space-y-0.5 pl-5">
-          <li>Your name, the time and your reason are written to the audit log.</li>
-          <li>The reveal cannot be undone: held-out calibration stays visible to everyone from now on.</li>
-          <li>
-            <b>Do not tune the judge prompt (or the agent prompts) after seeing held-out results.</b> Any change after this
-            point needs a new, untouched held-out set before its numbers mean anything.
-          </li>
-        </ul>
-      </Callout>
-      <label className="block text-sm">
-        <span className="font-medium text-slate-800">1. Your name</span>
-        <span className="ml-2 text-xs text-slate-500">recorded in the audit log</span>
+    <div className="grid gap-3 rounded-lg border border-rose-200 bg-white px-4 py-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+      <label className="block text-xs font-medium text-slate-600">
+        Your name
         <input
           value={actor}
           onChange={(e) => setActor(e.target.value)}
-          placeholder="Your full name"
-          className="mt-1 block w-full max-w-sm rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          placeholder="Full name (audit log)"
+          className="mt-1 block w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm font-normal text-slate-900"
         />
       </label>
-      <label className="block text-sm">
-        <span className="font-medium text-slate-800">2. Why are you revealing it now?</span>
-        <span className="ml-2 text-xs text-slate-500">
-          at least {MIN_REASON} characters ({reasonLen}/{MIN_REASON})
+      <label className="block text-xs font-medium text-slate-600">
+        Reason{" "}
+        <span className={reasonLen >= MIN_REASON ? "text-emerald-700" : "text-slate-400"}>
+          ({reasonLen}/{MIN_REASON} min)
         </span>
-        <textarea
+        <input
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          rows={2}
-          placeholder="e.g. Judge prompt is frozen after dev iteration; running the final held-out check."
-          className="mt-1 block w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          placeholder="e.g. Judge prompt frozen after dev iteration"
+          className="mt-1 block w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm font-normal text-slate-900"
         />
       </label>
-      <label className="flex items-start gap-2 text-sm text-slate-800">
-        <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} className="mt-0.5" />
-        <span>
-          3. I understand this is audited and irreversible, and I will not tune prompts after seeing held-out results.
-        </span>
+      <label className="flex items-center gap-2 text-sm text-slate-800 sm:col-span-2">
+        <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} />
+        Audited and irreversible — I won&apos;t tune prompts after seeing held-out results.
       </label>
-      {error && <p className="text-sm text-rose-700">{error}</p>}
-      <div className="flex gap-2">
+      {error && <div className="text-sm text-rose-700 sm:col-span-2">{error}</div>}
+      <div className="flex gap-2 sm:col-span-2">
         <Button variant="danger" onClick={submit} disabled={!valid || busy}>
-          {busy ? "Revealing…" : "Reveal held-out (irreversible)"}
+          {busy ? "Revealing…" : "Reveal (irreversible)"}
         </Button>
         <Button variant="ghost" onClick={onCancel} disabled={busy}>
           Cancel
@@ -118,7 +124,7 @@ function RevealForm({ onCancel, onRevealed }: { onCancel: () => void; onRevealed
 
 function LockIcon() {
   return (
-    <svg aria-hidden viewBox="0 0 24 24" className="mt-0.5 h-6 w-6 shrink-0 text-violet-700" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-violet-700" fill="none" stroke="currentColor" strokeWidth="2">
       <rect x="4" y="11" width="16" height="10" rx="2" />
       <path d="M8 11V7a4 4 0 1 1 8 0v4" />
     </svg>

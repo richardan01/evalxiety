@@ -4,29 +4,20 @@ import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { getJSON } from "@/lib/client/api";
 import { MIN_PER_CLASS } from "@/lib/metrics/calibration";
-import {
-  Badge,
-  Callout,
-  Card,
-  EmptyState,
-  KeyValue,
-  MockBadge,
-  OutcomeBadge,
-  Ratio,
-  SplitBadge,
-  cx,
-  fmtDateTime,
-} from "@/components/ui";
+import { Badge, InfoTip, MockBadge, Ratio, SplitBadge, cx, fmtDateTime } from "@/components/ui";
 import { HeldoutReveal } from "./HeldoutReveal";
-import { ExperimentalBadge, SectionHeading, Segmented, Steps } from "./parts";
-import type { CalibrationResponse, CalibrationUnlocked, Disagreement, HeldoutState, SetAside } from "./types";
+import { ExperimentalBadge, InfoTipLeft, SectionTitle, Segmented } from "./parts";
+import type { CalibrationResponse, CalibrationUnlocked, Disagreement, HeldoutState } from "./types";
 
-type Split = "dev" | "heldout";
-type Mode = "live" | "mock";
+export type Split = "dev" | "heldout";
+export type Mode = "live" | "mock";
 
-export function JudgeCalibration() {
-  const [split, setSplit] = useState<Split>("dev");
-  const [mode, setMode] = useState<Mode>("live");
+const MAX_DISAGREEMENTS = 5;
+
+/** Section B — does the experimental judge agree with human labels? Anchor: /evaluators#calibration. */
+export function JudgeCalibration({ initialSplit = "dev", initialMode = "live" }: { initialSplit?: Split; initialMode?: Mode }) {
+  const [split, setSplit] = useState<Split>(initialSplit);
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [nonce, setNonce] = useState(0);
   const [result, setResult] = useState<{ key: string; data: CalibrationResponse | null; error: string | null } | null>(null);
   const key = `${split}|${mode}|${nonce}`;
@@ -49,576 +40,370 @@ export function JudgeCalibration() {
   const data = current?.data ?? null;
 
   return (
-    <section id="calibration" className="space-y-3 scroll-mt-4">
-      <SectionHeading step={3} title="Judge calibration — does the judge agree with human reviewers?" phase="Phase 6 · judge calibration">
-        Human labels are the reference; the judge&apos;s verdicts on the same traces are compared against them. Whatever these
-        numbers say, the judge stays <b>experimental</b> in this build — no threshold marks it &ldquo;reliable&rdquo;.
-      </SectionHeading>
+    <section id="calibration" className="scroll-mt-4 space-y-3">
+      <SectionTitle
+        title="Can we trust the AI judge?"
+        infoLabel="Limitations"
+        info={<Limitations />}
+        right={
+          <>
+            <Segmented<Split>
+              label="Split"
+              value={split}
+              onChange={setSplit}
+              options={[
+                { value: "dev", label: "Dev", hint: "Iterate on the judge prompt here" },
+                { value: "heldout", label: "Held-out", hint: "Final check only — locked until an audited reveal" },
+              ]}
+            />
+            <Segmented<Mode>
+              label="Mode"
+              value={mode}
+              onChange={setMode}
+              options={[
+                { value: "live", label: "Live", hint: "Real Claude traces judged by the real Claude judge" },
+                { value: "mock", label: "Mock", hint: "Mock agent + heuristic mock judge — demonstrates the math only" },
+              ]}
+            />
+          </>
+        }
+      />
 
-      <Card title="How these numbers are produced">
-        <Steps
-          items={[
-            <>A named human reviewer opens a trace in <Link className="text-sky-700 hover:underline" href="/review">Trace Review</Link> and labels the criterion &ldquo;unsupported pricing justification&rdquo; as <b>present</b>, <b>absent</b> or <b>not assessed</b>.</>,
-            <>The annotation is promoted to the <b>gold set</b> — only human labels on frozen synthetic cases, with reviewer and timestamp. Judge output never becomes gold.</>,
-            <>The experimental judge is run on the same trace. Only results from the <b>current judge version</b> count.</>,
-            <>Each gold label is paired with the judge&apos;s latest verdict. <b>REQUIRES REVIEW</b> and <b>ERROR</b> verdicts are set aside — never counted as PASS.</>,
-            <>The remaining pairs fill the confusion matrix (positive class = an actual failure). TPR and TNR are reported separately, each with a Wilson 95% interval and its n.</>,
-          ]}
-        />
-      </Card>
-
-      <Card>
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-          <Segmented<Split>
-            label="Split"
-            value={split}
-            onChange={setSplit}
-            options={[
-              { value: "dev", label: "Dev — iterate here", hint: "Use dev results to improve the judge prompt" },
-              { value: "heldout", label: "Held-out — final check only", hint: "Locked until an audited reveal" },
-            ]}
-          />
-          <Segmented<Mode>
-            label="Execution mode"
-            value={mode}
-            onChange={setMode}
-            options={[
-              { value: "live", label: "LIVE", hint: "Real Claude agent traces judged by the real Claude judge" },
-              { value: "mock", label: "MOCK — demonstrates the math only", hint: "Mock agent + heuristic mock judge" },
-            ]}
-          />
-        </div>
-      </Card>
-
-      {mode === "mock" && (
-        <Callout tone="amber" title="MOCK — demonstrates the math only">
-          These pairs come from mock-agent traces judged by a keyword heuristic, not by Claude. The numbers show how the
-          calculation works; they say nothing about how well the real judge agrees with human reviewers.
-        </Callout>
-      )}
-
-      {data && data.heldout.revealed && <RevealedBanner state={data.heldout} />}
-
-      {!current ? (
-        <p className="text-sm text-slate-500">Loading calibration…</p>
-      ) : current.error ? (
-        <Callout tone="red" title="Could not load calibration">{current.error}</Callout>
-      ) : data?.locked ? (
-        <HeldoutReveal onRevealed={() => setNonce((n) => n + 1)} />
-      ) : data ? (
-        <CalibrationBody view={data} />
-      ) : null}
-
-      <Limitations />
+      <div className="space-y-4 rounded-lg border border-slate-200 bg-white px-4 py-4 shadow-sm">
+        {data && data.heldout.revealed && <RevealedLine state={data.heldout} />}
+        {!current ? (
+          <p className="text-sm text-slate-500">Loading…</p>
+        ) : current.error ? (
+          <p className="text-sm text-rose-700">Could not load calibration: {current.error}</p>
+        ) : data?.locked ? (
+          <HeldoutReveal onRevealed={() => setNonce((n) => n + 1)} />
+        ) : data ? (
+          <CalibrationBody view={data} />
+        ) : null}
+      </div>
     </section>
   );
 }
 
-function RevealedBanner({ state }: { state: HeldoutState }) {
+function RevealedLine({ state }: { state: HeldoutState }) {
   return (
-    <Callout tone="red" title="Held-out split has been revealed — do not tune prompts now">
-      Revealed by <b>{state.revealed_by ?? "unknown"}</b>
-      {state.revealed_at ? <> on {fmtDateTime(state.revealed_at)}</> : null}
-      {state.reason ? <> · reason: &ldquo;{state.reason}&rdquo;</> : null}. Changing the judge or agent prompts after seeing
-      held-out results invalidates them; a change now needs a new, untouched held-out set.
-    </Callout>
+    <div className="flex flex-wrap items-center gap-2 text-xs text-rose-800">
+      <Badge tone="red">HELD-OUT REVEALED</Badge>
+      <span>
+        by <b>{state.revealed_by ?? "unknown"}</b>
+        {state.revealed_at ? <> · {fmtDateTime(state.revealed_at)}</> : null} — don&apos;t tune prompts now
+      </span>
+      <InfoTip label="About the reveal">
+        {state.reason ? <>Reason: &ldquo;{state.reason}&rdquo;. </> : null}
+        Changing the judge or agent prompts after seeing held-out results invalidates them; a change now needs a new,
+        untouched held-out set.
+      </InfoTip>
+    </div>
   );
 }
 
 export function CalibrationBody({ view }: { view: CalibrationUnlocked }) {
   const { report } = view;
   const m = report.matrix;
-  const fn = view.disagreements.filter((d) => d.human_failure && d.judge_verdict === "PASS");
-  const fp = view.disagreements.filter((d) => !d.human_failure && d.judge_verdict === "FAIL");
 
   return (
-    <div className="space-y-3">
-      <div className={cx("rounded-lg border-2 px-5 py-4", report.insufficient ? "border-amber-300 bg-amber-50" : "border-violet-300 bg-violet-50")}>
-        <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-600">
-          Judge status · <SplitBadge split={view.split} /> <MockBadge mode={view.mode} /> <ExperimentalBadge />
+    <div className="space-y-4">
+      <div className="space-y-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <ExperimentalBadge />
+          <span className="text-lg font-semibold text-slate-900">{report.status_label}</span>
+          <SplitBadge split={view.split} />
+          <MockBadge mode={view.mode} />
+          <InfoTipLeft label="What this status means">
+            {report.insufficient ? (
+              <>
+                Needs at least {MIN_PER_CLASS} human-labelled examples per class (now {m.positives} problem, {m.negatives}{" "}
+                fine). That is a sample-size convention, not a reliability bar.
+              </>
+            ) : (
+              <>Both classes reach the sample-size convention, but this is still a small synthetic set: the judge stays experimental.</>
+            )}{" "}
+            Only results from judge version <code className="font-mono">{view.judge_version}</code> count.
+          </InfoTipLeft>
         </div>
-        <p className="mt-1 text-xl font-semibold text-slate-900">{report.status_label}</p>
-        <p className="mt-1 max-w-4xl text-sm text-slate-700">
-          {report.insufficient
-            ? `At least one class has fewer than ${MIN_PER_CLASS} human-labelled examples in the comparison (${m.positives} failure, ${m.negatives} pass). ${MIN_PER_CLASS} per class is a sample-size reporting convention from the evals guidance — not a reliability threshold.`
-            : "Both classes reach the sample-size reporting convention, but this is still a small synthetic set: the judge remains experimental and every finding still needs human review."}
-        </p>
-        <div className="mt-3">
-          <KeyValue
-            rows={[
-              ["Judge version (this mode)", <code key="v" className="font-mono text-xs">{view.judge_version}</code>],
-              [
-                "Versions with stored results",
-                view.judge_versions_present.length ? (
-                  <span key="p" className="text-xs">
-                    {view.judge_versions_present.map((v) => (
-                      <code key={v} className="mr-2 font-mono">{v}</code>
-                    ))}
-                    <span className="text-slate-500">(latest result per trace, all traces and modes)</span>
-                  </span>
-                ) : (
-                  <span key="p" className="text-slate-500">none yet — the judge has not been run on any trace</span>
-                ),
-              ],
-            ]}
-          />
-        </div>
+        {view.mode === "mock" && (
+          <div className="text-xs text-amber-800">Mock judge — shows how the math works, not how well Claude agrees with you.</div>
+        )}
       </div>
 
-      <Card
-        title="Where the labelled examples go"
-        subtitle="Every number is a count of gold examples for this split and mode. Exclusions are shown, not hidden."
-        actions={<MockBadge mode={view.mode} />}
-      >
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
-              <th className="py-1 font-medium">Step</th>
-              <th className="w-20 text-right font-medium">Count</th>
-              <th className="pl-4 font-medium">What it means</th>
-            </tr>
-          </thead>
-          <tbody>
-            <FunnelRow label="Gold examples in this split and mode" n={view.gold_in_scope}>
-              Human annotations promoted to gold, on {view.split === "dev" ? "dev" : "held-out"} cases executed in {view.mode.toUpperCase()} mode.
-            </FunnelRow>
-            <FunnelRow label="− Gold not assessed for this criterion" n={view.not_assessed} sub>
-              The reviewer marked &ldquo;unsupported justification&rdquo; as not assessed. Excluded.
-            </FunnelRow>
-            <FunnelRow label="= Reviewed labelled examples" n={view.labelled_examples} strong>
-              Gold examples labelled failure present / absent for this criterion.
-            </FunnelRow>
-            <FunnelRow label="− Labelled gold not yet judged" n={view.not_judged_trace_ids.length} sub tone={view.not_judged_trace_ids.length ? "amber" : undefined}>
-              No judge result under the current judge version yet — see the list below.
-            </FunnelRow>
-            <FunnelRow label="− Judge said REQUIRES REVIEW" n={m.excluded_requires_review} sub tone={m.excluded_requires_review ? "amber" : undefined}>
-              The judge was inconclusive. Excluded from the matrix and never counted as PASS.
-            </FunnelRow>
-            <FunnelRow label="− Judge ERROR" n={m.excluded_error} sub tone={m.excluded_error ? "amber" : undefined}>
-              The judge call failed or returned invalid output. Excluded.
-            </FunnelRow>
-            <FunnelRow label="= Compared in the confusion matrix" n={m.n} strong>
-              Human label paired with a binary judge verdict (PASS or FAIL).
-            </FunnelRow>
-            <FunnelRow label="Positives — human: failure present" n={m.positives} sub>
-              Unsupported claim confirmed by the human. Denominator of TPR.
-            </FunnelRow>
-            <FunnelRow label="Negatives — human: no failure (pass)" n={m.negatives} sub>
-              Human found every material claim supported. Denominator of TNR.
-            </FunnelRow>
-          </tbody>
-        </table>
-        <div className="mt-3 rounded-md bg-slate-50 px-3 py-2 text-sm">
-          <span className="font-semibold tabular-nums">{view.reviewed_not_promoted}</span>{" "}
-          <span className="text-slate-700">reviewed annotation(s) with a present/absent label are not yet promoted to gold.</span>{" "}
-          <span className="text-xs text-slate-500">
-            Counted across all splits and modes, including custom cases that cannot become gold. Promoting eligible ones adds
-            calibration data.
-          </span>
-        </div>
-      </Card>
-
-      {view.not_judged_trace_ids.length > 0 && (
-        <Callout tone="amber" title={`${view.not_judged_trace_ids.length} labelled gold example(s) have no judge result yet`}>
-          <p>
-            Run the experimental judge on these traces to include them (POST <code className="font-mono text-xs">/api/judge</code> for one
-            trace, or POST <code className="font-mono text-xs">/api/experiments/[id]/judge</code> to judge every trace of a run that lacks a
-            current-version result).
-          </p>
-          <div className="mt-1 flex flex-wrap gap-2">
-            {view.not_judged_trace_ids.map((id) => (
-              <Link key={id} href={`/review/${id}`} className="font-mono text-xs text-sky-700 hover:underline">
-                {id}
+      {view.labelled_examples === 0 ? (
+        <div className="rounded-lg border border-dashed border-slate-300 px-6 py-8 text-center">
+          <div className="text-sm font-medium text-slate-700">
+            Label a few traces in{" "}
+            <Link href="/review" className="text-sky-700 hover:underline">
+              Trace Review
+            </Link>{" "}
+            — then this shows how often the judge agrees with you.
+          </div>
+          {view.reviewed_not_promoted > 0 && (
+            <div className="mt-1 text-xs text-slate-500">
+              {view.reviewed_not_promoted} label{view.reviewed_not_promoted === 1 ? " isn't" : "s aren't"} in the gold set yet —{" "}
+              <Link href="/review/gold" className="text-sky-700 hover:underline">
+                promote {view.reviewed_not_promoted === 1 ? "it" : "them"}
               </Link>
-            ))}
-          </div>
-        </Callout>
-      )}
-
-      {m.n === 0 ? (
-        <EmptyState title={`No human-labelled examples with a binary judge verdict for ${view.split === "dev" ? "dev" : "held-out"} · ${view.mode.toUpperCase()}`}>
-          <div className="mx-auto max-w-xl space-y-1 text-left">
-            <p>The confusion matrix, TPR and TNR need human labels paired with judge verdicts. To produce them:</p>
-            <Steps
-              items={[
-                <>Review traces in <Link className="text-sky-700 hover:underline" href="/review">Trace Review</Link> and set the unsupported-justification label (present / absent).</>,
-                "Promote those annotations to gold.",
-                "Run the experimental judge on the same traces.",
-              ]}
-            />
-            {view.mode === "live" && <p className="pt-1 text-xs">If you have only run in mock mode so far, switch to MOCK to see the math demonstrated.</p>}
-            {report.undefined_reasons.length > 0 && (
-              <ul className="list-disc pl-5 pt-1 text-xs">
-                {report.undefined_reasons.map((r) => (
-                  <li key={r}>{r}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </EmptyState>
-      ) : (
-        <>
-          <div className="grid gap-3 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-            <Card
-              title="Confusion matrix"
-              subtitle="Positive class = an actual failure (unsupported claim present). Rows: human reference. Columns: judge."
-              actions={<MockBadge mode={view.mode} />}
-            >
-              <ConfusionMatrix tp={m.tp} fn={m.fn} fp={m.fp} tn={m.tn} />
-            </Card>
-            <div className="space-y-3">
-              <RateBox
-                title="True positive rate"
-                abbr="TPR"
-                mode={view.mode}
-                value={report.tpr}
-                num={m.tp}
-                den={m.positives}
-                ci={report.tpr_ci}
-                undefinedReason={report.undefined_reasons.find((r) => r.startsWith("TPR"))}
-              >
-                Of the traces a human marked as failing, the share the judge also flagged FAIL (TP ÷ (TP + FN)).
-              </RateBox>
-              <RateBox
-                title="True negative rate"
-                abbr="TNR"
-                mode={view.mode}
-                value={report.tnr}
-                num={m.tn}
-                den={m.negatives}
-                ci={report.tnr_ci}
-                undefinedReason={report.undefined_reasons.find((r) => r.startsWith("TNR"))}
-              >
-                Of the traces a human marked as passing, the share the judge also passed (TN ÷ (TN + FP)).
-              </RateBox>
+              .
             </div>
-          </div>
-          {report.undefined_reasons.length > 0 && (
-            <Callout tone="slate" title="Why some ratios are undefined">
-              <ul className="list-disc pl-5">
-                {report.undefined_reasons.map((r) => (
-                  <li key={r}>{r}</li>
-                ))}
-              </ul>
-              <p className="mt-1 text-xs">Undefined is not 0% or 100% — there is nothing to divide by.</p>
-            </Callout>
           )}
-          <p className="text-xs text-slate-500">
-            No accuracy, kappa or single combined score is reported: with imbalanced classes they hide missed failures. TPR and
-            TNR are read separately, together with their intervals.
-          </p>
-
-          <Card
-            title={`Disagreements to read by hand (${view.disagreements.length})`}
-            subtitle="Read each one before changing the judge prompt: a missed failure suggests tightening the FAIL definition; a false alarm suggests clarifying what PASS allows."
-          >
-            {view.disagreements.length === 0 ? (
-              <p className="text-sm text-slate-600">
-                No disagreements among the {m.n} compared pair(s). With a sample this small that is weak evidence, not proof of agreement.
-              </p>
-            ) : (
-              <div className="space-y-4">
-                <DisagreementGroup
-                  title={`False negatives — judge missed a human-confirmed failure (FN = ${fn.length})`}
-                  items={fn}
-                  kind="FN"
-                />
-                <DisagreementGroup
-                  title={`False positives — judge flagged a failure the human did not find (FP = ${fp.length})`}
-                  items={fp}
-                  kind="FP"
-                />
-              </div>
-            )}
-          </Card>
-        </>
-      )}
-
-      {view.requires_review.length > 0 && (
-        <Card
-          title={`Set aside: judge inconclusive or errored (${view.requires_review.length})`}
-          subtitle="Excluded from the matrix. These are not passes — a human should look at each."
-        >
-          <ul className="space-y-2">
-            {view.requires_review.map((p) => (
-              <SetAsideItem key={p.trace_id} item={p} />
-            ))}
-          </ul>
-        </Card>
+        </div>
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="space-y-2">
+            <ConfusionMatrix tp={m.tp} fn={m.fn} fp={m.fp} tn={m.tn} />
+            <Coverage view={view} />
+          </div>
+          <div className="space-y-3">
+            <RateRow
+              label="Catches real problems"
+              abbr="TPR"
+              formula="TP ÷ (TP + FN)"
+              num={m.tp}
+              den={m.positives}
+              value={report.tpr}
+              ci={report.tpr_ci}
+              undefinedReason={report.undefined_reasons.find((r) => r.startsWith("TPR"))}
+            />
+            <RateRow
+              label="Avoids false alarms"
+              abbr="TNR"
+              formula="TN ÷ (TN + FP)"
+              num={m.tn}
+              den={m.negatives}
+              value={report.tnr}
+              ci={report.tnr_ci}
+              undefinedReason={report.undefined_reasons.find((r) => r.startsWith("TNR"))}
+            />
+            <Disagreements items={view.disagreements} compared={m.n} />
+          </div>
+        </div>
       )}
     </div>
-  );
-}
-
-function FunnelRow({ label, n, children, sub, strong, tone }: { label: string; n: number; children: ReactNode; sub?: boolean; strong?: boolean; tone?: "amber" }) {
-  return (
-    <tr className={cx("border-b border-slate-100 align-top", strong && "bg-slate-50")}>
-      <td className={cx("py-1.5", sub && "pl-4 text-slate-600", strong && "font-semibold text-slate-900")}>{label}</td>
-      <td className={cx("text-right font-semibold tabular-nums", tone === "amber" ? "text-amber-700" : "text-slate-900")}>{n}</td>
-      <td className="pl-4 text-xs text-slate-500">{children}</td>
-    </tr>
   );
 }
 
 function ConfusionMatrix({ tp, fn, fp, tn }: { tp: number; fn: number; fp: number; tn: number }) {
+  const axis = "text-[11px] font-semibold uppercase tracking-wide text-slate-500";
+  const side = "flex items-center justify-end pr-1 text-xs font-medium text-slate-700";
   return (
-    <div className="grid grid-cols-[auto_auto_1fr_1fr] gap-1.5 text-sm">
+    <div className="grid grid-cols-[auto_auto_1fr_1fr] gap-1.5">
       <div />
       <div />
-      <div className="col-span-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">Judge</div>
+      <div className={cx("col-span-2 text-center", axis)}>Judge said</div>
 
       <div />
       <div />
-      <div className="text-center text-xs font-medium text-slate-700">FAIL — failure detected</div>
-      <div className="text-center text-xs font-medium text-slate-700">PASS — no failure detected</div>
+      <div className="text-center text-xs font-medium text-slate-700">Problem</div>
+      <div className="text-center text-xs font-medium text-slate-700">Fine</div>
 
-      <div className="row-span-2 flex items-center">
-        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 [writing-mode:vertical-rl] rotate-180">
-          Human (reference)
-        </span>
-      </div>
-      <div className="flex items-center pr-2 text-right text-xs font-medium text-slate-700">
-        Failure present
-        <br />
-        (positive)
-      </div>
-      <MatrixCell abbr="TP" n={tp} good meaning="Judge caught a real failure" />
-      <MatrixCell abbr="FN" n={fn} meaning="Judge missed a real failure" />
+      <div className={cx("row-span-2 flex items-center pr-1", axis)}>You said</div>
+      <div className={side}>Problem</div>
+      <MatrixCell n={tp} caption="Both found a problem" abbr="TP" agree />
+      <MatrixCell n={fn} caption="Judge missed it" abbr="FN" />
 
-      <div className="flex items-center pr-2 text-right text-xs font-medium text-slate-700">
-        No failure
-        <br />
-        (negative)
-      </div>
-      <MatrixCell abbr="FP" n={fp} meaning="Judge raised a false alarm" />
-      <MatrixCell abbr="TN" n={tn} good meaning="Judge correctly passed" />
+      <div className={side}>Fine</div>
+      <MatrixCell n={fp} caption="False alarm" abbr="FP" />
+      <MatrixCell n={tn} caption="Both said fine" abbr="TN" agree />
     </div>
   );
 }
 
-function MatrixCell({ abbr, n, good, meaning }: { abbr: string; n: number; good?: boolean; meaning: string }) {
+function MatrixCell({ n, caption, abbr, agree }: { n: number; caption: string; abbr: string; agree?: boolean }) {
   return (
     <div
       className={cx(
-        "rounded-md border px-3 py-3 text-center",
-        good ? "border-emerald-200 bg-emerald-50" : n > 0 ? "border-rose-300 bg-rose-50" : "border-slate-200 bg-slate-50",
+        "rounded-md border px-3 py-2.5 text-center",
+        agree ? "border-emerald-200 bg-emerald-50" : n > 0 ? "border-rose-300 bg-rose-50" : "border-slate-200 bg-slate-50",
       )}
     >
-      <div className="text-xs font-semibold text-slate-500">{abbr}</div>
-      <div className="text-3xl font-semibold tabular-nums text-slate-900">{n}</div>
-      <div className="text-[11px] text-slate-600">{meaning}</div>
+      <div className="text-2xl font-semibold tabular-nums text-slate-900">{n}</div>
+      <div className="text-xs font-medium text-slate-700">{caption}</div>
+      <div className="text-[10px] font-semibold text-slate-400">{abbr}</div>
     </div>
   );
 }
 
-function RateBox({ title, abbr, mode, value, num, den, ci, undefinedReason, children }: {
-  title: string;
+function Coverage({ view }: { view: CalibrationUnlocked }) {
+  const m = view.report.matrix;
+  const notJudged = view.not_judged_trace_ids.length;
+  const setAside = m.excluded_requires_review + m.excluded_error;
+  return (
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+      <span>
+        Compared <b className="text-slate-800">{m.n}</b> of {view.labelled_examples} labelled trace{view.labelled_examples === 1 ? "" : "s"}
+      </span>
+      {notJudged > 0 && <span className="text-amber-700">· {notJudged} not judged yet</span>}
+      {setAside > 0 && <span className="text-amber-700">· {setAside} set aside</span>}
+      <InfoTip label="Where the numbers come from">
+        <ul className="space-y-0.5">
+          <li>
+            Gold labels in this split + mode: <b>{view.gold_in_scope}</b>
+          </li>
+          <li>− not assessed for this criterion: {view.not_assessed}</li>
+          <li>− no judge result yet (current version): {notJudged}</li>
+          <li>− judge unsure (REQUIRES REVIEW, never PASS): {m.excluded_requires_review}</li>
+          <li>− judge ERROR: {m.excluded_error}</li>
+          <li>
+            = compared: <b>{m.n}</b> ({m.positives} problem, {m.negatives} fine)
+          </li>
+        </ul>
+        {view.reviewed_not_promoted > 0 && (
+          <p className="mt-1.5">
+            {view.reviewed_not_promoted} reviewed label(s) not yet in the gold set —{" "}
+            <Link href="/review/gold" className="text-sky-700 hover:underline">
+              promote
+            </Link>
+            .
+          </p>
+        )}
+        <TraceLinks title="Needs a judge run" ids={view.not_judged_trace_ids} />
+        <TraceLinks title="Set aside — needs a human look" ids={view.requires_review.map((p) => p.trace_id)} />
+      </InfoTip>
+    </div>
+  );
+}
+
+function TraceLinks({ title, ids }: { title: string; ids: string[] }) {
+  if (ids.length === 0) return null;
+  return (
+    <div className="mt-1.5">
+      <div className="font-medium text-slate-600">{title}</div>
+      <div className="flex flex-wrap gap-x-2">
+        {ids.map((id) => (
+          <Link key={id} href={`/review/${id}`} className="font-mono text-[11px] text-sky-700 hover:underline">
+            {id}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function RateRow({ label, abbr, formula, num, den, value, ci, undefinedReason }: {
+  label: string;
   abbr: string;
-  mode: Mode;
-  value: number | null;
+  formula: string;
   num: number;
   den: number;
+  value: number | null;
   ci: { low: number; high: number } | null;
   undefinedReason?: string;
-  children: ReactNode;
 }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm">
-      <div className="flex items-center justify-between gap-2 text-xs font-medium text-slate-500">
-        <span>
-          {title} ({abbr})
-        </span>
-        <MockBadge mode={mode} />
-      </div>
-      <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <span className="text-2xl font-semibold">
+    <div className="flex items-center justify-between gap-3 rounded-md bg-slate-50 px-3 py-2">
+      <span className="text-sm text-slate-700">
+        {label}: <b className="tabular-nums text-slate-900">{num}/{den}</b>
+      </span>
+      <span className="flex items-center gap-2">
+        <span className="text-xl font-semibold">
           <Ratio value={value} undefinedReason={undefinedReason} />
         </span>
-        <span className="text-sm text-slate-700">
-          n = <b className="tabular-nums">{num}/{den}</b>
-        </span>
-      </div>
-      <div className="mt-1 text-xs text-slate-700">
-        Wilson 95% interval:{" "}
-        {ci ? (
-          <b>
-            <Ratio value={ci.low} /> – <Ratio value={ci.high} />
-          </b>
-        ) : (
-          <span className="text-slate-500">undefined (n = 0)</span>
-        )}
-      </div>
-      {undefinedReason && value === null && <p className="mt-1 text-xs text-slate-500">{undefinedReason}</p>}
-      <p className="mt-1 text-xs text-slate-500">{children}</p>
+        <InfoTipLeft label={`About ${abbr}`}>
+          <b>{abbr}</b> = {formula}, n = {den}.
+          <br />
+          Wilson 95% interval:{" "}
+          {ci ? (
+            <b>
+              <Ratio value={ci.low} /> – <Ratio value={ci.high} />
+            </b>
+          ) : (
+            <span className="text-slate-500">undefined (n = 0)</span>
+          )}
+          {value === null && undefinedReason && <span className="mt-1 block text-slate-500">{undefinedReason}. Undefined is not 0% or 100%.</span>}
+        </InfoTipLeft>
+      </span>
     </div>
   );
 }
 
-function DisagreementGroup({ title, items, kind }: { title: string; items: Disagreement[]; kind: "FN" | "FP" }) {
+function Disagreements({ items, compared }: { items: Disagreement[]; compared: number }) {
+  const head = items.slice(0, MAX_DISAGREEMENTS);
+  const rest = items.slice(MAX_DISAGREEMENTS);
   return (
-    <div className="space-y-2">
-      <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
+    <div>
+      <div className="mb-1 flex items-center gap-2 text-xs font-semibold text-slate-500">
+        Where you and the judge disagree ({items.length})
+        <InfoTip label="How to use disagreements">
+          Read each before changing the judge prompt: a miss suggests tightening what counts as a problem; a false alarm
+          suggests clarifying what &ldquo;fine&rdquo; allows.
+        </InfoTip>
+      </div>
       {items.length === 0 ? (
-        <p className="text-xs text-slate-500">None.</p>
+        <div className="text-xs text-slate-500">
+          {compared === 0 ? "Nothing compared yet." : `None in ${compared} compared — a small sample, so weak evidence.`}
+        </div>
       ) : (
-        items.map((d) => <DisagreementCard key={d.trace_id} d={d} kind={kind} />)
+        <>
+          <DisagreementList items={head} />
+          {rest.length > 0 && (
+            <details className="mt-1">
+              <summary className="cursor-pointer text-xs font-medium text-sky-700">Show {rest.length} more</summary>
+              <DisagreementList items={rest} />
+            </details>
+          )}
+        </>
       )}
     </div>
   );
 }
 
-function DisagreementCard({ d, kind }: { d: Disagreement; kind: "FN" | "FP" }) {
-  const gold = d.gold;
-  const judge = d.judge;
-  const out = judge?.output ?? null;
+function DisagreementList({ items }: { items: Disagreement[] }) {
   return (
-    <article className="rounded-lg border border-slate-200">
-      <header className="flex flex-wrap items-center gap-2 border-b border-slate-100 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-        <Badge tone="red">{kind}</Badge>
-        <span>
-          case <b className="text-slate-800">{d.case_id}</b>
-        </span>
-        <SplitBadge split={gold?.dataset_split ?? null} />
-        {gold && <MockBadge mode={gold.trace_execution_mode} />}
-        <code className="font-mono">{d.trace_id}</code>
-        <Link href={`/review/${d.trace_id}`} className="ml-auto font-medium text-sky-700 hover:underline">
-          Open trace in review →
-        </Link>
-      </header>
-      <div className="grid gap-0 md:grid-cols-2">
-        <div className="space-y-1.5 px-3 py-2 text-sm md:border-r md:border-slate-100">
-          <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Human reviewer (reference)</div>
-          {gold ? (
-            <>
-              <p className="text-xs text-slate-600">
-                <b className="text-slate-800">{gold.reviewer}</b> · reviewed {fmtDateTime(gold.review_timestamp)} · label v{gold.label_version}
-              </p>
-              <p>
-                Unsupported justification:{" "}
-                <Badge tone={gold.unsupported_justification_label === "present" ? "red" : "green"}>
-                  {gold.unsupported_justification_label === "present" ? "failure present" : "absent (pass)"}
-                </Badge>{" "}
-                <span className="text-xs text-slate-500">overall task: {gold.human_label}</span>
-              </p>
-              <div>
-                <div className="text-xs font-medium text-slate-500">First failure / notes</div>
-                {gold.supporting_evidence.trim() ? (
-                  <p className="whitespace-pre-wrap text-slate-800">{gold.supporting_evidence}</p>
-                ) : (
-                  <p className="text-xs text-slate-500">The reviewer left no notes.</p>
-                )}
-              </div>
-            </>
-          ) : (
-            <p className="text-xs text-slate-500">Gold record not found.</p>
-          )}
-        </div>
-        <div className="space-y-1.5 bg-violet-50/30 px-3 py-2 text-sm">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Judge <ExperimentalBadge /> <span className="normal-case">not gold</span>
-          </div>
-          {judge ? (
-            <>
-              <p className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
-                <OutcomeBadge outcome={judge.verdict} /> <MockBadge mode={judge.execution_mode} />
-                <code className="font-mono">{judge.judge_version}</code>
-              </p>
-              {out ? (
-                <>
-                  <div>
-                    <div className="text-xs font-medium text-slate-500">Explanation</div>
-                    <p className="text-slate-800">{out.explanation}</p>
-                  </div>
-                  <div>
-                    <div className="text-xs font-medium text-slate-500">Relevant claims</div>
-                    {out.relevant_claims.length ? (
-                      <ul className="list-disc space-y-0.5 pl-5 text-slate-800">
-                        {out.relevant_claims.map((c, i) => (
-                          <li key={i}>“{c}”</li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-xs text-slate-500">none listed</p>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap items-center gap-1">
-                    <span className="text-xs font-medium text-slate-500">Evidence IDs:</span>
-                    {out.evidence_ids.length ? (
-                      out.evidence_ids.map((id) => (
-                        <code key={id} className="rounded bg-white px-1 font-mono text-xs ring-1 ring-slate-200">
-                          {id}
-                        </code>
-                      ))
-                    ) : (
-                      <span className="text-xs text-slate-500">none listed</span>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <p className="text-xs text-rose-700">{judge.error ?? "No judge output stored."}</p>
-              )}
-            </>
-          ) : (
-            <p className="text-xs text-slate-500">Judge result not found.</p>
-          )}
-        </div>
-      </div>
-    </article>
-  );
-}
-
-function SetAsideItem({ item }: { item: SetAside }) {
-  const j = item.judge;
-  return (
-    <li className="flex flex-wrap items-start gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm">
-      <OutcomeBadge outcome={item.judge_verdict} />
-      {j && <MockBadge mode={j.execution_mode} />}
-      <span className="text-xs text-slate-600">
-        case <b className="text-slate-800">{item.case_id}</b> · human label: {item.human_failure ? "failure present" : "absent (pass)"}
-      </span>
-      <Link href={`/review/${item.trace_id}`} className="font-mono text-xs text-sky-700 hover:underline">
-        {item.trace_id}
-      </Link>
-      <span className="basis-full text-xs text-slate-700">
-        {j?.output?.uncertainty_reason
-          ? <>Why the judge could not decide: {j.output.uncertainty_reason}</>
-          : j?.error
-            ? <>Error: {j.error}</>
-            : "No reason recorded."}
-      </span>
-    </li>
+    <ul className="divide-y divide-slate-100 rounded-md border border-slate-200">
+      {items.map((d) => {
+        const missed = d.human_failure;
+        const note: ReactNode = missed
+          ? d.gold?.supporting_evidence.trim()
+            ? `You: ${d.gold.supporting_evidence.trim()}`
+            : null
+          : d.judge?.output?.explanation
+            ? `Judge: ${d.judge.output.explanation}`
+            : null;
+        return (
+          <li key={d.trace_id} className="flex items-center gap-2 px-2.5 py-1.5 text-sm">
+            <Badge tone="red">{missed ? "Judge missed it" : "False alarm"}</Badge>
+            <span className="shrink-0 font-medium text-slate-800">{d.case_id}</span>
+            {d.gold && <MockBadge mode={d.gold.trace_execution_mode} />}
+            <span className="min-w-0 flex-1 truncate text-xs text-slate-500" title={typeof note === "string" ? note : undefined}>
+              {note}
+            </span>
+            <Link href={`/review/${d.trace_id}`} className="shrink-0 text-xs font-medium text-sky-700 hover:underline">
+              Open →
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
 function Limitations() {
   return (
-    <Callout tone="slate" title="Evaluation limitations — read before quoting any number above">
-      <ul className="list-disc space-y-1 pl-5">
-        <li>
-          <b>Tiny synthetic sample.</b> Gold examples come from a small set of synthetic merchant scenarios reviewed by hand. These
-          numbers describe a prototype set and cannot establish production reliability.
-        </li>
-        <li>
-          <b>Wide intervals.</b> With n this small, one disagreement moves TPR or TNR by many points. Read the Wilson interval, not
-          the point estimate.
-        </li>
-        <li>
-          <b>No few-shot examples.</b> There is no separate training split, so the judge prompt carries no examples — using dev or
-          held-out examples would leak into calibration.
-        </li>
-        <li>
-          <b>Held-out is reserved for the final check.</b> Iterate on dev only; reveal held-out once, after the judge prompt is
-          frozen, and do not tune afterwards.
-        </li>
-        <li>
-          <b>No automated prompt optimisation.</b> Disagreements are read by a person; the prompt is never tuned automatically
-          against these labels.
-        </li>
-        <li>
-          <b>Never a release gate on its own.</b> The judge is experimental; its FAIL, REQUIRES REVIEW and ERROR findings require
-          human review before they count for anything. No reliability threshold is set in this build.
-        </li>
-      </ul>
-    </Callout>
+    <ul className="list-disc space-y-1 pl-4">
+      <li>
+        <b>Tiny synthetic sample</b> — describes a prototype set; it cannot establish production reliability.
+      </li>
+      <li>
+        <b>Wide intervals</b> — one disagreement moves TPR/TNR a lot; read the Wilson interval, not the point estimate.
+      </li>
+      <li>
+        <b>No few-shot examples</b> — using dev or held-out examples in the prompt would leak into calibration.
+      </li>
+      <li>
+        <b>Held-out is for one final check</b> after the judge prompt is frozen; never tune afterwards.
+      </li>
+      <li>
+        <b>No automated prompt tuning</b> against these labels; disagreements are read by a person.
+      </li>
+      <li>
+        <b>No accuracy or kappa</b> — with imbalanced classes they hide missed problems.
+      </li>
+      <li>
+        <b>Never a release gate on its own</b> — no reliability threshold is set; every judge finding needs human review.
+      </li>
+    </ul>
   );
 }

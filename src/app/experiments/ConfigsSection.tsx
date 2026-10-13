@@ -1,110 +1,100 @@
 "use client";
 
-import { Badge, Callout, Card, KeyValue, cx } from "@/components/ui";
+import { cx } from "@/components/ui";
 import { paragraphDiff } from "./promptDiff";
 import { humanize } from "./shared";
 import type { AgentConfigRow } from "./types";
 
-export function ConfigsSection({ configs, modelId }: { configs: AgentConfigRow[]; modelId: string }) {
+function pickPair(configs: AgentConfigRow[]) {
   const baseline = configs.find((c) => c.role === "baseline");
   const corrected = configs.find((c) => c.role === "corrected");
-  if (!baseline || !corrected) {
-    return <Callout tone="red">Expected one baseline and one corrected agent configuration; the API returned {configs.length}.</Callout>;
+  return baseline && corrected ? { baseline, corrected } : null;
+}
+
+/** One-line summary for the collapsed section header. */
+export function configsSummary(configs: AgentConfigRow[]): string {
+  const p = pickPair(configs);
+  if (!p) return "";
+  const changed = paragraphDiff(p.baseline.system_prompt, p.corrected.system_prompt).filter((r) => r.changed).length;
+  const parts = [];
+  if (p.baseline.retrieval_strategy !== p.corrected.retrieval_strategy) {
+    parts.push(`policy lookup: ${humanize(p.baseline.retrieval_strategy)} → ${humanize(p.corrected.retrieval_strategy)}`);
   }
+  parts.push(`${changed} prompt paragraph${changed === 1 ? "" : "s"} changed`);
+  return parts.join(" · ");
+}
+
+export function ConfigsSection({ configs, modelId }: { configs: AgentConfigRow[]; modelId: string }) {
+  const p = pickPair(configs);
+  if (!p) {
+    return <p className="text-sm text-rose-700">Expected one Baseline and one Corrected version; the API returned {configs.length}.</p>;
+  }
+  const { baseline, corrected } = p;
   const rows = paragraphDiff(baseline.system_prompt, corrected.system_prompt);
   const changed = rows.filter((r) => r.changed);
   const identical = rows.filter((r) => !r.changed);
-  const sameEffort = baseline.effort === corrected.effort;
-  const sameRetrieval = baseline.retrieval_strategy === corrected.retrieval_strategy;
+  const facts: Array<[string, string, string]> = [
+    ["Policy lookup", humanize(baseline.retrieval_strategy), humanize(corrected.retrieval_strategy)],
+    ["Prompt", baseline.prompt_version, corrected.prompt_version],
+    ["Effort", baseline.effort, corrected.effort],
+  ];
 
   return (
-    <div className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-2">
-        {[baseline, corrected].map((c) => (
-          <Card
-            key={c.config_id}
-            title={
-              <span className="flex items-center gap-2">
-                {c.label}
-                <Badge tone={c.role === "baseline" ? "neutral" : "blue"}>{c.role}</Badge>
-              </span>
-            }
-            subtitle={<code className="font-mono">{c.config_id}</code>}
-          >
-            <KeyValue
-              rows={[
-                ["Prompt version", <code key="p" className="font-mono">{c.prompt_version}</code>],
-                [
-                  "Retrieval strategy",
-                  <span key="r" className={cx(!sameRetrieval && "rounded bg-amber-100 px-1 font-medium")}>
-                    {humanize(c.retrieval_strategy)}
-                  </span>,
-                ],
-                ["Effort", c.effort],
-                ["Description", <span key="d" className="text-slate-700">{c.description}</span>],
-              ]}
-            />
-          </Card>
-        ))}
-      </div>
-
-      <Callout tone="slate" title="What is held constant, and what changes">
-        <ul className="list-disc space-y-0.5 pl-5">
-          <li>
-            Both configurations call the <b>same model</b> (<code className="font-mono">{modelId}</code> in live mode; the mock agent in
-            mock mode), with the <b>same effort</b> ({sameEffort ? baseline.effort : `${baseline.effort} vs ${corrected.effort} — NOT the same`}), the{" "}
-            <b>same structured output schema</b> and the same approval/citation instructions, and they run on the <b>same frozen cases</b>.
-          </li>
-          <li>
-            They differ in {sameRetrieval ? "" : <><b>retrieval strategy</b> ({humanize(baseline.retrieval_strategy)} → {humanize(corrected.retrieval_strategy)}) and </>}
-            <b>{changed.length} system-prompt paragraph{changed.length === 1 ? "" : "s"}</b>
-            {changed.length === 1 ? " — the policy-selection rule, highlighted below" : ""}. So any difference in results is attributable to policy
-            handling, not to the model.
-          </li>
-        </ul>
-      </Callout>
-
-      <Card
-        title="System prompts side by side"
-        subtitle="Paragraph-level diff computed from the live prompt text. Highlighted rows differ; everything else is word-for-word identical."
-      >
-        <div className="grid grid-cols-2 gap-3 pb-2 text-xs font-semibold text-slate-600">
-          <div>
-            {baseline.label} · <code className="font-mono">{baseline.prompt_version}</code>
-          </div>
-          <div>
-            {corrected.label} · <code className="font-mono">{corrected.prompt_version}</code>
-          </div>
-        </div>
-        <div className="space-y-2">
-          {changed.map((r, i) => (
-            <div key={`c${i}`} className="grid grid-cols-2 gap-3">
-              <PromptBlock text={r.left} tone="removed" label={changed.length === 1 ? "Differs — policy selection" : `Difference ${i + 1}`} />
-              <PromptBlock text={r.right} tone="added" label={changed.length === 1 ? "Differs — policy selection" : `Difference ${i + 1}`} />
-            </div>
+    <div className="space-y-3">
+      <table className="w-full max-w-3xl text-sm">
+        <thead className="text-left text-xs text-slate-500">
+          <tr className="border-b border-slate-100">
+            <th className="py-1.5 pr-3 font-medium" />
+            <th className="py-1.5 pr-3 font-medium" title={baseline.description}>
+              {baseline.label} <code className="font-mono text-[11px] font-normal text-slate-400">{baseline.config_id}</code>
+            </th>
+            <th className="py-1.5 font-medium" title={corrected.description}>
+              {corrected.label} <code className="font-mono text-[11px] font-normal text-slate-400">{corrected.config_id}</code>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {facts.map(([k, b, c]) => (
+            <tr key={k} className="border-b border-slate-50">
+              <td className="py-1.5 pr-3 text-slate-500">{k}</td>
+              <td className={cx("py-1.5 pr-3", b !== c && "font-medium text-rose-800")}>{b}</td>
+              <td className={cx("py-1.5", b !== c && "font-medium text-emerald-800")}>{c}</td>
+            </tr>
           ))}
-          <details className="rounded border border-slate-200">
-            <summary className="cursor-pointer select-none px-3 py-1.5 text-xs font-medium text-slate-600">
-              Show the {identical.length} identical paragraph{identical.length === 1 ? "" : "s"} (shared instructions)
-            </summary>
-            <div className="space-y-2 border-t border-slate-200 p-2">
-              {identical.map((r, i) => (
-                <div key={`s${i}`} className="grid grid-cols-2 gap-3">
-                  <PromptBlock text={r.left} tone="same" />
-                  <PromptBlock text={r.right} tone="same" />
-                </div>
-              ))}
-            </div>
-          </details>
-        </div>
-      </Card>
+        </tbody>
+      </table>
+      <p className="text-xs text-slate-500">
+        Same model (<code className="font-mono">{modelId}</code>), same output schema, same cases — only policy handling changes.
+      </p>
+
+      <div className="space-y-2">
+        {changed.map((r, i) => (
+          <div key={`c${i}`} className="grid grid-cols-2 gap-3">
+            <PromptBlock text={r.left} tone="removed" label={`${baseline.label} prompt`} />
+            <PromptBlock text={r.right} tone="added" label={`${corrected.label} prompt`} />
+          </div>
+        ))}
+        <details className="rounded border border-slate-200">
+          <summary className="cursor-pointer px-3 py-1.5 text-xs font-medium text-slate-600 select-none">
+            {identical.length} identical paragraph{identical.length === 1 ? "" : "s"}
+          </summary>
+          <div className="space-y-2 border-t border-slate-200 p-2">
+            {identical.map((r, i) => (
+              <div key={`s${i}`} className="grid grid-cols-2 gap-3">
+                <PromptBlock text={r.left} tone="same" />
+                <PromptBlock text={r.right} tone="same" />
+              </div>
+            ))}
+          </div>
+        </details>
+      </div>
     </div>
   );
 }
 
 function PromptBlock({ text, tone, label }: { text: string | null; tone: "removed" | "added" | "same"; label?: string }) {
   if (text === null) {
-    return <div className="rounded border border-dashed border-slate-300 px-3 py-2 text-xs italic text-slate-400">(no paragraph)</div>;
+    return <div className="rounded border border-dashed border-slate-300 px-3 py-2 text-xs text-slate-400 italic">(no paragraph)</div>;
   }
   return (
     <div
@@ -115,7 +105,12 @@ function PromptBlock({ text, tone, label }: { text: string | null; tone: "remove
         tone === "same" && "border-slate-200 bg-slate-50 text-slate-600",
       )}
     >
-      {label && <div className="mb-1 text-[10px] font-semibold tracking-wide uppercase">{label}</div>}
+      {label && (
+        <div className="mb-1 text-[10px] font-semibold tracking-wide uppercase">
+          {tone === "removed" ? "− " : tone === "added" ? "+ " : ""}
+          {label}
+        </div>
+      )}
       {text}
     </div>
   );
