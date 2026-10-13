@@ -5,10 +5,12 @@ import { CheckTag, InfoTipLeft, ModeMix, SectionTitle } from "./parts";
 import type { EvaluatorDefinition, EvaluatorResultRow, JudgeDefinition } from "./types";
 
 /** Section A — the five checks as compact cards, each with its live pass count across stored traces. */
-export function EvaluatorDefinitions({ deterministic, judge, rows }: {
+export function EvaluatorDefinitions({ deterministic, judge, rows, selected, onFix }: {
   deterministic: EvaluatorDefinition[];
   judge: JudgeDefinition;
   rows: EvaluatorResultRow[];
+  selected?: string | null;
+  onFix?: (checkId: string) => void;
 }) {
   const mix = modeMix(rows);
   const checks = orderChecks(deterministic);
@@ -47,6 +49,8 @@ export function EvaluatorDefinitions({ deterministic, judge, rows }: {
                 [t.missing, "no result", "text-amber-700"],
               ]}
               info={<CodeCheckInfo d={d} />}
+              selected={selected === d.evaluator_id}
+              onFix={t.fail + t.error > 0 && onFix ? () => onFix(d.evaluator_id) : undefined}
             />
           );
         })}
@@ -73,6 +77,8 @@ export function EvaluatorDefinitions({ deterministic, judge, rows }: {
                 [jt.not_judged, "not judged", "text-slate-500"],
               ]}
               info={<JudgeInfo judge={judge} />}
+              selected={selected === judge.id}
+              onFix={jt.fail + jt.requires_review + jt.error > 0 && onFix ? () => onFix(judge.id) : undefined}
             />
           </div>
         </div>
@@ -81,7 +87,7 @@ export function EvaluatorDefinitions({ deterministic, judge, rows }: {
   );
 }
 
-function CheckCard({ name, tag, pass, total, extras, info, judge }: {
+function CheckCard({ name, tag, pass, total, extras, info, judge, selected, onFix }: {
   name: string;
   tag: ReactNode;
   pass: number;
@@ -89,6 +95,8 @@ function CheckCard({ name, tag, pass, total, extras, info, judge }: {
   extras: Array<[number, string, string]>;
   info: ReactNode;
   judge?: boolean;
+  selected?: boolean;
+  onFix?: () => void;
 }) {
   const shown = extras.filter(([n]) => n > 0);
   return (
@@ -96,6 +104,7 @@ function CheckCard({ name, tag, pass, total, extras, info, judge }: {
       className={cx(
         "flex flex-col gap-2 rounded-lg border bg-white px-3 py-3 shadow-sm",
         judge ? "border-2 border-dashed border-violet-300 bg-violet-50/40" : "border-slate-200",
+        selected && "ring-2 ring-sky-400",
       )}
     >
       <div className="flex items-start justify-between gap-2">
@@ -131,6 +140,19 @@ function CheckCard({ name, tag, pass, total, extras, info, judge }: {
             ))}
         </div>
       </div>
+      {onFix && (
+        <button
+          type="button"
+          onClick={onFix}
+          aria-pressed={selected}
+          className={cx(
+            "mt-1 rounded-md px-2 py-1 text-left text-xs font-medium",
+            selected ? "bg-sky-600 text-white" : "bg-slate-900 text-white hover:bg-slate-700",
+          )}
+        >
+          {judge ? "Review flags →" : "Fix failures →"}
+        </button>
+      )}
     </div>
   );
 }

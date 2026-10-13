@@ -6,14 +6,27 @@ import { PageHeader } from "@/components/ui";
 import { EvaluatorDefinitions } from "./EvaluatorDefinitions";
 import { JudgeCalibration, type Mode, type Split } from "./JudgeCalibration";
 import { ResultsMatrix } from "./ResultsMatrix";
+import { FixPanel } from "./FixPanel";
 import type { EvaluatorsResponse } from "./types";
 
-export function EvaluatorsHome({ initialRunId, initialSplit, initialMode }: {
+export function EvaluatorsHome({ initialRunId, initialSplit, initialMode, initialCheck }: {
   initialRunId: string | null;
   initialSplit: Split;
   initialMode: Mode;
+  initialCheck: string | null;
 }) {
   const [data, setData] = useState<EvaluatorsResponse | null>(null);
+  const [fixCheck, setFixCheck] = useState<string | null>(initialCheck);
+
+  function openFix(id: string | null) {
+    setFixCheck(id);
+    const url = new URL(window.location.href);
+    if (id) url.searchParams.set("check", id);
+    else url.searchParams.delete("check");
+    url.hash = id ? "fix" : "";
+    window.history.replaceState(null, "", url);
+    if (id) requestAnimationFrame(() => document.getElementById("fix")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -59,8 +72,10 @@ export function EvaluatorsHome({ initialRunId, initialSplit, initialMode }: {
           ))}
         </div>
       ) : (
-        <EvaluatorDefinitions deterministic={data.deterministic} judge={data.judge} rows={data.results} />
+        <EvaluatorDefinitions deterministic={data.deterministic} judge={data.judge} rows={data.results} selected={fixCheck} onFix={(id) => openFix(fixCheck === id ? null : id)} />
       )}
+
+      {data && fixCheck && <FixPanel checkId={fixCheck} rows={data.results} onClose={() => openFix(null)} />}
 
       <JudgeCalibration initialSplit={initialSplit} initialMode={initialMode} />
 

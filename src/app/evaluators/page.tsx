@@ -12,6 +12,7 @@ export default async function EvaluatorsPage({ searchParams }: PageProps<"/evalu
       initialRunId={one(sp.run_id)}
       initialSplit={split === "heldout" ? "heldout" : "dev"}
       initialMode={mode === "mock" ? "mock" : "live"}
+      initialCheck={one(sp.check)}
     />
   );
 }
