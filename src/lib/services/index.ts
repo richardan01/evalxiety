@@ -36,6 +36,7 @@ import {
   listTraces,
   upsertGold,
   latestRubric,
+  listRubricVersions,
 } from "../storage/repos";
 import { sha256 } from "../storage/store";
 
@@ -46,8 +47,9 @@ import { sha256 } from "../storage/store";
 export function currentJudgeVersionFor(
   trace: Pick<Trace, "execution_mode">,
   criterion: JudgeCriterion = DEFAULT_RUBRIC.judge_criterion,
+  model: string = DEFAULT_RUBRIC.judge_model,
 ): string {
-  return judgeVersion(trace.execution_mode === "mock" ? "mock" : "live", criterion);
+  return judgeVersion(trace.execution_mode === "mock" ? "mock" : "live", criterion, model);
 }
 
 /**
@@ -58,10 +60,11 @@ export function latestJudgeByTrace(
   results: JudgeResult[],
   traces: Trace[],
   criterion: JudgeCriterion = DEFAULT_RUBRIC.judge_criterion,
+  model: string = DEFAULT_RUBRIC.judge_model,
 ): Map<string, JudgeResult> {
   const map = new Map<string, JudgeResult>();
   const byId = new Map(traces.map((t) => [t.trace_id, t]));
-  const versions = { live: judgeVersion("live", criterion), mock: judgeVersion("mock", criterion) };
+  const versions = { live: judgeVersion("live", criterion, model), mock: judgeVersion("mock", criterion, model) };
   for (const r of [...results].sort((a, b) => a.created_at.localeCompare(b.created_at))) {
     const t = byId.get(r.trace_id);
     if (t && r.judge_version === versions[t.execution_mode]) map.set(r.trace_id, r);
@@ -84,13 +87,21 @@ export async function reviewQueue(): Promise<{ items: QueueItem[]; reviewed_coun
   const [allTraces, annotations, runs] = await Promise.all([listTraces(), listAnnotations(), listExperimentRuns()]);
   // Hide unlabelled traces from superseded runs (an older run of the same version on the same set, or a run on
   // case/policy content that has since changed). Labels only count toward the gate on the current runs.
-  const current = new Set<string>();
-  for (const r of runs) {
-    if (r.status !== "completed" || !runMatchesFrozenContent(r)) continue;
-    const key = `${r.agent_config_id}|${r.frozen_set_id}|${r.execution_mode}`;
-    if (![...current].some((k) => k.startsWith(key + "|"))) current.add(`${key}|${r.run_id}`); // runs are newest-first
+  // Newest-first; a run is current unless a newer completed current-content run of the same version and
+  // mode covers all of its cases (e.g. the 20-case final check supersedes the 12-case dev run).
+  const candidates = runs.filter((r) => r.status === "completed" && runMatchesFrozenContent(r));
+  const currentRunIds = new Set<string>();
+  for (const r of candidates) {
+    const superseded = candidates.some(
+      (n) =>
+        n !== r &&
+        n.created_at > r.created_at &&
+        n.agent_config_id === r.agent_config_id &&
+        n.execution_mode === r.execution_mode &&
+        r.case_ids.every((c) => n.case_ids.includes(c)),
+    );
+    if (!superseded) currentRunIds.add(r.run_id);
   }
-  const currentRunIds = new Set([...current].map((k) => k.split("|")[3]));
   const labelled = new Set(annotations.map((a) => a.trace_id));
   const traces = allTraces.filter(
     (t) => !t.experiment_run_id || currentRunIds.has(t.experiment_run_id) || labelled.has(t.trace_id) || runs.find((r) => r.run_id === t.experiment_run_id)?.status === "running",
@@ -111,7 +122,7 @@ export async function traceEvaluations(traceId: string) {
   return {
     deterministic: evaluateTrace(trace),
     judge_results: judge,
-    current_judge_version: currentJudgeVersionFor(trace, rubric.judge_criterion),
+    current_judge_version: currentJudgeVersionFor(trace, rubric.judge_criterion, rubric.judge_model),
     rubric_version: rubric.version,
   };
 }
@@ -233,7 +244,15 @@ export async function calibrationView(opts: { split: "dev" | "heldout"; mode: "l
     listAnnotations(),
     latestRubric(),
   ]);
-  const latest = latestJudgeByTrace(judgeResults, traces, rubric.judge_criterion);
+  const latest = latestJudgeByTrace(judgeResults, traces, rubric.judge_criterion, rubric.judge_model);
+  // Was the judge (criterion or model) changed after the held-out reveal? Then held-out numbers are not clean.
+  let judgeChangedAfterReveal = false;
+  if (heldout.revealed && heldout.revealed_at) {
+    const versions = await listRubricVersions();
+    const atReveal = [...versions].reverse().find((v) => v.created_at <= heldout.revealed_at!) ?? versions[0];
+    judgeChangedAfterReveal =
+      JSON.stringify(atReveal.judge_criterion) !== JSON.stringify(rubric.judge_criterion) || atReveal.judge_model !== rubric.judge_model;
+  }
   const inScope = gold.filter((g) => g.dataset_split === opts.split && g.trace_execution_mode === opts.mode);
   const labelled = inScope.filter((g) => g.unsupported_justification_label !== "not_assessed");
   const pairs: Array<CalibrationPair & { gold_id: string }> = [];
@@ -258,8 +277,10 @@ export async function calibrationView(opts: { split: "dev" | "heldout"; mode: "l
     heldout,
     split: opts.split,
     mode: opts.mode,
-    judge_version: judgeVersion(opts.mode, rubric.judge_criterion),
+    judge_version: judgeVersion(opts.mode, rubric.judge_criterion, rubric.judge_model),
+    judge_model: rubric.judge_model,
     rubric_version: rubric.version,
+    judge_changed_after_reveal: judgeChangedAfterReveal,
     judge_versions_present: versions,
     gold_in_scope: inScope.length,
     labelled_examples: labelled.length,
@@ -287,7 +308,7 @@ export async function calibrationView(opts: { split: "dev" | "heldout"; mode: "l
 export async function caseEvaluationsForRun(run: ExperimentRun, judgeResults?: JudgeResult[]): Promise<CaseEvaluation[]> {
   const traces = (await Promise.all(Object.values(run.trace_ids).map((id) => getTrace(id)))).filter((t): t is Trace => t !== null);
   const rubric = await latestRubric();
-  const latest = latestJudgeByTrace(judgeResults ?? (await listJudgeResults()), traces, rubric.judge_criterion);
+  const latest = latestJudgeByTrace(judgeResults ?? (await listJudgeResults()), traces, rubric.judge_criterion, rubric.judge_model);
   return run.case_ids.map((caseId) => {
     const t = traces.find((x) => x.case_id === caseId) ?? null;
     return evaluateCase(caseId, t, t ? (latest.get(t.trace_id)?.verdict ?? null) : null);
@@ -382,7 +403,7 @@ export async function releaseView(opts: { candidate_run_id?: string; baseline_ru
     baseline_run_id: baselineRun?.run_id ?? null,
     frozen_set_hash: required.content_hash,
     evaluator_versions: DETERMINISTIC_EVALUATORS.map((d) => `${d.evaluator_id}@${d.version}`),
-    judge_version: judgeVersion(mode, rubric.judge_criterion),
+    judge_version: judgeVersion(mode, rubric.judge_criterion, rubric.judge_model),
     candidate: candidateEvals.map((e) => ({ c: e.case_id, t: e.trace_id, r: e.results.map((r) => r.outcome), j: e.judge_verdict })),
     baseline: baselineEvals.map((e) => ({ c: e.case_id, t: e.trace_id, r: e.results.map((r) => r.outcome) })),
     candidate_annotations: candidateAnnotations.map((a) => [a.annotation_id, a.updated_at, a.task_outcome, a.severity, a.unsupported_justification_label]),
@@ -398,7 +419,7 @@ export async function releaseView(opts: { candidate_run_id?: string; baseline_ru
     baseline: baselineRun ? { run: baselineRun, evals: baselineEvals } : null,
     reviewed_trace_count: reviewedCount,
     candidate_annotations: candidateAnnotations,
-    judge: { version: judgeVersion(mode, rubric.judge_criterion), insufficient_validation: judgeInsufficient },
+    judge: { version: judgeVersion(mode, rubric.judge_criterion, rubric.judge_model), insufficient_validation: judgeInsufficient },
     approvals,
     evidence_snapshot_hash,
   });

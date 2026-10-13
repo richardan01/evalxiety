@@ -7,7 +7,7 @@ import { DETERMINISTIC_EVALUATORS } from "@/lib/evaluators/deterministic";
 import { frozenSets, includesHeldout } from "@/lib/experiments/frozen";
 import {
   EST_AGENT_CALL_USD,
-  EST_JUDGE_CALL_USD,
+  judgeCallEstimate,
   HeldoutLockedError,
   PaidBatchConfirmationRequired,
   executeRun,
@@ -18,7 +18,7 @@ import {
 import { MODEL_ID, modeInfo } from "@/lib/llm/client";
 import { summarizeRun } from "@/lib/metrics/experiments";
 import { caseEvaluationsForRun } from "@/lib/services";
-import { getHeldoutState, listExperimentRuns, listJudgeResults } from "@/lib/storage/repos";
+import { getHeldoutState, listExperimentRuns, listJudgeResults , latestRubric } from "@/lib/storage/repos";
 
 /** List experiment runs (with deterministic summaries), frozen sets, agent configs and cost estimates. */
 export async function GET() {
@@ -53,7 +53,7 @@ export async function GET() {
         blocking: d.blocking,
       })),
       heldout,
-      estimate_per_case: { agent: EST_AGENT_CALL_USD, judge: EST_JUDGE_CALL_USD },
+      estimate_per_case: { agent: EST_AGENT_CALL_USD, judge: judgeCallEstimate((await latestRubric()).judge_model) },
       mode: modeInfo(),
       model_id: MODEL_ID,
     });

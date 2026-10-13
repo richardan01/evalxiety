@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"The requested price is a 12.97% discount versus the enterprise list of 2.10% + $0.15 (list revenue $77,400), so it requires regional_pricing_manager approval.\",\"We counter at 1.87% + $0.12 ... an 11.65% discount, within the threshold, so no discount approval is needed.\",\"Merchant cost data is available, so no pricing_desk review is needed.\"],\"evidence_ids\":[\"PRC-2026.1§1\",\"PRC-2026.1§2\",\"PRC-2026.1§3\",\"PRC-2026.1§4\",\"PRC-2026.1§5\",\"PRC-2026.1§6\",\"PRC-2026.1§7\",\"PRC-2026.1§8\",\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-request\",\"FACT-exception\",\"FACT-decision_date\"],\"explanation\":\"No material claim is unsupported. Each claim traces to the evidence. The policy window and decision date come from PRC-2026.1§1 and FACT-decision_date. Size, volume and transaction count come from FACT-profile, FACT-volume and FACT-transactions. The cost basis comes from FACT-cost. The 20% enterprise margin minimum comes from PRC-2026.1§3. The enterprise list rate comes from PRC-2026.1§2. The rule that a discount above 12% needs regional_pricing_manager approval comes from PRC-2026.1§4. The $4,000,000 deal_desk threshold comes from PRC-2026.1§5. The absence of promotion or exception comes from FACT-exception, PRC-2026.1§6 and PRC-2026.1§7. The finding that pricing_desk review is not needed applies PRC-2026.1§8 to FACT-cost. The merchant's requested rate is explicitly labelled as its own unverified statement, consistent with FACT-request. The merchant's 'debit-heavy mix' assertion is not adopted as fact or used in the justification. No market rates, competitor benchmarks, risk or chargeback performance, or invented policy rules are cited. The figures follow from the supplied inputs by direct arithmetic; their precision is checked elsewhere.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 3808,
+    "output_tokens": 1050,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.036232,
+  "latency_ms": 9665,
+  "cached_at": "2026-10-13T08:58:20.853Z"
+}

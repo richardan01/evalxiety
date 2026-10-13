@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"The lowest whole-basis-point rate that meets the minimum at a $0.20 fee is 1.95% + $0.20.\",\"Tenure is not a pricing criterion in the policy.\",\"As an alternative that needs no approval, 1.98% + $0.20 is exactly a 15.00% discount and gives a 25.21% margin.\"],\"evidence_ids\":[\"FACT-profile\",\"FACT-request\",\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"PRC-2025.1§1\",\"PRC-2025.1§2\",\"PRC-2025.1§3\",\"PRC-2025.1§4\",\"PRC-2025.1§5\",\"PRC-2025.1§6\",\"PRC-2025.1§7\",\"PRC-2025.1§8\",\"FACT-exception\",\"FACT-decision_date\"],\"explanation\":\"No material claim is unsupported. Every material claim traces to the evidence or follows from it by arithmetic or by applying a quoted policy rule.\\n- **Policy window:** The 2026-02-12 decision date falls inside the PRC-2025.1§1 window.\\n- **Tenure and loyalty:** The 48-month tenure is in FACT-profile. The 4-year loyalty claim is correctly presented as the merchant's own unverified statement (FACT-request). Saying tenure is not a pricing criterion accurately reflects that no policy section mentions it.\\n- **Requested price:** Costs come from FACT-cost. The requested price falls below the 24% mid minimum and is barred without an approved exception (PRC-2025.1§3, §7). FACT-exception confirms no exception was requested.\\n- **Lowest compliant rate:** At 1.94% + $0.20 the margin is 23.93%, which is below 24%. At 1.95% + $0.20 it is 24.26%, so 1.95% is the lowest whole-basis-point rate that complies.\\n- **Discount and approval:** List pricing is 2.40% + $0.20 (PRC-2025.1§2), giving list revenue of $13,440. The recommended price is a 16.07% discount, which exceeds 15% and so requires regional_pricing_manager approval (§4).\\n- **Alternative price:** 1.98% + $0.20 is exactly a 15.00% discount. That is not greater than 15%, so §4 requires no approval.\\n- **Other routing:** Volume of $480,000 is below the $5,000,000 deal_desk threshold (§5). SPRING25 is outside its validity window (§6). Merchant-specific cost data is available, so pricing_desk review is not triggered (§8).\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 3969,
+    "output_tokens": 1111,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.038096,
+  "latency_ms": 10662,
+  "cached_at": "2026-10-13T08:57:53.928Z"
+}

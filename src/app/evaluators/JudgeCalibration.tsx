@@ -114,6 +114,17 @@ export function CalibrationBody({ view }: { view: CalibrationUnlocked }) {
           <span className="text-lg font-semibold text-slate-900">{report.status_label}</span>
           <SplitBadge split={view.split} />
           <MockBadge mode={view.mode} />
+          <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[11px] text-slate-600" title="Model the judge runs on (set in Rubric)">
+            {view.judge_model}
+          </span>
+          {view.split === "heldout" && view.judge_changed_after_reveal && (
+            <span
+              className="rounded bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-900 ring-1 ring-inset ring-amber-300"
+              title="The judge criterion or model was changed after the held-out reveal"
+            >
+              judge changed after reveal — not a clean final check
+            </span>
+          )}
           <InfoTipLeft label="What this status means">
             {report.insufficient ? (
               <>

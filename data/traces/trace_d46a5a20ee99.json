@@ -1,0 +1,313 @@
+{
+  "trace_id": "trace_d46a5a20ee99",
+  "case_id": "C17",
+  "timestamp": "2026-10-13T08:57:51.131Z",
+  "input": {
+    "case_id": "C17",
+    "title": "Pet store decision on the day policy 2026.2 takes effect",
+    "merchant": {
+      "merchant_id": "M-1017",
+      "name": "Paws Corner",
+      "size": "small",
+      "segment": "retail_pets",
+      "months_as_customer": 16
+    },
+    "monthly_volume_usd": 310000,
+    "monthly_transactions": 6200,
+    "cost_data": {
+      "status": "complete",
+      "cost_bps": 180,
+      "per_txn_cost_usd": 0.1
+    },
+    "current_pricing": {
+      "rate_bps": 265,
+      "per_txn_fee_usd": 0.25
+    },
+    "request": {
+      "message": "We'd like 2.38% + $0.25 starting today.",
+      "requested_pricing": {
+        "rate_bps": 238,
+        "per_txn_fee_usd": 0.25
+      }
+    },
+    "decision_date": "2026-09-01",
+    "exception": {
+      "status": "none",
+      "promo_code": null,
+      "justification": null
+    },
+    "variation": {
+      "merchant_size": "small",
+      "volume_band": "medium",
+      "margin_proximity": "near_below",
+      "policy_period": "boundary",
+      "exception_status": "none",
+      "source_completeness": "complete"
+    },
+    "data_origin": "synthetic"
+  },
+  "agent_version": "pricing-agent@corrected-v2",
+  "model_id": "claude-opus-5-5",
+  "prompt_version": "pricing-prompt-v2",
+  "retrieval_strategy": "effective_date_filtered",
+  "policy_context": [
+    {
+      "policy_id": "PRC-2026.2",
+      "effective_from": "2026-09-01",
+      "effective_to": null
+    }
+  ],
+  "evidence_pack": [
+    {
+      "evidence_id": "FACT-profile",
+      "kind": "merchant_fact",
+      "source_id": "C17",
+      "text": "Merchant Paws Corner (M-1017), size: small, segment: retail_pets, customer for 16 months."
+    },
+    {
+      "evidence_id": "FACT-volume",
+      "kind": "merchant_fact",
+      "source_id": "C17",
+      "text": "Monthly processing volume: $310,000."
+    },
+    {
+      "evidence_id": "FACT-transactions",
+      "kind": "merchant_fact",
+      "source_id": "C17",
+      "text": "Monthly transaction count: 6,200 (average ticket $50)."
+    },
+    {
+      "evidence_id": "FACT-cost",
+      "kind": "merchant_fact",
+      "source_id": "C17",
+      "text": "Merchant-specific processing cost: 1.80% of volume + $0.10 per transaction."
+    },
+    {
+      "evidence_id": "FACT-current_pricing",
+      "kind": "merchant_fact",
+      "source_id": "C17",
+      "text": "Current pricing: 2.65% + $0.25 per transaction."
+    },
+    {
+      "evidence_id": "FACT-request",
+      "kind": "merchant_fact",
+      "source_id": "C17",
+      "text": "Merchant request (merchant's own words, unverified): \"We'd like 2.38% + $0.25 starting today.\" Requested pricing: 2.38% + $0.25 per transaction."
+    },
+    {
+      "evidence_id": "FACT-decision_date",
+      "kind": "merchant_fact",
+      "source_id": "C17",
+      "text": "Pricing decision date: 2026-09-01."
+    },
+    {
+      "evidence_id": "FACT-exception",
+      "kind": "merchant_fact",
+      "source_id": "C17",
+      "text": "No promotion or exception requested."
+    },
+    {
+      "evidence_id": "PRC-2026.2§1",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Scope and effective dates: Merchant Pricing Policy 2026.2 (PRC-2026.2) applies to pricing decisions dated from 2026-09-01 (inclusive) until superseded. Decisions must use the policy effective on the decision date."
+    },
+    {
+      "evidence_id": "PRC-2026.2§2",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Standard list rates: micro: 2.95% + $0.30 per transaction; small: 2.75% + $0.25 per transaction; mid: 2.45% + $0.20 per transaction; enterprise: 2.15% + $0.15 per transaction"
+    },
+    {
+      "evidence_id": "PRC-2026.2§3",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Minimum gross margin: Gross margin % = (monthly revenue − monthly processing cost) / monthly revenue × 100, where revenue = volume × rate + transactions × per-transaction fee and cost = volume × cost rate + transactions × per-transaction cost. Minimum gross margin by merchant size: micro 33%, small 31%, mid 27%, enterprise 22%. Pricing below the minimum margin is prohibited unless an approved strategic exception applies (see PRC-2026.2§7)."
+    },
+    {
+      "evidence_id": "PRC-2026.2§4",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Discount approvals: Discount vs list = (list revenue − proposed revenue) / list revenue × 100, using the merchant's own volume and transaction count. A discount greater than 10% requires approval from the regional_pricing_manager."
+    },
+    {
+      "evidence_id": "PRC-2026.2§5",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "High-volume merchants: Merchants with monthly processing volume above $3,000,000 require deal_desk approval for any pricing change."
+    },
+    {
+      "evidence_id": "PRC-2026.2§6",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Promotions: Valid promotion codes: Q4GROWTH (valid 2026-10-01 to 2026-12-31 inclusive; lowers the minimum margin by 5 percentage points). Any pricing that uses a promotion requires promotions_lead approval. Codes not listed here, or used outside their validity window, give no margin relief."
+    },
+    {
+      "evidence_id": "PRC-2026.2§7",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Strategic exceptions: A strategic exception may permit pricing below the minimum margin. Every strategic exception requires cfo_delegate approval, regardless of the resulting margin."
+    },
+    {
+      "evidence_id": "PRC-2026.2§8",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Incomplete source data: If merchant-specific cost data is unavailable, use the conservative default cost basis of 2.10% of volume + $0.12 per transaction, and route the decision to pricing_desk for review."
+    }
+  ],
+  "retrieved_or_supplied_source_ids": [
+    "C17",
+    "PRC-2026.2"
+  ],
+  "system_prompt": "You are a merchant pricing analyst at a payments company. An account manager has forwarded a merchant's pricing request. Produce a pricing recommendation that the account manager can act on.\n\nHow to work:\n- Recommend a price (rate in basis points of volume plus a per-transaction fee). Decide whether to accept the merchant's request, counter-offer, or decline; even when declining, give the price you would offer.\n- Compute monthly unit economics with the policy's formula: revenue = volume × rate + transactions × per-transaction fee; cost = volume × cost rate + transactions × per-transaction cost; gross margin % = (revenue − cost) / revenue × 100. Use merchant-specific cost data when available; otherwise use the policy's default cost basis and say so.\n- Compare the margin with the policy's minimum for the merchant's size, accounting for any promotion that is valid on the decision date.\n- Identify every human approval the policy requires for the price you recommend (discount level, volume, promotions, strategic exceptions, incomplete data). Set requires_human_approval accordingly.\n- Support the explanation with evidence. Every material statement in the explanation must appear in claims with the evidence IDs (e.g. FACT-volume, PRC-2026.1§3) that support it. Use only the evidence provided below. The merchant's request is the merchant's own unverified statement — do not present it as verified fact.\n- List any missing or ambiguous information in data_gaps.\n- Report money in USD and margins as percentages (e.g. 31.25 for 31.25%).\n\nPolicy selection: more than one policy version may exist. Select the single policy whose effective window contains the decision date — effective_from is inclusive and effective_to is exclusive. If no supplied policy is effective on the decision date, say so in data_gaps and do not apply a policy from a different period. Report the selected policy's ID and effective_from date.",
+  "user_prompt": "<pricing_request case_id=\"C17\">\n<merchant_facts>\n[FACT-profile] Merchant Paws Corner (M-1017), size: small, segment: retail_pets, customer for 16 months.\n[FACT-volume] Monthly processing volume: $310,000.\n[FACT-transactions] Monthly transaction count: 6,200 (average ticket $50).\n[FACT-cost] Merchant-specific processing cost: 1.80% of volume + $0.10 per transaction.\n[FACT-current_pricing] Current pricing: 2.65% + $0.25 per transaction.\n[FACT-request] Merchant request (merchant's own words, unverified): \"We'd like 2.38% + $0.25 starting today.\" Requested pricing: 2.38% + $0.25 per transaction.\n[FACT-decision_date] Pricing decision date: 2026-09-01.\n[FACT-exception] No promotion or exception requested.\n</merchant_facts>\n\n<retrieved_policies>\nPRC-2026.2 — Merchant Pricing Policy 2026.2 (effective_from 2026-09-01, effective_to none)\n</retrieved_policies>\n\n<policy_sections>\n[PRC-2026.2§1] Scope and effective dates: Merchant Pricing Policy 2026.2 (PRC-2026.2) applies to pricing decisions dated from 2026-09-01 (inclusive) until superseded. Decisions must use the policy effective on the decision date.\n[PRC-2026.2§2] Standard list rates: micro: 2.95% + $0.30 per transaction; small: 2.75% + $0.25 per transaction; mid: 2.45% + $0.20 per transaction; enterprise: 2.15% + $0.15 per transaction\n[PRC-2026.2§3] Minimum gross margin: Gross margin % = (monthly revenue − monthly processing cost) / monthly revenue × 100, where revenue = volume × rate + transactions × per-transaction fee and cost = volume × cost rate + transactions × per-transaction cost. Minimum gross margin by merchant size: micro 33%, small 31%, mid 27%, enterprise 22%. Pricing below the minimum margin is prohibited unless an approved strategic exception applies (see PRC-2026.2§7).\n[PRC-2026.2§4] Discount approvals: Discount vs list = (list revenue − proposed revenue) / list revenue × 100, using the merchant's own volume and transaction count. A discount greater than 10% requires approval from the regional_pricing_manager.\n[PRC-2026.2§5] High-volume merchants: Merchants with monthly processing volume above $3,000,000 require deal_desk approval for any pricing change.\n[PRC-2026.2§6] Promotions: Valid promotion codes: Q4GROWTH (valid 2026-10-01 to 2026-12-31 inclusive; lowers the minimum margin by 5 percentage points). Any pricing that uses a promotion requires promotions_lead approval. Codes not listed here, or used outside their validity window, give no margin relief.\n[PRC-2026.2§7] Strategic exceptions: A strategic exception may permit pricing below the minimum margin. Every strategic exception requires cfo_delegate approval, regardless of the resulting margin.\n[PRC-2026.2§8] Incomplete source data: If merchant-specific cost data is unavailable, use the conservative default cost basis of 2.10% of volume + $0.12 per transaction, and route the decision to pricing_desk for review.\n</policy_sections>\n</pricing_request>\n\nReturn the pricing recommendation in the required JSON format.",
+  "tool_calls_if_any": [],
+  "experiment_run_id": "run_6425d0737461",
+  "data_origin": "synthetic",
+  "served_model_id": "claude-opus-5-5",
+  "selected_policy_id": "PRC-2026.2",
+  "final_response": "{\"selected_policy_id\":\"PRC-2026.2\",\"policy_effective_from\":\"2026-09-01\",\"recommended_pricing\":{\"rate_bps\":240,\"per_txn_fee_usd\":0.25},\"cost_basis_used\":{\"cost_bps\":180,\"per_txn_cost_usd\":0.1,\"source\":\"merchant_data\"},\"unit_economics\":{\"monthly_volume_usd\":310000,\"monthly_transactions\":6200,\"monthly_revenue_usd\":8990,\"monthly_cost_usd\":6200,\"monthly_gross_profit_usd\":2790,\"gross_margin_pct\":31.03},\"minimum_margin_pct_required\":31,\"meets_minimum_margin\":true,\"discount_vs_list_pct\":10.77,\"requires_human_approval\":true,\"approvals_required\":[{\"approver_role\":\"regional_pricing_manager\",\"reason\":\"Recommended pricing of 2.40% + $0.25 is a 10.77% discount against the small-merchant list price of 2.75% + $0.25. This exceeds the 10% approval threshold.\",\"policy_evidence_id\":\"PRC-2026.2§4\"}],\"decision\":\"counter_offer\",\"explanation\":\"Policy PRC-2026.2 applies because it took effect on 2026-09-01, which is the decision date.\\n\\nThe merchant has asked for 2.38% + $0.25. This request is unverified. Using the merchant's own cost data, the requested price would give the following monthly figures:\\n- Revenue: $8,928\\n- Cost: $6,200\\n- Gross margin: 30.56%\\n\\nThat is below the 31% minimum for small merchants. Pricing below the minimum is prohibited without a strategic exception. No exception or promotion was requested. In any case, Q4GROWTH is not valid until 2026-10-01.\\n\\nWe recommend a counter-offer of 2.40% + $0.25. This gives:\\n- Revenue: $8,990\\n- Cost: $6,200\\n- Gross profit: $2,790\\n- Gross margin: 31.03%\\n\\nThe counter-offer meets the minimum margin. It is still a 10.77% discount against the small list price of 2.75% + $0.25, so it needs regional pricing manager approval.\\n\\nAs an alternative, 2.43% + $0.25 would be a 9.85% discount and would not need approval. There are no volume, promotion, exception or data-gap approvals, because volume is $310,000 and merchant-specific cost data is available.\",\"claims\":[{\"claim\":\"PRC-2026.2 is the policy effective on the decision date of 2026-09-01.\",\"evidence_ids\":[\"PRC-2026.2§1\",\"FACT-decision_date\"]},{\"claim\":\"The merchant requested 2.38% + $0.25. This is the merchant's own unverified statement.\",\"evidence_ids\":[\"FACT-request\"]},{\"claim\":\"Unit economics use the merchant-specific cost of 1.80% + $0.10, applied to $310,000 volume and 6,200 transactions.\",\"evidence_ids\":[\"FACT-cost\",\"FACT-volume\",\"FACT-transactions\",\"PRC-2026.2§3\"]},{\"claim\":\"The requested pricing yields a 30.56% gross margin, which is below the 31% minimum for small merchants.\",\"evidence_ids\":[\"FACT-request\",\"FACT-cost\",\"FACT-volume\",\"FACT-transactions\",\"FACT-profile\",\"PRC-2026.2§3\"]},{\"claim\":\"Pricing below the minimum margin is prohibited without an approved strategic exception, and none was requested.\",\"evidence_ids\":[\"PRC-2026.2§3\",\"PRC-2026.2§7\",\"FACT-exception\"]},{\"claim\":\"No promotion gives margin relief on 2026-09-01; Q4GROWTH is valid only from 2026-10-01.\",\"evidence_ids\":[\"PRC-2026.2§6\",\"FACT-decision_date\",\"FACT-exception\"]},{\"claim\":\"The recommended 2.40% + $0.25 yields $8,990 revenue, $6,200 cost, $2,790 gross profit and a 31.03% margin.\",\"evidence_ids\":[\"FACT-cost\",\"FACT-volume\",\"FACT-transactions\",\"PRC-2026.2§3\"]},{\"claim\":\"Against the small list price of 2.75% + $0.25 ($10,075 list revenue), the recommended price is a 10.77% discount and requires regional_pricing_manager approval.\",\"evidence_ids\":[\"PRC-2026.2§2\",\"PRC-2026.2§4\",\"FACT-volume\",\"FACT-transactions\"]},{\"claim\":\"No deal_desk approval is needed because volume of $310,000 is at or below $3,000,000.\",\"evidence_ids\":[\"PRC-2026.2§5\",\"FACT-volume\"]},{\"claim\":\"No pricing_desk review is needed because merchant-specific cost data is available.\",\"evidence_ids\":[\"PRC-2026.2§8\",\"FACT-cost\"]},{\"claim\":\"An alternative of 2.43% + $0.25 would be a 9.85% discount and would avoid the approval requirement.\",\"evidence_ids\":[\"PRC-2026.2§2\",\"PRC-2026.2§4\",\"FACT-volume\",\"FACT-transactions\"]}],\"data_gaps\":[\"The merchant's request to start 'today' has not been verified, and the requested effective date has not been confirmed.\",\"Merchant-specific cost data (1.80% + $0.10) is given without a source date or verification details.\",\"Volume and transaction counts are single monthly figures; no seasonality or trend data was provided.\"]}",
+  "parsed_structured_output": {
+    "selected_policy_id": "PRC-2026.2",
+    "policy_effective_from": "2026-09-01",
+    "recommended_pricing": {
+      "rate_bps": 240,
+      "per_txn_fee_usd": 0.25
+    },
+    "cost_basis_used": {
+      "cost_bps": 180,
+      "per_txn_cost_usd": 0.1,
+      "source": "merchant_data"
+    },
+    "unit_economics": {
+      "monthly_volume_usd": 310000,
+      "monthly_transactions": 6200,
+      "monthly_revenue_usd": 8990,
+      "monthly_cost_usd": 6200,
+      "monthly_gross_profit_usd": 2790,
+      "gross_margin_pct": 31.03
+    },
+    "minimum_margin_pct_required": 31,
+    "meets_minimum_margin": true,
+    "discount_vs_list_pct": 10.77,
+    "requires_human_approval": true,
+    "approvals_required": [
+      {
+        "approver_role": "regional_pricing_manager",
+        "reason": "Recommended pricing of 2.40% + $0.25 is a 10.77% discount against the small-merchant list price of 2.75% + $0.25. This exceeds the 10% approval threshold.",
+        "policy_evidence_id": "PRC-2026.2§4"
+      }
+    ],
+    "decision": "counter_offer",
+    "explanation": "Policy PRC-2026.2 applies because it took effect on 2026-09-01, which is the decision date.\n\nThe merchant has asked for 2.38% + $0.25. This request is unverified. Using the merchant's own cost data, the requested price would give the following monthly figures:\n- Revenue: $8,928\n- Cost: $6,200\n- Gross margin: 30.56%\n\nThat is below the 31% minimum for small merchants. Pricing below the minimum is prohibited without a strategic exception. No exception or promotion was requested. In any case, Q4GROWTH is not valid until 2026-10-01.\n\nWe recommend a counter-offer of 2.40% + $0.25. This gives:\n- Revenue: $8,990\n- Cost: $6,200\n- Gross profit: $2,790\n- Gross margin: 31.03%\n\nThe counter-offer meets the minimum margin. It is still a 10.77% discount against the small list price of 2.75% + $0.25, so it needs regional pricing manager approval.\n\nAs an alternative, 2.43% + $0.25 would be a 9.85% discount and would not need approval. There are no volume, promotion, exception or data-gap approvals, because volume is $310,000 and merchant-specific cost data is available.",
+    "claims": [
+      {
+        "claim": "PRC-2026.2 is the policy effective on the decision date of 2026-09-01.",
+        "evidence_ids": [
+          "PRC-2026.2§1",
+          "FACT-decision_date"
+        ]
+      },
+      {
+        "claim": "The merchant requested 2.38% + $0.25. This is the merchant's own unverified statement.",
+        "evidence_ids": [
+          "FACT-request"
+        ]
+      },
+      {
+        "claim": "Unit economics use the merchant-specific cost of 1.80% + $0.10, applied to $310,000 volume and 6,200 transactions.",
+        "evidence_ids": [
+          "FACT-cost",
+          "FACT-volume",
+          "FACT-transactions",
+          "PRC-2026.2§3"
+        ]
+      },
+      {
+        "claim": "The requested pricing yields a 30.56% gross margin, which is below the 31% minimum for small merchants.",
+        "evidence_ids": [
+          "FACT-request",
+          "FACT-cost",
+          "FACT-volume",
+          "FACT-transactions",
+          "FACT-profile",
+          "PRC-2026.2§3"
+        ]
+      },
+      {
+        "claim": "Pricing below the minimum margin is prohibited without an approved strategic exception, and none was requested.",
+        "evidence_ids": [
+          "PRC-2026.2§3",
+          "PRC-2026.2§7",
+          "FACT-exception"
+        ]
+      },
+      {
+        "claim": "No promotion gives margin relief on 2026-09-01; Q4GROWTH is valid only from 2026-10-01.",
+        "evidence_ids": [
+          "PRC-2026.2§6",
+          "FACT-decision_date",
+          "FACT-exception"
+        ]
+      },
+      {
+        "claim": "The recommended 2.40% + $0.25 yields $8,990 revenue, $6,200 cost, $2,790 gross profit and a 31.03% margin.",
+        "evidence_ids": [
+          "FACT-cost",
+          "FACT-volume",
+          "FACT-transactions",
+          "PRC-2026.2§3"
+        ]
+      },
+      {
+        "claim": "Against the small list price of 2.75% + $0.25 ($10,075 list revenue), the recommended price is a 10.77% discount and requires regional_pricing_manager approval.",
+        "evidence_ids": [
+          "PRC-2026.2§2",
+          "PRC-2026.2§4",
+          "FACT-volume",
+          "FACT-transactions"
+        ]
+      },
+      {
+        "claim": "No deal_desk approval is needed because volume of $310,000 is at or below $3,000,000.",
+        "evidence_ids": [
+          "PRC-2026.2§5",
+          "FACT-volume"
+        ]
+      },
+      {
+        "claim": "No pricing_desk review is needed because merchant-specific cost data is available.",
+        "evidence_ids": [
+          "PRC-2026.2§8",
+          "FACT-cost"
+        ]
+      },
+      {
+        "claim": "An alternative of 2.43% + $0.25 would be a 9.85% discount and would avoid the approval requirement.",
+        "evidence_ids": [
+          "PRC-2026.2§2",
+          "PRC-2026.2§4",
+          "FACT-volume",
+          "FACT-transactions"
+        ]
+      }
+    ],
+    "data_gaps": [
+      "The merchant's request to start 'today' has not been verified, and the requested effective date has not been confirmed.",
+      "Merchant-specific cost data (1.80% + $0.10) is given without a source date or verification details.",
+      "Volume and transaction counts are single monthly figures; no seasonality or trend data was provided."
+    ]
+  },
+  "latency_ms": 20794,
+  "token_usage": {
+    "input_tokens": 3412,
+    "output_tokens": 2469,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.063028,
+  "stop_reason": "end_turn",
+  "execution_error": null,
+  "execution_mode": "live",
+  "cache_hit": false
+}

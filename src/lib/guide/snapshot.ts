@@ -3,6 +3,7 @@
  * the app is in mock mode (or a live call can't be made).
  */
 import { overviewView } from "../services";
+import { getHeldoutState } from "../storage/repos";
 import { modeInfo, readLedger } from "../llm/client";
 import { demoSteps, type DemoStep } from "@/app/_overview/demoPath";
 import { nextStep } from "./next";
@@ -15,7 +16,7 @@ export interface GuideState {
 }
 
 export async function guideState(page: string): Promise<GuideState> {
-  const [o, ledger] = await Promise.all([overviewView(), readLedger()]);
+  const [o, ledger, heldout] = await Promise.all([overviewView(), readLedger(), getHeldoutState()]);
   const info = modeInfo();
   const steps = demoSteps(o);
   const text = [
@@ -24,6 +25,7 @@ export async function guideState(page: string): Promise<GuideState> {
     `Mode: ${info.mode.toUpperCase()} (${info.reason}). Live spend so far: $${ledger.total_estimated_usd.toFixed(2)} of $${info.spend_cap_usd.toFixed(2)} cap.`,
     `Executions: ${o.executions.total} (${o.executions.live} live, ${o.executions.mock} mock, ${o.executions.errors} errors).`,
     `Human review: ${o.review.reviewed_traces} traces annotated (target ${o.review.target_min}–${o.review.target_max}), ${o.review.unreviewed} unreviewed. Gold: ${o.review.gold_dev} dev, ${o.review.gold_heldout} held-out.`,
+    `Held-out access: ${heldout.revealed ? `REVEALED ${heldout.revealed_at ?? ""} by ${heldout.revealed_by ?? "unknown"} — final check done or under way; no further tuning of prompts, rubric or judge.` : "locked (held-out cases cannot be run until the audited reveal)."}`,
     `Observed failure modes: ${o.observed_failure_modes} (taxonomy v${o.taxonomy_version}).`,
     `Release status: ${o.release_status}. Pass-all rate: ${o.pass_all_rate == null ? "n/a" : `${(o.pass_all_rate * 100).toFixed(0)}%`}. Critical failures: ${o.critical_failures ?? "n/a"}.`,
     `Top release reasons: ${o.release_reasons.slice(0, 3).map((r) => r.message).join(" | ") || "none"}`,
@@ -35,6 +37,8 @@ export async function guideState(page: string): Promise<GuideState> {
 }
 
 const PAGE_HELP: Record<string, string> = {
+  "/start":
+    "**Start here** shows the 5-stage path (Run → Review → Define what good means → Check automatically → Compare and ship), what to improve next based on your data, how to bring your own agent, and a glossary.",
   "/": "**Dashboard** compares Baseline and Corrected side by side: headline numbers as *baseline → corrected*, eval trends across runs, two bars per check (Baseline grey, Corrected blue), what changed, and how far you are through the pipeline.",
   "/review":
     "**Review traces** is where you run a case and judge it yourself. A *trace* is one recorded run of the agent. Pick a case and config, run it, open the trace, then answer the 5-question checklist (✓ / ✗ / ?), mark Pass or Fail, and on Fail add one line on the first failure plus a severity.",
@@ -46,7 +50,7 @@ const PAGE_HELP: Record<string, string> = {
   "/experiments": "**Experiments** runs Baseline and Corrected on the same frozen set of cases and compares them case by case.",
   "/release": "**Release gate** turns all the evidence into a ship / no-ship decision that a named human must approve.",
   "/connect":
-    "**Connect (MCP)** lets Claude Desktop or Claude Code read AgentTrust (release status, runs, traces, rubric) through a read-only MCP server. Copy the setup snippet for your client; the app must be running.",
+    "**Connect (MCP)** lets Claude Desktop or Claude Code read Evalxiety (release status, runs, traces, rubric) through a read-only MCP server. Copy the setup snippet for your client; the app must be running.",
 };
 
 function pageHelp(page: string): string {
@@ -75,7 +79,7 @@ export function mockReply(question: string, state: GuideState, why: string): str
       "5. Check any LLM judge against human labels (TPR/TNR), then confirm on held-out data.",
       "6. Compare old vs. new agent on the same frozen cases; look for regressions.",
       "7. Set release rules up front and require a named human sign-off.",
-      "In this codebase the pieces live in `src/lib/agent/`, `src/lib/domain/scenarios.ts`, `src/lib/evaluators/` and `src/lib/release/gate.ts`.",
+      "See [Start here](/start) → *Onboard your own agent* for what's built: today only the rubric is generic; trace import, case files, check plugins and a re-run adapter are coming next, so other agents need code changes (`src/lib/agent/`, `src/lib/domain/scenarios.ts`, `src/lib/evaluators/`, `src/lib/release/gate.ts`).",
     ].join("\n");
   } else if (/page|here|this tab|what is this/.test(q)) {
     body = `${pageHelp(state.page)}\n\n${nextLine}`;

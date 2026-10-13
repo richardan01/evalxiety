@@ -8,9 +8,9 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getJSON } from "@/lib/client/api";
-import { InfoTip, MockBadge, StatusPill, cx } from "@/components/ui";
-import { topReason } from "@/app/release/status";
+import { InfoTip, MockBadge, cx } from "@/components/ui";
 import { CheckBars, CountBars, TrendsChart } from "./DashboardCharts";
+import { EvalxietyBanner } from "./EvalxietyBanner";
 import type { OverviewData } from "./types";
 
 function Kpi({ icon, label, value, delta, deltaTone, sub, info }: {
@@ -91,13 +91,6 @@ export function OverviewDashboard() {
   const today = new Date().toDateString();
   const runsToday = o.history.filter((h) => new Date(h.created_at).toDateString() === today).length;
 
-  const top = topReason(o.release_reasons);
-  const why =
-    o.release_status === "INSUFFICIENT_EVIDENCE" && !fullRunDone && critical.length > 0
-      ? `Not decided yet — dev results already show ${critical.length} critical regression${critical.length > 1 ? "s" : ""} (${critical.map((c) => c.case_id).join(", ")}).`
-      : o.release_status === "INSUFFICIENT_EVIDENCE" && !fullRunDone
-        ? "Not decided yet — the final check on all 20 cases hasn't run."
-        : (top?.message ?? "All release conditions are met.");
   const next =
     reviewed < minReviews
       ? { href: "/review", label: `Review answers (${reviewed}/${minReviews})` }
@@ -125,7 +118,7 @@ export function OverviewDashboard() {
           <div className="mt-0.5 flex items-center gap-2 text-sm text-slate-500">
             Every eval run of the pricing agent — and whether it&apos;s ready to ship.
             <InfoTip>
-              AgentTrust tests a Claude pricing agent on 20 synthetic merchant cases. Code checks verify policy rules; people label answers; an
+              Evalxiety tests a Claude pricing agent on 20 synthetic merchant cases. Code checks verify policy rules; people label answers; an
               experimental AI judge checks explanations; the release gate combines the evidence. Pass rates per check — never an averaged score.
             </InfoTip>
           </div>
@@ -138,15 +131,7 @@ export function OverviewDashboard() {
         </span>
       </div>
 
-      <section className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
-        <div className="flex flex-wrap items-center gap-4">
-          <StatusPill status={o.release_status} />
-          <p className="text-sm text-slate-800">{why}</p>
-        </div>
-        <Link href={next.href} className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
-          {next.label} →
-        </Link>
-      </section>
+      <EvalxietyBanner o={o} next={next} />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <Kpi icon="🧪" label="Eval runs" value={o.history.length} delta={runsToday ? `+${runsToday} today` : undefined} deltaTone="up" sub={`${o.executions.total} traces`} />

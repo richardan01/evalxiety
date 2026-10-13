@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Connect: how to use AgentTrust from Claude Desktop, Claude Code or (later) your own agent.
+ * Connect: how to use Evalxiety from Claude Desktop, Claude Code or (later) your own agent.
  * Everything shown comes from GET /api/connect, so the snippets carry this machine's real paths.
  */
 import { useEffect, useState, type ReactNode } from "react";
@@ -30,7 +30,7 @@ function desktopSnippet(d: ConnectData): string {
   return JSON.stringify(
     {
       mcpServers: {
-        agenttrust: {
+        evalxiety: {
           command: d.node_path,
           args: [d.server_path],
           env: { AGENTTRUST_URL: d.api_base_url },
@@ -42,7 +42,7 @@ function desktopSnippet(d: ConnectData): string {
   );
 }
 
-const codeCommand = (d: ConnectData) => `claude mcp add agenttrust -- node ${d.server_path}`;
+const codeCommand = (d: ConnectData) => `claude mcp add evalxiety -- node ${d.server_path}`;
 
 function CopyButton({ text }: { text: string }) {
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
@@ -121,7 +121,7 @@ function Diagram({ mode }: { mode: ConnectData["mode"] | null }) {
         <span className="flex items-center gap-2">
           How it fits together
           <InfoTip>
-            Inbound, your Claude reads AgentTrust over MCP (GET requests only). Outbound, AgentTrust is the only part
+            Inbound, your Claude reads Evalxiety over MCP (GET requests only). Outbound, Evalxiety is the only part
             that calls the Claude API: it runs the agent under test and the judge, within the spend cap.
           </InfoTip>
         </span>
@@ -131,10 +131,10 @@ function Diagram({ mode }: { mode: ConnectData["mode"] | null }) {
         <FlowRow caption="You ask">
           <Node title="Your Claude" sub="Desktop / Code" />
           <Arrow label="MCP · read-only" />
-          <Node title="AgentTrust" sub="runs, checks, gate" tone="dark" />
+          <Node title="Evalxiety" sub="runs, checks, gate" tone="dark" />
         </FlowRow>
-        <FlowRow caption="AgentTrust tests">
-          <Node title="AgentTrust" sub="runner + judge" tone="dark" />
+        <FlowRow caption="Evalxiety tests">
+          <Node title="Evalxiety" sub="runner + judge" tone="dark" />
           <Arrow label="Claude API" />
           <Node
             title="Agent under test"
@@ -173,10 +173,10 @@ export function ConnectView() {
     <div className="space-y-5">
       <PageHeader
         title="Connect"
-        question="Use AgentTrust from Claude Desktop, Claude Code or your own agent."
+        question="Use Evalxiety from Claude Desktop, Claude Code or your own agent."
         info={
           <>
-            AgentTrust ships a local MCP server (<code>mcp/server.mjs</code>, stdio). It only calls GET endpoints of this
+            Evalxiety ships a local MCP server (<code>mcp/server.mjs</code>, stdio). It only calls GET endpoints of this
             app, so asking Claude about results never spends API credits or changes data.
           </>
         }
@@ -188,7 +188,7 @@ export function ConnectView() {
         <Callout tone="red" title="MCP server not found">Expected at {data.server_path}.</Callout>
       )}
       {data && data.server_exists && !data.sdk_installed && (
-        <Callout tone="amber" title="MCP SDK missing">Run npm install in the AgentTrust folder.</Callout>
+        <Callout tone="amber" title="MCP SDK missing">Run npm install in the Evalxiety folder.</Callout>
       )}
 
       <Diagram mode={data?.mode ?? null} />
@@ -199,9 +199,9 @@ export function ConnectView() {
             <span className="flex items-center gap-2">
               Claude Desktop
               <InfoTip>
-                Merge the <code>agenttrust</code> entry into <code>mcpServers</code> if the file already has other
+                Merge the <code>evalxiety</code> entry into <code>mcpServers</code> if the file already has other
                 servers. The command is the absolute path of node because Claude Desktop does not use your shell PATH.
-                AgentTrust must be running (<code>npm run dev</code>) when you ask.
+                Evalxiety must be running (<code>npm run dev</code>) when you ask.
               </InfoTip>
             </span>
           }
@@ -212,7 +212,7 @@ export function ConnectView() {
           <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm text-slate-700">
             <li>Paste into the config file above.</li>
             <li>Restart Claude Desktop.</li>
-            <li>Look for <span className="font-medium">agenttrust</span> in the tools menu.</li>
+            <li>Look for <span className="font-medium">evalxiety</span> in the tools menu.</li>
           </ol>
         </Card>
 
@@ -294,10 +294,10 @@ export function ConnectView() {
               </li>
               <li className="flex items-center gap-1.5">
                 <span className="text-slate-400">○</span> HTTP adapter
-                <InfoTip>Point AgentTrust at your agent&apos;s endpoint so frozen cases run against it.</InfoTip>
+                <InfoTip>Point Evalxiety at your agent&apos;s endpoint so frozen cases run against it.</InfoTip>
               </li>
               <li className="flex items-center gap-1.5">
-                <span className="text-slate-400">○</span> <code className="font-mono text-xs">agenttrust gate --ci</code>
+                <span className="text-slate-400">○</span> <code className="font-mono text-xs">evalxiety gate --ci</code>
                 <InfoTip>Fail a CI build when the release gate is not met.</InfoTip>
               </li>
             </ul>

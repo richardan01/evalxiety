@@ -4,8 +4,8 @@ import { MockBanner, Sidebar } from "@/components/Sidebar";
 import { GuideAgent } from "@/components/guide/GuideAgent";
 
 export const metadata: Metadata = {
-  title: "AgentTrust — release readiness for AI agents",
-  description: "Don't just build AI agents. Prove they're ready to ship.",
+  title: "Evalxiety — because your AI should be nervous before shipping",
+  description: "A nervous quality-control companion that keeps checking whether your evaluation results can be trusted.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -17,7 +17,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <MockBanner />
           <main className="mx-auto w-full max-w-7xl flex-1 px-8 py-7">{children}</main>
           <footer className="border-t border-slate-200 bg-white px-8 py-3 text-xs text-slate-500">
-            Synthetic merchant-pricing scenario · results describe a small prototype test set, not production certification.
+            Evalxiety · synthetic merchant-pricing scenario · results describe a small prototype test set, not production certification.
           </footer>
         </div>
         <GuideAgent />

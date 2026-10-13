@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"No strategic exception is on record.\",\"SPRING26 is not a valid promotion code under PRC-2026.2, so it gives no margin relief. The only valid code is Q4GROWTH.\",\"The counter needs no human approval because: volume is well below $3M, no promotion is applied, no strategic exception is used, merchant cost data is available\"],\"evidence_ids\":[\"PRC-2026.2§1\",\"PRC-2026.2§2\",\"PRC-2026.2§3\",\"PRC-2026.2§4\",\"PRC-2026.2§5\",\"PRC-2026.2§6\",\"PRC-2026.2§7\",\"PRC-2026.2§8\",\"FACT-request\",\"FACT-exception\",\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-decision_date\"],\"explanation\":\"No material claim is unsupported. Each one traces to the evidence:\\n- Policy selection follows from PRC-2026.2§1 and FACT-decision_date.\\n- Merchant size, volume, transaction count and cost come from FACT-profile, FACT-volume, FACT-transactions and FACT-cost.\\n- The 31% small-merchant minimum restates PRC-2026.2§3.\\n- Small list pricing of 2.75% + $0.25 restates PRC-2026.2§2.\\n- The 10% discount threshold and regional_pricing_manager approval restate PRC-2026.2§4.\\n- SPRING26's invalidity applies PRC-2026.2§6 directly: only Q4GROWTH is listed, and unlisted codes give no relief.\\n- The sales-rep promise is correctly framed as the merchant's unverified statement, matching FACT-request.\\n- 'No strategic exception is on record' is consistent with the evidence. FACT-exception describes only a promotion request, and no strategic exception appears anywhere.\\n- The no-approval reasoning applies §5 (volume $140,000 is under $3M), §6 (no promotion used), §7 (no exception used) and §8 (cost data available via FACT-cost).\\n- Revenue, margin and discount figures are straightforward arithmetic from the supplied values.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 3814,
+    "output_tokens": 1037,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.035996,
+  "latency_ms": 10332,
+  "cached_at": "2026-10-13T08:57:19.074Z"
+}

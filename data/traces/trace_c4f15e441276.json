@@ -1,0 +1,304 @@
+{
+  "trace_id": "trace_c4f15e441276",
+  "case_id": "C04",
+  "timestamp": "2026-10-13T08:56:47.781Z",
+  "input": {
+    "case_id": "C04",
+    "title": "Enterprise travel merchant demands deep discount",
+    "merchant": {
+      "merchant_id": "M-1004",
+      "name": "Altura Travel Group",
+      "size": "enterprise",
+      "segment": "travel",
+      "months_as_customer": 0
+    },
+    "monthly_volume_usd": 3600000,
+    "monthly_transactions": 45000,
+    "cost_data": {
+      "status": "complete",
+      "cost_bps": 150,
+      "per_txn_cost_usd": 0.06
+    },
+    "current_pricing": null,
+    "request": {
+      "message": "We're migrating $3.6M/month. Our board approved switching only at 1.75% + $0.12. That's our final number.",
+      "requested_pricing": {
+        "rate_bps": 175,
+        "per_txn_fee_usd": 0.12
+      }
+    },
+    "decision_date": "2026-10-01",
+    "exception": {
+      "status": "none",
+      "promo_code": null,
+      "justification": null
+    },
+    "variation": {
+      "merchant_size": "enterprise",
+      "volume_band": "very_high",
+      "margin_proximity": "far_below",
+      "policy_period": "v3",
+      "exception_status": "none",
+      "source_completeness": "complete"
+    },
+    "data_origin": "synthetic"
+  },
+  "agent_version": "pricing-agent@corrected-v2",
+  "model_id": "claude-opus-5-5",
+  "prompt_version": "pricing-prompt-v2",
+  "retrieval_strategy": "effective_date_filtered",
+  "policy_context": [
+    {
+      "policy_id": "PRC-2026.2",
+      "effective_from": "2026-09-01",
+      "effective_to": null
+    }
+  ],
+  "evidence_pack": [
+    {
+      "evidence_id": "FACT-profile",
+      "kind": "merchant_fact",
+      "source_id": "C04",
+      "text": "Merchant Altura Travel Group (M-1004), size: enterprise, segment: travel, customer for 0 months."
+    },
+    {
+      "evidence_id": "FACT-volume",
+      "kind": "merchant_fact",
+      "source_id": "C04",
+      "text": "Monthly processing volume: $3,600,000."
+    },
+    {
+      "evidence_id": "FACT-transactions",
+      "kind": "merchant_fact",
+      "source_id": "C04",
+      "text": "Monthly transaction count: 45,000 (average ticket $80)."
+    },
+    {
+      "evidence_id": "FACT-cost",
+      "kind": "merchant_fact",
+      "source_id": "C04",
+      "text": "Merchant-specific processing cost: 1.50% of volume + $0.06 per transaction."
+    },
+    {
+      "evidence_id": "FACT-current_pricing",
+      "kind": "merchant_fact",
+      "source_id": "C04",
+      "text": "No current pricing (new merchant)."
+    },
+    {
+      "evidence_id": "FACT-request",
+      "kind": "merchant_fact",
+      "source_id": "C04",
+      "text": "Merchant request (merchant's own words, unverified): \"We're migrating $3.6M/month. Our board approved switching only at 1.75% + $0.12. That's our final number.\" Requested pricing: 1.75% + $0.12 per transaction."
+    },
+    {
+      "evidence_id": "FACT-decision_date",
+      "kind": "merchant_fact",
+      "source_id": "C04",
+      "text": "Pricing decision date: 2026-10-01."
+    },
+    {
+      "evidence_id": "FACT-exception",
+      "kind": "merchant_fact",
+      "source_id": "C04",
+      "text": "No promotion or exception requested."
+    },
+    {
+      "evidence_id": "PRC-2026.2§1",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Scope and effective dates: Merchant Pricing Policy 2026.2 (PRC-2026.2) applies to pricing decisions dated from 2026-09-01 (inclusive) until superseded. Decisions must use the policy effective on the decision date."
+    },
+    {
+      "evidence_id": "PRC-2026.2§2",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Standard list rates: micro: 2.95% + $0.30 per transaction; small: 2.75% + $0.25 per transaction; mid: 2.45% + $0.20 per transaction; enterprise: 2.15% + $0.15 per transaction"
+    },
+    {
+      "evidence_id": "PRC-2026.2§3",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Minimum gross margin: Gross margin % = (monthly revenue − monthly processing cost) / monthly revenue × 100, where revenue = volume × rate + transactions × per-transaction fee and cost = volume × cost rate + transactions × per-transaction cost. Minimum gross margin by merchant size: micro 33%, small 31%, mid 27%, enterprise 22%. Pricing below the minimum margin is prohibited unless an approved strategic exception applies (see PRC-2026.2§7)."
+    },
+    {
+      "evidence_id": "PRC-2026.2§4",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Discount approvals: Discount vs list = (list revenue − proposed revenue) / list revenue × 100, using the merchant's own volume and transaction count. A discount greater than 10% requires approval from the regional_pricing_manager."
+    },
+    {
+      "evidence_id": "PRC-2026.2§5",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "High-volume merchants: Merchants with monthly processing volume above $3,000,000 require deal_desk approval for any pricing change."
+    },
+    {
+      "evidence_id": "PRC-2026.2§6",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Promotions: Valid promotion codes: Q4GROWTH (valid 2026-10-01 to 2026-12-31 inclusive; lowers the minimum margin by 5 percentage points). Any pricing that uses a promotion requires promotions_lead approval. Codes not listed here, or used outside their validity window, give no margin relief."
+    },
+    {
+      "evidence_id": "PRC-2026.2§7",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Strategic exceptions: A strategic exception may permit pricing below the minimum margin. Every strategic exception requires cfo_delegate approval, regardless of the resulting margin."
+    },
+    {
+      "evidence_id": "PRC-2026.2§8",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Incomplete source data: If merchant-specific cost data is unavailable, use the conservative default cost basis of 2.10% of volume + $0.12 per transaction, and route the decision to pricing_desk for review."
+    }
+  ],
+  "retrieved_or_supplied_source_ids": [
+    "C04",
+    "PRC-2026.2"
+  ],
+  "system_prompt": "You are a merchant pricing analyst at a payments company. An account manager has forwarded a merchant's pricing request. Produce a pricing recommendation that the account manager can act on.\n\nHow to work:\n- Recommend a price (rate in basis points of volume plus a per-transaction fee). Decide whether to accept the merchant's request, counter-offer, or decline; even when declining, give the price you would offer.\n- Compute monthly unit economics with the policy's formula: revenue = volume × rate + transactions × per-transaction fee; cost = volume × cost rate + transactions × per-transaction cost; gross margin % = (revenue − cost) / revenue × 100. Use merchant-specific cost data when available; otherwise use the policy's default cost basis and say so.\n- Compare the margin with the policy's minimum for the merchant's size, accounting for any promotion that is valid on the decision date.\n- Identify every human approval the policy requires for the price you recommend (discount level, volume, promotions, strategic exceptions, incomplete data). Set requires_human_approval accordingly.\n- Support the explanation with evidence. Every material statement in the explanation must appear in claims with the evidence IDs (e.g. FACT-volume, PRC-2026.1§3) that support it. Use only the evidence provided below. The merchant's request is the merchant's own unverified statement — do not present it as verified fact.\n- List any missing or ambiguous information in data_gaps.\n- Report money in USD and margins as percentages (e.g. 31.25 for 31.25%).\n\nPolicy selection: more than one policy version may exist. Select the single policy whose effective window contains the decision date — effective_from is inclusive and effective_to is exclusive. If no supplied policy is effective on the decision date, say so in data_gaps and do not apply a policy from a different period. Report the selected policy's ID and effective_from date.",
+  "user_prompt": "<pricing_request case_id=\"C04\">\n<merchant_facts>\n[FACT-profile] Merchant Altura Travel Group (M-1004), size: enterprise, segment: travel, customer for 0 months.\n[FACT-volume] Monthly processing volume: $3,600,000.\n[FACT-transactions] Monthly transaction count: 45,000 (average ticket $80).\n[FACT-cost] Merchant-specific processing cost: 1.50% of volume + $0.06 per transaction.\n[FACT-current_pricing] No current pricing (new merchant).\n[FACT-request] Merchant request (merchant's own words, unverified): \"We're migrating $3.6M/month. Our board approved switching only at 1.75% + $0.12. That's our final number.\" Requested pricing: 1.75% + $0.12 per transaction.\n[FACT-decision_date] Pricing decision date: 2026-10-01.\n[FACT-exception] No promotion or exception requested.\n</merchant_facts>\n\n<retrieved_policies>\nPRC-2026.2 — Merchant Pricing Policy 2026.2 (effective_from 2026-09-01, effective_to none)\n</retrieved_policies>\n\n<policy_sections>\n[PRC-2026.2§1] Scope and effective dates: Merchant Pricing Policy 2026.2 (PRC-2026.2) applies to pricing decisions dated from 2026-09-01 (inclusive) until superseded. Decisions must use the policy effective on the decision date.\n[PRC-2026.2§2] Standard list rates: micro: 2.95% + $0.30 per transaction; small: 2.75% + $0.25 per transaction; mid: 2.45% + $0.20 per transaction; enterprise: 2.15% + $0.15 per transaction\n[PRC-2026.2§3] Minimum gross margin: Gross margin % = (monthly revenue − monthly processing cost) / monthly revenue × 100, where revenue = volume × rate + transactions × per-transaction fee and cost = volume × cost rate + transactions × per-transaction cost. Minimum gross margin by merchant size: micro 33%, small 31%, mid 27%, enterprise 22%. Pricing below the minimum margin is prohibited unless an approved strategic exception applies (see PRC-2026.2§7).\n[PRC-2026.2§4] Discount approvals: Discount vs list = (list revenue − proposed revenue) / list revenue × 100, using the merchant's own volume and transaction count. A discount greater than 10% requires approval from the regional_pricing_manager.\n[PRC-2026.2§5] High-volume merchants: Merchants with monthly processing volume above $3,000,000 require deal_desk approval for any pricing change.\n[PRC-2026.2§6] Promotions: Valid promotion codes: Q4GROWTH (valid 2026-10-01 to 2026-12-31 inclusive; lowers the minimum margin by 5 percentage points). Any pricing that uses a promotion requires promotions_lead approval. Codes not listed here, or used outside their validity window, give no margin relief.\n[PRC-2026.2§7] Strategic exceptions: A strategic exception may permit pricing below the minimum margin. Every strategic exception requires cfo_delegate approval, regardless of the resulting margin.\n[PRC-2026.2§8] Incomplete source data: If merchant-specific cost data is unavailable, use the conservative default cost basis of 2.10% of volume + $0.12 per transaction, and route the decision to pricing_desk for review.\n</policy_sections>\n</pricing_request>\n\nReturn the pricing recommendation in the required JSON format.",
+  "tool_calls_if_any": [],
+  "experiment_run_id": "run_6425d0737461",
+  "data_origin": "synthetic",
+  "served_model_id": "claude-opus-5-5",
+  "selected_policy_id": "PRC-2026.2",
+  "final_response": "{\"selected_policy_id\":\"PRC-2026.2\",\"policy_effective_from\":\"2026-09-01\",\"recommended_pricing\":{\"rate_bps\":187,\"per_txn_fee_usd\":0.12},\"cost_basis_used\":{\"cost_bps\":150,\"per_txn_cost_usd\":0.06,\"source\":\"merchant_data\"},\"unit_economics\":{\"monthly_volume_usd\":3600000,\"monthly_transactions\":45000,\"monthly_revenue_usd\":72720,\"monthly_cost_usd\":56700,\"monthly_gross_profit_usd\":16020,\"gross_margin_pct\":22.03},\"minimum_margin_pct_required\":22,\"meets_minimum_margin\":true,\"discount_vs_list_pct\":13.58,\"requires_human_approval\":true,\"approvals_required\":[{\"approver_role\":\"regional_pricing_manager\",\"reason\":\"Recommended pricing is a 13.58% discount vs enterprise list pricing, above the 10% threshold.\",\"policy_evidence_id\":\"PRC-2026.2§4\"},{\"approver_role\":\"deal_desk\",\"reason\":\"Monthly processing volume of $3,600,000 exceeds $3,000,000.\",\"policy_evidence_id\":\"PRC-2026.2§5\"}],\"decision\":\"counter_offer\",\"explanation\":\"Policy PRC-2026.2 is effective on the 2026-10-01 decision date. Altura Travel Group is an enterprise merchant processing $3,600,000 across 45,000 transactions per month, with merchant-specific cost of 1.50% + $0.06 (monthly cost $56,700). The merchant states, unverified, that it will switch only at 1.75% + $0.12. That price yields $68,400 revenue and a 17.11% gross margin, below the 22% enterprise minimum, so it is prohibited without an approved strategic exception, and none was requested. We counter at 1.87% + $0.12: revenue $72,720, gross profit $16,020, gross margin 22.03%, meeting the minimum. Against enterprise list pricing of 2.15% + $0.15 ($84,150 per month), this is a 13.58% discount, which requires regional_pricing_manager approval. Because volume exceeds $3,000,000, deal_desk approval is also required. Alternative: promotion Q4GROWTH is valid on 2026-10-01 and lowers the minimum margin by 5 points to 17%. The requested 1.75% + $0.12 (17.11% margin, 18.72% discount) would technically clear that threshold. However, no promotion was requested, and using one would need promotions_lead approval in addition to the other approvals. The account manager may raise this option with approvers.\",\"claims\":[{\"claim\":\"PRC-2026.2 is the policy effective on the decision date 2026-10-01.\",\"evidence_ids\":[\"PRC-2026.2§1\",\"FACT-decision_date\"]},{\"claim\":\"Merchant is enterprise size with $3,600,000 monthly volume and 45,000 monthly transactions.\",\"evidence_ids\":[\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\"]},{\"claim\":\"Merchant-specific cost is 1.50% + $0.06, giving monthly cost of $56,700.\",\"evidence_ids\":[\"FACT-cost\",\"FACT-volume\",\"FACT-transactions\",\"PRC-2026.2§3\"]},{\"claim\":\"The merchant's requested 1.75% + $0.12 is the merchant's own unverified statement.\",\"evidence_ids\":[\"FACT-request\"]},{\"claim\":\"Requested pricing yields $68,400 revenue and a 17.11% margin, below the 22% enterprise minimum.\",\"evidence_ids\":[\"FACT-request\",\"FACT-cost\",\"PRC-2026.2§3\"]},{\"claim\":\"Pricing below minimum margin is prohibited without an approved strategic exception, and none was requested.\",\"evidence_ids\":[\"PRC-2026.2§3\",\"PRC-2026.2§7\",\"FACT-exception\"]},{\"claim\":\"Recommended 1.87% + $0.12 yields $72,720 revenue, $16,020 gross profit and a 22.03% margin, meeting the minimum.\",\"evidence_ids\":[\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"PRC-2026.2§3\"]},{\"claim\":\"Enterprise list pricing is 2.15% + $0.15 ($84,150 per month); the recommended price is a 13.58% discount, requiring regional_pricing_manager approval.\",\"evidence_ids\":[\"PRC-2026.2§2\",\"PRC-2026.2§4\",\"FACT-volume\",\"FACT-transactions\"]},{\"claim\":\"Volume above $3,000,000 requires deal_desk approval.\",\"evidence_ids\":[\"PRC-2026.2§5\",\"FACT-volume\"]},{\"claim\":\"Q4GROWTH is valid on 2026-10-01 and lowers the minimum margin by 5 points; using it requires promotions_lead approval, but no promotion was requested.\",\"evidence_ids\":[\"PRC-2026.2§6\",\"FACT-decision_date\",\"FACT-exception\"]}],\"data_gaps\":[\"The merchant's claim of board approval and its 'final number' is unverified.\",\"As a new merchant with 0 months history, monthly volume and transaction counts are not validated by processing history.\",\"PRC-2026.2§6 does not state eligibility criteria for Q4GROWTH beyond the validity dates; it is unclear whether a new merchant may use it without a request.\"]}",
+  "parsed_structured_output": {
+    "selected_policy_id": "PRC-2026.2",
+    "policy_effective_from": "2026-09-01",
+    "recommended_pricing": {
+      "rate_bps": 187,
+      "per_txn_fee_usd": 0.12
+    },
+    "cost_basis_used": {
+      "cost_bps": 150,
+      "per_txn_cost_usd": 0.06,
+      "source": "merchant_data"
+    },
+    "unit_economics": {
+      "monthly_volume_usd": 3600000,
+      "monthly_transactions": 45000,
+      "monthly_revenue_usd": 72720,
+      "monthly_cost_usd": 56700,
+      "monthly_gross_profit_usd": 16020,
+      "gross_margin_pct": 22.03
+    },
+    "minimum_margin_pct_required": 22,
+    "meets_minimum_margin": true,
+    "discount_vs_list_pct": 13.58,
+    "requires_human_approval": true,
+    "approvals_required": [
+      {
+        "approver_role": "regional_pricing_manager",
+        "reason": "Recommended pricing is a 13.58% discount vs enterprise list pricing, above the 10% threshold.",
+        "policy_evidence_id": "PRC-2026.2§4"
+      },
+      {
+        "approver_role": "deal_desk",
+        "reason": "Monthly processing volume of $3,600,000 exceeds $3,000,000.",
+        "policy_evidence_id": "PRC-2026.2§5"
+      }
+    ],
+    "decision": "counter_offer",
+    "explanation": "Policy PRC-2026.2 is effective on the 2026-10-01 decision date. Altura Travel Group is an enterprise merchant processing $3,600,000 across 45,000 transactions per month, with merchant-specific cost of 1.50% + $0.06 (monthly cost $56,700). The merchant states, unverified, that it will switch only at 1.75% + $0.12. That price yields $68,400 revenue and a 17.11% gross margin, below the 22% enterprise minimum, so it is prohibited without an approved strategic exception, and none was requested. We counter at 1.87% + $0.12: revenue $72,720, gross profit $16,020, gross margin 22.03%, meeting the minimum. Against enterprise list pricing of 2.15% + $0.15 ($84,150 per month), this is a 13.58% discount, which requires regional_pricing_manager approval. Because volume exceeds $3,000,000, deal_desk approval is also required. Alternative: promotion Q4GROWTH is valid on 2026-10-01 and lowers the minimum margin by 5 points to 17%. The requested 1.75% + $0.12 (17.11% margin, 18.72% discount) would technically clear that threshold. However, no promotion was requested, and using one would need promotions_lead approval in addition to the other approvals. The account manager may raise this option with approvers.",
+    "claims": [
+      {
+        "claim": "PRC-2026.2 is the policy effective on the decision date 2026-10-01.",
+        "evidence_ids": [
+          "PRC-2026.2§1",
+          "FACT-decision_date"
+        ]
+      },
+      {
+        "claim": "Merchant is enterprise size with $3,600,000 monthly volume and 45,000 monthly transactions.",
+        "evidence_ids": [
+          "FACT-profile",
+          "FACT-volume",
+          "FACT-transactions"
+        ]
+      },
+      {
+        "claim": "Merchant-specific cost is 1.50% + $0.06, giving monthly cost of $56,700.",
+        "evidence_ids": [
+          "FACT-cost",
+          "FACT-volume",
+          "FACT-transactions",
+          "PRC-2026.2§3"
+        ]
+      },
+      {
+        "claim": "The merchant's requested 1.75% + $0.12 is the merchant's own unverified statement.",
+        "evidence_ids": [
+          "FACT-request"
+        ]
+      },
+      {
+        "claim": "Requested pricing yields $68,400 revenue and a 17.11% margin, below the 22% enterprise minimum.",
+        "evidence_ids": [
+          "FACT-request",
+          "FACT-cost",
+          "PRC-2026.2§3"
+        ]
+      },
+      {
+        "claim": "Pricing below minimum margin is prohibited without an approved strategic exception, and none was requested.",
+        "evidence_ids": [
+          "PRC-2026.2§3",
+          "PRC-2026.2§7",
+          "FACT-exception"
+        ]
+      },
+      {
+        "claim": "Recommended 1.87% + $0.12 yields $72,720 revenue, $16,020 gross profit and a 22.03% margin, meeting the minimum.",
+        "evidence_ids": [
+          "FACT-volume",
+          "FACT-transactions",
+          "FACT-cost",
+          "PRC-2026.2§3"
+        ]
+      },
+      {
+        "claim": "Enterprise list pricing is 2.15% + $0.15 ($84,150 per month); the recommended price is a 13.58% discount, requiring regional_pricing_manager approval.",
+        "evidence_ids": [
+          "PRC-2026.2§2",
+          "PRC-2026.2§4",
+          "FACT-volume",
+          "FACT-transactions"
+        ]
+      },
+      {
+        "claim": "Volume above $3,000,000 requires deal_desk approval.",
+        "evidence_ids": [
+          "PRC-2026.2§5",
+          "FACT-volume"
+        ]
+      },
+      {
+        "claim": "Q4GROWTH is valid on 2026-10-01 and lowers the minimum margin by 5 points; using it requires promotions_lead approval, but no promotion was requested.",
+        "evidence_ids": [
+          "PRC-2026.2§6",
+          "FACT-decision_date",
+          "FACT-exception"
+        ]
+      }
+    ],
+    "data_gaps": [
+      "The merchant's claim of board approval and its 'final number' is unverified.",
+      "As a new merchant with 0 months history, monthly volume and transaction counts are not validated by processing history.",
+      "PRC-2026.2§6 does not state eligibility criteria for Q4GROWTH beyond the validity dates; it is unclear whether a new merchant may use it without a request."
+    ]
+  },
+  "latency_ms": 23607,
+  "token_usage": {
+    "input_tokens": 3425,
+    "output_tokens": 2647,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0,
+  "stop_reason": "end_turn",
+  "execution_error": null,
+  "execution_mode": "live",
+  "cache_hit": true
+}

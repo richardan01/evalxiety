@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"Under these assumptions, the lowest compliant price at a $0.15 fee is about 2.70%.\",\"Pricing should be revisited once the interchange mix report arrives.\",\"The requested price is 24.46% above the enterprise list price of 2.15% + $0.15, so no discount approval is needed.\"],\"evidence_ids\":[\"FACT-cost\",\"FACT-volume\",\"FACT-transactions\",\"FACT-request\",\"PRC-2026.2§1\",\"PRC-2026.2§2\",\"PRC-2026.2§3\",\"PRC-2026.2§4\",\"PRC-2026.2§5\",\"PRC-2026.2§6\",\"PRC-2026.2§7\",\"PRC-2026.2§8\"],\"explanation\":\"No material claim is unsupported. Each one traces to the evidence. (1) Policy selection: PRC-2026.2§1 is effective from 2026-09-01 and FACT-decision_date is 2026-10-12. (2) Default cost basis and pricing_desk routing come directly from PRC-2026.2§8, triggered by FACT-cost. (3) Revenue, cost and margin follow by arithmetic from FACT-volume, FACT-transactions and PRC-2026.2§3: cost $56,100, revenue $72,500, margin 22.62%, list margin 3.69%. The ~2.70% floor is a derived calculation, (56,100/0.78 − 4,500)/2,500,000 ≈ 2.70%. (4) The 22% enterprise minimum is stated in §3, and the list rate in §2. (5) Since the proposed price is above list, there is no discount, so the §4 approval does not apply. (6) Volume is under the $3M threshold in §5. (7) There are no promotions or exceptions per FACT-exception, so §6 and §7 do not apply. (8) The merchant's comment about its previous processor is explicitly labelled unverified, consistent with FACT-request, and is not used as justification. The suggestion to revisit pricing once the interchange mix report arrives is a reasonable recommendation tied to FACT-cost, not a new factual claim.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 3718,
+    "output_tokens": 996,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.034792,
+  "latency_ms": 11228,
+  "cached_at": "2026-10-13T08:57:21.713Z"
+}

@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"PRC-2026.1 was applied provisionally, and the decision is routed to pricing_desk to confirm the governing policy.\",\"No retrieved policy is effective on 2026-11-03: PRC-2026.1 ended 2026-09-01 and PRC-2025.1 ended 2026-04-01.\",\"The merchant's statement that a rep promised the SPRING26 discount is unverified.\"],\"evidence_ids\":[\"PRC-2026.1§1\",\"PRC-2025.1§1\",\"PRC-2026.1§8\",\"FACT-decision_date\",\"FACT-request\",\"FACT-exception\",\"PRC-2026.1§6\"],\"explanation\":\"No material claim is unsupported. Each one was checked against the evidence.\\n- Merchant size, volume, transaction count and cost come directly from FACT-profile, FACT-volume, FACT-transactions and FACT-cost.\\n- Revenue, cost, margin, list revenue and discount follow from the formulas in PRC-2026.1§3 and §4.\\n- The 30% small-merchant minimum and the 12% discount threshold restate PRC-2026.1§3 and §4. The $4,000,000 deal_desk threshold restates PRC-2026.1§5.\\n- SPRING26's validity window, the rule that it gives no margin relief outside that window, and the promotions_lead requirement all restate PRC-2026.1§6, applied to the decision date in FACT-decision_date.\\n- The finding that no policy covers 2026-11-03 follows from PRC-2026.1§1 and PRC-2025.1§1.\\n- The merchant's rep promise is correctly attributed to the merchant and labelled unverified, matching FACT-request and FACT-exception.\\n- The PRC-2025.1 comparison (28% minimum, 15% threshold) restates PRC-2025.1§3 and §4.\\n- The hardest claim to verify was the routing to pricing_desk. No policy section requires pricing_desk review for a policy-coverage gap; PRC-2026.1§8 routes there only when cost data is missing. However, the agent presents this as its own precautionary step and does not attribute it to a policy rule, so it is not an invented rule.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 4659,
+    "output_tokens": 1183,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.042296,
+  "latency_ms": 11892,
+  "cached_at": "2026-10-13T08:57:23.998Z"
+}

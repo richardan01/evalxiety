@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
- * AgentTrust MCP server (stdio) — READ-ONLY.
+ * Evalxiety MCP server (stdio) — READ-ONLY.
  *
- * Exposes the AgentTrust evaluation state (release gate, dashboard, runs, traces, review queue, rubric)
+ * Exposes the Evalxiety evaluation state (release gate, dashboard, runs, traces, review queue, rubric)
  * to Claude Desktop / Claude Code. Every tool is a thin wrapper over an HTTP GET to the running app.
  *
  * Read-only guarantee: the only network call in this file is `apiGet`, which issues GET requests to an
  * allowlist of read endpoints. Nothing here runs the agent or the judge, reveals held-out cases, saves
  * labels, edits the rubric or approves a release — those spend API credits or need a named human,
- * and stay in the AgentTrust UI.
+ * and stay in the Evalxiety UI.
  *
  * Run: node mcp/server.mjs   (AGENTTRUST_URL defaults to http://127.0.0.1:3123)
  */
@@ -22,7 +22,7 @@ const TIMEOUT_MS = 30_000;
 const TOOLS = JSON.parse(readFileSync(new URL("./tools.json", import.meta.url), "utf8"));
 const summaryOf = (name) => TOOLS.find((t) => t.name === name)?.summary ?? "";
 const READ_ONLY_NOTE =
-  "READ-ONLY: issues HTTP GET only. Never runs the agent or judge, reveals held-out data, labels or approves (those spend credits or need a named human in the AgentTrust UI).";
+  "READ-ONLY: issues HTTP GET only. Never runs the agent or judge, reveals held-out data, labels or approves (those spend credits or need a named human in the Evalxiety UI).";
 const describe = (name, extra = "") => `${summaryOf(name)}${extra ? ` ${extra}` : ""} ${READ_ONLY_NOTE}`;
 
 // ---------------------------------------------------------------------------
@@ -53,7 +53,7 @@ async function apiGet(path, query = {}) {
   } catch (err) {
     const cause = err?.cause?.code || err?.name || String(err);
     throw new ApiError(
-      `AgentTrust is not reachable at ${BASE_URL} (${cause}). Start AgentTrust with \`npm run dev\` in the AgentTrust folder, or set AGENTTRUST_URL.`,
+      `Evalxiety is not reachable at ${BASE_URL} (${cause}). Start Evalxiety with \`npm run dev\` in the Evalxiety (Evalxiety) folder, or set AGENTTRUST_URL.`,
     );
   }
   const body = await res.json().catch(() => null);
@@ -96,7 +96,7 @@ const newestFirst = (a, b) => String(b.created_at).localeCompare(String(a.create
 // Server + tools
 // ---------------------------------------------------------------------------
 
-const server = new McpServer({ name: "agenttrust", version: "0.1.0" });
+const server = new McpServer({ name: "evalxiety", version: "0.1.0" });
 const annotations = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
 
 server.registerTool(
@@ -136,7 +136,7 @@ server.registerTool(
       unresolved_reviews: g.unresolved_reviews?.length ?? 0,
       limitations: g.limitations,
       other_runs: (v.runs ?? []).map((r) => `${r.run_id} ${labelOf(r.agent_config_id)} on ${r.frozen_set_id} (${r.execution_mode}, ${r.status})`),
-      note: "Approval itself needs a named human in the AgentTrust Release tab; this tool cannot approve.",
+      note: "Approval itself needs a named human in the Evalxiety Release tab; this tool cannot approve.",
     };
   }),
 );
@@ -380,7 +380,7 @@ server.registerTool(
               mode: judge.execution_mode,
               created_at: judge.created_at,
             }
-          : { verdict: "not run", note: "Running the judge spends credits; do it from the AgentTrust UI." },
+          : { verdict: "not run", note: "Running the judge spends credits; do it from the Evalxiety UI." },
     };
   }),
 );
@@ -389,7 +389,7 @@ server.registerTool(
   "get_review_queue",
   {
     title: "Human review queue",
-    description: describe("get_review_queue", "Labels must be saved by a named human in the AgentTrust Review tab."),
+    description: describe("get_review_queue", "Labels must be saved by a named human in the Evalxiety Review tab."),
     inputSchema: {},
     annotations,
   },
@@ -461,4 +461,4 @@ server.registerTool(
 );
 
 await server.connect(new StdioServerTransport());
-console.error(`[agenttrust-mcp] read-only server on stdio → ${BASE_URL}`);
+console.error(`[evalxiety-mcp] read-only server on stdio → ${BASE_URL}`);

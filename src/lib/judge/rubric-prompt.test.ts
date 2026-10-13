@@ -47,3 +47,30 @@ describe("rubric-built judge prompt", () => {
     expect(buildJudgeSystemPrompt(edited)).toContain(JUDGE_QUESTION);
   });
 });
+
+describe("judge model choice", () => {
+  it("each model is its own judge version; the default (Opus) keeps the stored version", async () => {
+    const opus = judgeVersion("live", DEFAULT_RUBRIC.judge_criterion, "claude-opus-5-5");
+    expect(opus).toBe("upj-prompt-v1+claude-opus-5-5+0078a9e5");
+    const sonnet = judgeVersion("live", DEFAULT_RUBRIC.judge_criterion, "claude-sonnet-5-5");
+    const haiku = judgeVersion("live", DEFAULT_RUBRIC.judge_criterion, "claude-haiku-5-5");
+    expect(new Set([opus, sonnet, haiku]).size).toBe(3);
+    expect(haiku).toMatch(/^upj-prompt-v1\+claude-haiku-5-5\+[0-9a-f]{8}$/);
+    // Mock judge versions do not depend on the model.
+    expect(judgeVersion("mock", DEFAULT_RUBRIC.judge_criterion, "claude-haiku-5-5")).toBe(judgeVersion("mock"));
+  });
+
+  it("judge cost estimates scale with the model's price", async () => {
+    const { judgeCallEstimate, EST_JUDGE_CALL_USD } = await import("../experiments/runner");
+    expect(judgeCallEstimate("claude-opus-5-5")).toBeCloseTo(EST_JUDGE_CALL_USD);
+    expect(judgeCallEstimate("claude-sonnet-5-5")).toBeCloseTo(EST_JUDGE_CALL_USD / 2);
+    expect(judgeCallEstimate("claude-haiku-5-5")).toBeCloseTo(EST_JUDGE_CALL_USD / 40);
+  });
+
+  it("stored rubrics without a model default to Opus", async () => {
+    const { RubricVersion } = await import("../rubric/rubric");
+    const { judge_model: _m, ...legacy } = DEFAULT_RUBRIC;
+    void _m;
+    expect(RubricVersion.parse(legacy).judge_model).toBe("claude-opus-5-5");
+  });
+});

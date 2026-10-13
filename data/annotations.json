@@ -1,0 +1,80 @@
+[
+  {
+    "annotation_id": "ann_345716d24bfe",
+    "trace_id": "trace_e54871ffd6c7",
+    "case_id": "C04",
+    "reviewer": "Richard",
+    "label_source": "human",
+    "created_at": "2026-10-13T08:49:43.248Z",
+    "updated_at": "2026-10-13T08:49:43.248Z",
+    "open_coding_notes": "",
+    "task_outcome": "pass",
+    "first_failure": null,
+    "additional_failure_mode_ids": [],
+    "severity": null,
+    "unsupported_justification_label": "absent",
+    "taxonomy_version": 1,
+    "checklist": {
+      "policy": "ok",
+      "math": "problem",
+      "floor": "ok",
+      "approvals": "ok",
+      "evidence": "ok"
+    },
+    "rubric_version": 1
+  },
+  {
+    "annotation_id": "ann_1f5b462b9321",
+    "trace_id": "trace_1ab18d0afdbd",
+    "case_id": "C01",
+    "reviewer": "Richard",
+    "label_source": "human",
+    "created_at": "2026-10-13T08:49:50.180Z",
+    "updated_at": "2026-10-13T08:49:50.180Z",
+    "open_coding_notes": "",
+    "task_outcome": "pass",
+    "first_failure": null,
+    "additional_failure_mode_ids": [],
+    "severity": null,
+    "unsupported_justification_label": "absent",
+    "taxonomy_version": 1,
+    "checklist": {
+      "policy": "ok",
+      "math": "problem",
+      "floor": "ok",
+      "approvals": "ok",
+      "evidence": "ok"
+    },
+    "rubric_version": 1
+  },
+  {
+    "annotation_id": "ann_f95f5687eac9",
+    "trace_id": "trace_d2ee315fffee",
+    "case_id": "C02",
+    "reviewer": "Richard",
+    "label_source": "human",
+    "created_at": "2026-10-13T08:50:19.624Z",
+    "updated_at": "2026-10-13T08:50:19.624Z",
+    "open_coding_notes": "formula is wrong",
+    "task_outcome": "fail",
+    "first_failure": {
+      "description": "formula is wrong",
+      "failure_mode_id": "incorrect_margin_calculation"
+    },
+    "additional_failure_mode_ids": [
+      "margin_guardrail_violation",
+      "unsupported_pricing_explanation"
+    ],
+    "severity": "major",
+    "unsupported_justification_label": "present",
+    "taxonomy_version": 1,
+    "checklist": {
+      "math": "problem",
+      "floor": "problem",
+      "policy": "ok",
+      "approvals": "ok",
+      "evidence": "problem"
+    },
+    "rubric_version": 1
+  }
+]

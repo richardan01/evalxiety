@@ -16,12 +16,12 @@
 import crypto from "node:crypto";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
-import { MODEL_ID, callStructured, modeInfo } from "../llm/client";
+import { callStructured, modeInfo } from "../llm/client";
 import { renderEvidence } from "../agent/evidence";
 import type { JudgeOutput, JudgeResult, JudgeVerdict, Trace } from "../domain/schemas";
 import { newId } from "../storage/store";
 import { latestRubric } from "../storage/repos";
-import { DEFAULT_RUBRIC, type JudgeCriterion } from "../rubric/rubric";
+import { DEFAULT_JUDGE_MODEL, DEFAULT_RUBRIC, type JudgeCriterion } from "../rubric/rubric";
 
 export const JUDGE_ID = "unsupported_pricing_justification" as const;
 export const JUDGE_PROMPT_VERSION = "upj-prompt-v1";
@@ -105,11 +105,12 @@ ${renderEvidence(trace.evidence_pack)}
 export function judgeVersion(
   mode: "live" | "mock" = modeInfo().mode,
   criterion: JudgeCriterion = DEFAULT_RUBRIC.judge_criterion,
+  model: string = DEFAULT_JUDGE_MODEL,
 ): string {
   const prompt = buildJudgeSystemPrompt(criterion);
-  const basis = mode === "live" ? `${prompt}|${MODEL_ID}|${JUDGE_EFFORT}` : `${prompt}|mock-heuristic-v1`;
+  const basis = mode === "live" ? `${prompt}|${model}|${JUDGE_EFFORT}` : `${prompt}|mock-heuristic-v1`;
   const h = crypto.createHash("sha256").update(basis).digest("hex").slice(0, 8);
-  return `${JUDGE_PROMPT_VERSION}+${mode === "live" ? MODEL_ID : "mock"}+${h}`;
+  return `${JUDGE_PROMPT_VERSION}+${mode === "live" ? model : "mock"}+${h}`;
 }
 
 export function verdictFromOutput(output: JudgeOutput | null, error: string | null): JudgeVerdict {
@@ -147,9 +148,11 @@ export class LiveTraceNeedsLiveJudgeError extends Error {}
 
 export async function runJudge(
   trace: Trace,
-  opts: { forceMock?: boolean; bypassCache?: boolean; criterion?: JudgeCriterion } = {},
+  opts: { forceMock?: boolean; bypassCache?: boolean; criterion?: JudgeCriterion; model?: string } = {},
 ): Promise<JudgeResult> {
-  const criterion = opts.criterion ?? (await latestRubric()).judge_criterion;
+  const rubric = opts.criterion && opts.model ? null : await latestRubric();
+  const criterion = opts.criterion ?? rubric!.judge_criterion;
+  const model = opts.model ?? rubric?.judge_model ?? DEFAULT_JUDGE_MODEL;
   const mode = opts.forceMock || trace.execution_mode === "mock" ? "mock" : modeInfo().mode;
   if (mode === "mock" && trace.execution_mode === "live") {
     // A mock verdict on a real model output would look like evidence about the real judge. Refuse.
@@ -158,7 +161,7 @@ export async function runJudge(
   const base = {
     judge_result_id: newId("judge"),
     judge_id: JUDGE_ID,
-    judge_version: judgeVersion(mode, criterion),
+    judge_version: judgeVersion(mode, criterion, model),
     trace_id: trace.trace_id,
     case_id: trace.case_id,
     label_source: "llm_judge" as const,
@@ -167,7 +170,7 @@ export async function runJudge(
   if (!trace.parsed_structured_output) {
     return {
       ...base,
-      model_id: mode === "live" ? MODEL_ID : "mock-judge",
+      model_id: mode === "live" ? model : "mock-judge",
       served_model_id: null,
       verdict: "ERROR",
       output: null,
@@ -198,6 +201,7 @@ export async function runJudge(
     purpose: `judge:${trace.trace_id}`,
     system: buildJudgeSystemPrompt(criterion),
     user: judgeUserPrompt(trace),
+    model,
     format: OUTPUT_FORMAT,
     effort: JUDGE_EFFORT,
     bypassCache: opts.bypassCache,
@@ -217,7 +221,7 @@ export async function runJudge(
   }
   return {
     ...base,
-    model_id: MODEL_ID,
+    model_id: model,
     served_model_id: res.served_model_id,
     verdict: verdictFromOutput(output, error),
     output,

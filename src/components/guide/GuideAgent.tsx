@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { demoSteps, type DemoStep } from "@/app/_overview/demoPath";
 import type { ModeData, OverviewData } from "@/app/_overview/types";
 import { nextStep } from "@/lib/guide/next";
+import { Mascot, moodFor } from "../Mascot";
 import { cx } from "../ui";
 import { Markdown } from "./Markdown";
 
@@ -24,6 +25,7 @@ const PAGE_SUGGESTIONS: Array<[string, string[]]> = [
   ["/evaluators", ["What's the difference between the checks and the judge?", "How do I read TPR and TNR?"]],
   ["/experiments", ["How do I compare Baseline vs Corrected?", "What counts as a regression?"]],
   ["/release", ["Why is my release blocked?", "What do I need for demo approval?"]],
+  ["/start", ["Where should I begin?", "Explain the 5 stages"]],
   ["/connect", ["How do I connect Claude Code?", "What can the MCP tools do?"]],
   ["/", ["Give me the 5-minute tour", "What does each page do?"]],
 ];
@@ -45,6 +47,7 @@ export function GuideAgent() {
   const [open, setOpen] = useState(false);
   const [seen, setSeen] = useState(true);
   const [steps, setSteps] = useState<DemoStep[] | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
   const [mode, setMode] = useState<ModeData | null>(null);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -76,7 +79,11 @@ export function GuideAgent() {
   const refresh = useCallback(() => {
     fetch("/api/overview", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
-      .then((o: OverviewData | null) => o && setSteps(demoSteps(o)))
+      .then((o: OverviewData | null) => {
+        if (!o) return;
+        setSteps(demoSteps(o));
+        setStatus(o.release_status);
+      })
       .catch(() => undefined);
     fetch("/api/mode", { cache: "no-store" })
       .then((r) => r.json())
@@ -169,6 +176,7 @@ export function GuideAgent() {
   const done = steps?.filter((s) => s.state === "done").length ?? 0;
   const next = steps ? nextStep(steps) : null;
   const live = mode?.mode === "live";
+  const mood = status ? moodFor(status) : "worried";
 
   return (
     <>
@@ -183,15 +191,15 @@ export function GuideAgent() {
           open && "pointer-events-none translate-y-2 opacity-0",
         )}
       >
-        <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 text-base">
-          ✦
+        <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-white">
+          <Mascot mood={mood} size={32} />
           {!seen && <span className="absolute -right-0.5 -top-0.5 h-3 w-3 animate-ping rounded-full bg-amber-400" />}
           {!seen && <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-amber-400" />}
         </span>
         <span>
           <span className="block text-sm font-semibold leading-tight">Ask the Guide</span>
           <span className="block text-[11px] leading-tight text-slate-300">
-            {next ? `Next: step ${next.n} · ${next.title}` : steps ? "All tracked steps done" : "How to use AgentTrust"}
+            {next ? `Next: step ${next.n} · ${next.title}` : steps ? "All tracked steps done" : "How to use Evalxiety"}
           </span>
         </span>
       </button>
@@ -202,7 +210,7 @@ export function GuideAgent() {
       {/* Panel */}
       <aside
         id="guide-panel"
-        aria-label="AgentTrust Guide"
+        aria-label="Evalxiety Guide"
         className={cx(
           "fixed inset-y-0 right-0 z-50 flex w-full max-w-[440px] flex-col border-l border-slate-200 bg-white shadow-2xl transition-transform duration-300 ease-out",
           open ? "translate-x-0" : "pointer-events-none translate-x-full",
@@ -211,10 +219,12 @@ export function GuideAgent() {
         <header className="bg-gradient-to-br from-slate-900 via-indigo-950 to-violet-900 px-5 pb-4 pt-4 text-white">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-lg ring-1 ring-white/20">✦</span>
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white ring-1 ring-white/20">
+                <Mascot mood={mood} size={34} />
+              </span>
               <div>
-                <h2 className="text-base font-semibold leading-tight">AgentTrust Guide</h2>
-                <p className="text-xs text-indigo-200">Learn the app · evaluate your own agent</p>
+                <h2 className="text-base font-semibold leading-tight">Evalxiety Guide</h2>
+                <p className="text-xs text-indigo-200">Nervous so your launch doesn&apos;t have to be</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -312,11 +322,15 @@ export function GuideAgent() {
         <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
           {messages.length === 0 && (
             <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-4 text-sm text-slate-700">
-              <p className="font-semibold text-slate-900">Hi! I&apos;m your guide.</p>
+              <p className="font-semibold text-slate-900">Hi! I&apos;m your (slightly nervous) guide.</p>
               <p className="mt-1">
-                AgentTrust checks whether an AI agent is ready to ship: you run it, judge its answers yourself, turn the
-                failures you find into automatic checks, compare fixes, and make a release decision. Ask me anything, or tap a
-                question below.
+                Evalxiety worries about whether an AI agent is really ready to ship: you run it, judge its answers yourself,
+                turn the failures you find into automatic checks, compare fixes, and make a release decision. Ask me anything, or tap a
+                question below. New here? Open{" "}
+                <Link href="/start" className="font-medium text-indigo-700 underline decoration-indigo-300 underline-offset-2">
+                  Start here
+                </Link>{" "}
+                for the full path.
               </p>
             </div>
           )}
@@ -381,7 +395,7 @@ export function GuideAgent() {
               }}
               rows={1}
               maxLength={4000}
-              placeholder="Ask how to use AgentTrust or evaluate your agent…"
+              placeholder="Ask how to use Evalxiety or evaluate your agent…"
               className="max-h-32 min-h-[36px] flex-1 resize-none bg-transparent px-2 py-1.5 text-sm text-slate-900 outline-none placeholder:text-slate-400"
             />
             {busy ? (

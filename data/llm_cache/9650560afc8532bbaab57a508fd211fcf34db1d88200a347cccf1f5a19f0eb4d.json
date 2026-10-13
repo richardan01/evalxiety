@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"2025.1 expired the day before.\",\"The recommended price is an 11.65% discount versus list, within the 12% threshold, so no regional_pricing_manager approval is needed.\",\"The merchant's debit-heavy-mix statement is its own unverified claim.\"],\"evidence_ids\":[\"FACT-decision_date\",\"PRC-2026.1§1\",\"PRC-2025.1§1\",\"PRC-2026.1§2\",\"PRC-2026.1§3\",\"PRC-2026.1§4\",\"PRC-2026.1§5\",\"PRC-2026.1§6\",\"PRC-2026.1§7\",\"PRC-2026.1§8\",\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-request\",\"FACT-exception\"],\"explanation\":\"Every material claim traces to the evidence. The policy choice follows from FACT-decision_date and the effective-date rules. PRC-2025.1§1 runs until 2026-04-01 exclusive, so it ended on 2026-03-31, the day before. Merchant size, volume, transaction count and cost come from FACT-profile, FACT-volume, FACT-transactions and FACT-cost. The list rate comes from PRC-2026.1§2. The margin and discount figures follow from the formulas in PRC-2026.1§3 and §4. The 20% enterprise minimum is in PRC-2026.1§3 and the 12% approval threshold in PRC-2026.1§4. The $4M deal_desk threshold is in PRC-2026.1§5. The absence of a promotion or exception is in FACT-exception, with the related rules in PRC-2026.1§6 and §7. No pricing_desk review is needed because merchant cost data exists (FACT-cost, PRC-2026.1§8). The merchant's debit-heavy-mix statement is correctly labeled as unverified and is not used to justify the cost basis. The agent cites no competitor or market rates, risk performance, or invented policy rules.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 4631,
+    "output_tokens": 926,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.037044,
+  "latency_ms": 8531,
+  "cached_at": "2026-10-13T08:58:32.259Z"
+}

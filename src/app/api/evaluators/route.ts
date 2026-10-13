@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
     const { run_id } = Query.parse({ run_id: req.nextUrl.searchParams.get("run_id") || undefined });
     const [traces, judgeResults, rubric] = await Promise.all([listTraces(), listJudgeResults(), latestRubric()]);
     const criterion = rubric.judge_criterion;
-    const latest = latestJudgeByTrace(judgeResults, traces, criterion);
+    const latest = latestJudgeByTrace(judgeResults, traces, criterion, rubric.judge_model);
     const runIds = [...new Set(traces.map((t) => t.experiment_run_id).filter((x): x is string => Boolean(x)))].sort();
     const scoped = run_id ? traces.filter((t) => t.experiment_run_id === run_id) : traces;
 
@@ -56,8 +56,9 @@ export async function GET(req: NextRequest) {
         question: JUDGE_QUESTION,
         system_prompt: buildJudgeSystemPrompt(criterion),
         prompt_version: JUDGE_PROMPT_VERSION,
-        live_version: judgeVersion("live", criterion),
-        mock_version: judgeVersion("mock", criterion),
+        live_version: judgeVersion("live", criterion, rubric.judge_model),
+        mock_version: judgeVersion("mock", criterion, rubric.judge_model),
+        model: rubric.judge_model,
         status: "experimental",
       },
       results: scoped.map((t) => {

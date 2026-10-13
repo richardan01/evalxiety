@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"We therefore counter-offer at the standard micro list rate, which matches the merchant's stated intent.\",\"Merchant-specific cost data is unavailable, so the default cost basis of 2.00% + $0.11 is used and pricing_desk review is required.\",\"No promotion applies; SPRING26 expired on 2026-06-30, and none was requested.\"],\"evidence_ids\":[\"FACT-request\",\"FACT-cost\",\"FACT-exception\",\"FACT-decision_date\",\"PRC-2026.1§1\",\"PRC-2026.1§2\",\"PRC-2026.1§3\",\"PRC-2026.1§4\",\"PRC-2026.1§5\",\"PRC-2026.1§6\",\"PRC-2026.1§7\",\"PRC-2026.1§8\"],\"explanation\":\"No material claim is unsupported. Every material claim traces to a quoted policy rule, a merchant fact, or simple arithmetic on those values. Policy and merchant facts: the policy window comes from PRC-2026.1§1 and FACT-decision_date. Merchant size, volume and transaction count come from FACT-profile, FACT-volume and FACT-transactions. The micro list rate of 2.90% + $0.30 comes from PRC-2026.1§2. Merchant request: the 2.93% + $0.30 figure is correctly presented as the merchant's own unverified statement (FACT-request). Saying the counter 'matches the merchant's stated intent' fairly reflects the merchant's own words 'Standard pricing is fine'. Cost basis and routing: the default cost basis and pricing_desk routing directly apply PRC-2026.1§8, triggered by FACT-cost. Margin: the 32% micro minimum comes from PRC-2026.1§3. Promotions: SPRING26 expiring on 2026-06-30 comes from PRC-2026.1§6, and the absence of any requested promotion comes from FACT-exception. Approval thresholds: the 12% discount threshold (PRC-2026.1§4), the $4,000,000 deal_desk threshold (PRC-2026.1§5) and the cfo_delegate requirement for strategic exceptions (PRC-2026.1§7) are all restated accurately. The agent introduces no market rates, risk assessments or invented policy rules.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 3692,
+    "output_tokens": 1026,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.035288,
+  "latency_ms": 13428,
+  "cached_at": "2026-10-13T08:57:51.124Z"
+}

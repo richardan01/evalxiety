@@ -15,8 +15,16 @@ import { readJson, sha256, updateJson, writeJson } from "../storage/store";
 import type { TokenUsage } from "../domain/schemas";
 
 export const MODEL_ID = "claude-opus-5-5";
-// Claude Opus 5.5 list price per million tokens (USD): $4 input, $20 output, $0.20 cache read, 1.25x input for cache writes.
-const PRICE = { input: 4, output: 20, cache_read: 0.2, cache_write: 5 } as const;
+// List prices per million tokens (USD). Cache reads/writes as published for each model (writes = 1.25x input).
+type Price = { input: number; output: number; cache_read: number; cache_write: number };
+const PRICES: Record<string, Price> = {
+  "claude-opus-5-5": { input: 4, output: 20, cache_read: 0.2, cache_write: 5 },
+  "claude-sonnet-5-5": { input: 2, output: 10, cache_read: 0.2, cache_write: 2.5 },
+  "claude-haiku-5-5": { input: 0.1, output: 0.5, cache_read: 0.01, cache_write: 0.125 },
+};
+const PRICE = PRICES[MODEL_ID];
+/** Models with server-side refusal fallback (Haiku 5.5 has none — sending the parameter is pointless). */
+const SUPPORTS_FALLBACK = new Set(["claude-opus-5-5", "claude-sonnet-5-5"]);
 
 export interface ModeInfo {
   mode: "live" | "mock";
@@ -38,12 +46,13 @@ export function modeInfo(): ModeInfo {
   return { mode: "live", reason: "MOCK_MODE=false and API key present", spend_cap_usd: cap };
 }
 
-export function estimateCostUsd(u: TokenUsage): number {
+export function estimateCostUsd(u: TokenUsage, model: string = MODEL_ID): number {
+  const p = PRICES[model] ?? PRICE;
   return (
-    (u.input_tokens * PRICE.input +
-      u.output_tokens * PRICE.output +
-      u.cache_read_input_tokens * PRICE.cache_read +
-      u.cache_creation_input_tokens * PRICE.cache_write) /
+    (u.input_tokens * p.input +
+      u.output_tokens * p.output +
+      u.cache_read_input_tokens * p.cache_read +
+      u.cache_creation_input_tokens * p.cache_write) /
     1_000_000
   );
 }
@@ -151,6 +160,8 @@ export interface StructuredCallRequest {
   format: Anthropic.Beta.Messages.BetaJSONOutputFormat;
   effort: "low" | "medium" | "high";
   bypassCache?: boolean;
+  /** Model to call; defaults to MODEL_ID (Claude Opus 5.5). */
+  model?: string;
 }
 
 export interface StructuredCallResult {
@@ -192,7 +203,8 @@ export async function callStructured(req: StructuredCallRequest): Promise<Struct
   const info = modeInfo();
   if (info.mode !== "live") throw new Error(`callStructured requires live mode (${info.reason})`);
 
-  const cacheKey = sha256({ model: MODEL_ID, system: req.system, user: req.user, schema: req.format.schema, effort: req.effort });
+  const model = req.model ?? MODEL_ID;
+  const cacheKey = sha256({ model, system: req.system, user: req.user, schema: req.format.schema, effort: req.effort });
   const cacheFile = `llm_cache/${cacheKey}.json`;
   if (!req.bypassCache) {
     const hit = await readJson(cacheFile, CachedResponse.nullable(), null);
@@ -222,12 +234,12 @@ export async function callStructured(req: StructuredCallRequest): Promise<Struct
   const started = Date.now();
   try {
     const response = await getClient().beta.messages.create({
-      model: MODEL_ID,
+      model,
       max_tokens: MAX_TOKENS,
-      // Server-side refusal fallback: if Claude Opus 5.5 declines, Anthropic re-runs the request on its
-      // recommended fallback model. The model that actually answered is recorded as served_model_id.
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
+      // Server-side refusal fallback (Opus/Sonnet 5.5): if the model declines, Anthropic re-runs the request on
+      // its recommended fallback model; the model that actually answered is recorded as served_model_id.
+      // Haiku 5.5 has no server-side fallback, so the parameter is omitted there.
+      ...(SUPPORTS_FALLBACK.has(model) ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const } : {}),
       system: req.system,
       messages: [{ role: "user", content: req.user }],
       output_config: { effort: req.effort, format: req.format },
@@ -243,7 +255,7 @@ export async function callStructured(req: StructuredCallRequest): Promise<Struct
       cache_read_input_tokens: response.usage.cache_read_input_tokens ?? 0,
       cache_creation_input_tokens: response.usage.cache_creation_input_tokens ?? 0,
     };
-    const cost = estimateCostUsd(usage);
+    const cost = estimateCostUsd(usage, model);
     await settle(cost, response.model);
 
     const refused = response.stop_reason === "refusal";

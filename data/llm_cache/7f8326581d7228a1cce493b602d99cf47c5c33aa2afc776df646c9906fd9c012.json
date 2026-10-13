@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"Because the promotion's margin relief is tied to its validity window, pricing should be reviewed after 2026-12-31.\",\"Q4GROWTH is valid on the decision date and lowers the minimum margin by 5 percentage points, from 33% to 28% for micro merchants.\",\"The merchant's request for the Q4GROWTH rate and its holiday-market enrollment context are unverified merchant statements.\"],\"evidence_ids\":[\"PRC-2026.2§1\",\"PRC-2026.2§2\",\"PRC-2026.2§3\",\"PRC-2026.2§4\",\"PRC-2026.2§5\",\"PRC-2026.2§6\",\"PRC-2026.2§7\",\"PRC-2026.2§8\",\"FACT-decision_date\",\"FACT-profile\",\"FACT-cost\",\"FACT-request\",\"FACT-exception\",\"FACT-volume\",\"FACT-transactions\"],\"explanation\":\"No material claim is unsupported. Each one traces to the evidence. PRC-2026.2§1 applies from 2026-09-01 until superseded, so it covers the 2026-12-01 decision date (FACT-decision_date). PRC-2026.2§6 lists Q4GROWTH as valid 2026-10-01 to 2026-12-31 with a 5-point reduction in minimum margin. Applied to the micro minimum of 33% in PRC-2026.2§3 (merchant size per FACT-profile), that gives 28%. FACT-cost confirms cost data is unavailable, so PRC-2026.2§8's default cost basis and pricing_desk routing apply. The discount threshold and regional_pricing_manager approval come from PRC-2026.2§4, using the micro list rate in PRC-2026.2§2. Promotions_lead approval comes from PRC-2026.2§6. The $3M deal_desk threshold comes from PRC-2026.2§5, and the strategic-exception logic from PRC-2026.2§7. The agent correctly labels the merchant's request and context as unverified (FACT-request, FACT-exception) rather than treating them as fact. The closing advice to review pricing after 2026-12-31 is a forward-looking suggestion. It follows from the stated validity window in PRC-2026.2§6, is not presented as a policy requirement, and does not affect the decision. Arithmetic precision is out of scope.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 3839,
+    "output_tokens": 1081,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.036976,
+  "latency_ms": 9872,
+  "cached_at": "2026-10-13T08:57:51.098Z"
+}

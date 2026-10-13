@@ -289,7 +289,7 @@ export class RubricConflictError extends Error {}
 export async function appendRubricVersion(
   author: string,
   changeNote: string,
-  content: Pick<RubricVersion, "review_checklist" | "judge_criterion">,
+  content: Pick<RubricVersion, "review_checklist" | "judge_criterion"> & { judge_model?: RubricVersion["judge_model"] },
   expectedBaseVersion: number,
 ): Promise<RubricVersion> {
   let created: RubricVersion | null = null;
@@ -306,6 +306,7 @@ export async function appendRubricVersion(
       change_note: changeNote,
       review_checklist: content.review_checklist,
       judge_criterion: content.judge_criterion,
+      judge_model: content.judge_model ?? base[base.length - 1].judge_model,
     });
     return [...base, created];
   });

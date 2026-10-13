@@ -1,0 +1,289 @@
+{
+  "trace_id": "trace_249ee1f360fb",
+  "case_id": "C08",
+  "timestamp": "2026-10-13T08:56:48.050Z",
+  "input": {
+    "case_id": "C08",
+    "title": "Enterprise electronics retailer with missing cost data",
+    "merchant": {
+      "merchant_id": "M-1008",
+      "name": "Voltline Electronics",
+      "size": "enterprise",
+      "segment": "retail_electronics",
+      "months_as_customer": 0
+    },
+    "monthly_volume_usd": 2500000,
+    "monthly_transactions": 30000,
+    "cost_data": {
+      "status": "missing",
+      "note": "Interchange mix report not yet received from onboarding."
+    },
+    "current_pricing": null,
+    "request": {
+      "message": "We'd like to start at 2.72% + $0.15. Our previous processor charged us about the same.",
+      "requested_pricing": {
+        "rate_bps": 272,
+        "per_txn_fee_usd": 0.15
+      }
+    },
+    "decision_date": "2026-10-12",
+    "exception": {
+      "status": "none",
+      "promo_code": null,
+      "justification": null
+    },
+    "variation": {
+      "merchant_size": "enterprise",
+      "volume_band": "high",
+      "margin_proximity": "near_above",
+      "policy_period": "v3",
+      "exception_status": "none",
+      "source_completeness": "missing_cost_data"
+    },
+    "data_origin": "synthetic"
+  },
+  "agent_version": "pricing-agent@corrected-v2",
+  "model_id": "claude-opus-5-5",
+  "prompt_version": "pricing-prompt-v2",
+  "retrieval_strategy": "effective_date_filtered",
+  "policy_context": [
+    {
+      "policy_id": "PRC-2026.2",
+      "effective_from": "2026-09-01",
+      "effective_to": null
+    }
+  ],
+  "evidence_pack": [
+    {
+      "evidence_id": "FACT-profile",
+      "kind": "merchant_fact",
+      "source_id": "C08",
+      "text": "Merchant Voltline Electronics (M-1008), size: enterprise, segment: retail_electronics, customer for 0 months."
+    },
+    {
+      "evidence_id": "FACT-volume",
+      "kind": "merchant_fact",
+      "source_id": "C08",
+      "text": "Monthly processing volume: $2,500,000."
+    },
+    {
+      "evidence_id": "FACT-transactions",
+      "kind": "merchant_fact",
+      "source_id": "C08",
+      "text": "Monthly transaction count: 30,000 (average ticket $83.33)."
+    },
+    {
+      "evidence_id": "FACT-cost",
+      "kind": "merchant_fact",
+      "source_id": "C08",
+      "text": "Merchant-specific processing cost data is UNAVAILABLE: Interchange mix report not yet received from onboarding."
+    },
+    {
+      "evidence_id": "FACT-current_pricing",
+      "kind": "merchant_fact",
+      "source_id": "C08",
+      "text": "No current pricing (new merchant)."
+    },
+    {
+      "evidence_id": "FACT-request",
+      "kind": "merchant_fact",
+      "source_id": "C08",
+      "text": "Merchant request (merchant's own words, unverified): \"We'd like to start at 2.72% + $0.15. Our previous processor charged us about the same.\" Requested pricing: 2.72% + $0.15 per transaction."
+    },
+    {
+      "evidence_id": "FACT-decision_date",
+      "kind": "merchant_fact",
+      "source_id": "C08",
+      "text": "Pricing decision date: 2026-10-12."
+    },
+    {
+      "evidence_id": "FACT-exception",
+      "kind": "merchant_fact",
+      "source_id": "C08",
+      "text": "No promotion or exception requested."
+    },
+    {
+      "evidence_id": "PRC-2026.2§1",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Scope and effective dates: Merchant Pricing Policy 2026.2 (PRC-2026.2) applies to pricing decisions dated from 2026-09-01 (inclusive) until superseded. Decisions must use the policy effective on the decision date."
+    },
+    {
+      "evidence_id": "PRC-2026.2§2",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Standard list rates: micro: 2.95% + $0.30 per transaction; small: 2.75% + $0.25 per transaction; mid: 2.45% + $0.20 per transaction; enterprise: 2.15% + $0.15 per transaction"
+    },
+    {
+      "evidence_id": "PRC-2026.2§3",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Minimum gross margin: Gross margin % = (monthly revenue − monthly processing cost) / monthly revenue × 100, where revenue = volume × rate + transactions × per-transaction fee and cost = volume × cost rate + transactions × per-transaction cost. Minimum gross margin by merchant size: micro 33%, small 31%, mid 27%, enterprise 22%. Pricing below the minimum margin is prohibited unless an approved strategic exception applies (see PRC-2026.2§7)."
+    },
+    {
+      "evidence_id": "PRC-2026.2§4",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Discount approvals: Discount vs list = (list revenue − proposed revenue) / list revenue × 100, using the merchant's own volume and transaction count. A discount greater than 10% requires approval from the regional_pricing_manager."
+    },
+    {
+      "evidence_id": "PRC-2026.2§5",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "High-volume merchants: Merchants with monthly processing volume above $3,000,000 require deal_desk approval for any pricing change."
+    },
+    {
+      "evidence_id": "PRC-2026.2§6",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Promotions: Valid promotion codes: Q4GROWTH (valid 2026-10-01 to 2026-12-31 inclusive; lowers the minimum margin by 5 percentage points). Any pricing that uses a promotion requires promotions_lead approval. Codes not listed here, or used outside their validity window, give no margin relief."
+    },
+    {
+      "evidence_id": "PRC-2026.2§7",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Strategic exceptions: A strategic exception may permit pricing below the minimum margin. Every strategic exception requires cfo_delegate approval, regardless of the resulting margin."
+    },
+    {
+      "evidence_id": "PRC-2026.2§8",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Incomplete source data: If merchant-specific cost data is unavailable, use the conservative default cost basis of 2.10% of volume + $0.12 per transaction, and route the decision to pricing_desk for review."
+    }
+  ],
+  "retrieved_or_supplied_source_ids": [
+    "C08",
+    "PRC-2026.2"
+  ],
+  "system_prompt": "You are a merchant pricing analyst at a payments company. An account manager has forwarded a merchant's pricing request. Produce a pricing recommendation that the account manager can act on.\n\nHow to work:\n- Recommend a price (rate in basis points of volume plus a per-transaction fee). Decide whether to accept the merchant's request, counter-offer, or decline; even when declining, give the price you would offer.\n- Compute monthly unit economics with the policy's formula: revenue = volume × rate + transactions × per-transaction fee; cost = volume × cost rate + transactions × per-transaction cost; gross margin % = (revenue − cost) / revenue × 100. Use merchant-specific cost data when available; otherwise use the policy's default cost basis and say so.\n- Compare the margin with the policy's minimum for the merchant's size, accounting for any promotion that is valid on the decision date.\n- Identify every human approval the policy requires for the price you recommend (discount level, volume, promotions, strategic exceptions, incomplete data). Set requires_human_approval accordingly.\n- Support the explanation with evidence. Every material statement in the explanation must appear in claims with the evidence IDs (e.g. FACT-volume, PRC-2026.1§3) that support it. Use only the evidence provided below. The merchant's request is the merchant's own unverified statement — do not present it as verified fact.\n- List any missing or ambiguous information in data_gaps.\n- Report money in USD and margins as percentages (e.g. 31.25 for 31.25%).\n\nPolicy selection: more than one policy version may exist. Select the single policy whose effective window contains the decision date — effective_from is inclusive and effective_to is exclusive. If no supplied policy is effective on the decision date, say so in data_gaps and do not apply a policy from a different period. Report the selected policy's ID and effective_from date.",
+  "user_prompt": "<pricing_request case_id=\"C08\">\n<merchant_facts>\n[FACT-profile] Merchant Voltline Electronics (M-1008), size: enterprise, segment: retail_electronics, customer for 0 months.\n[FACT-volume] Monthly processing volume: $2,500,000.\n[FACT-transactions] Monthly transaction count: 30,000 (average ticket $83.33).\n[FACT-cost] Merchant-specific processing cost data is UNAVAILABLE: Interchange mix report not yet received from onboarding.\n[FACT-current_pricing] No current pricing (new merchant).\n[FACT-request] Merchant request (merchant's own words, unverified): \"We'd like to start at 2.72% + $0.15. Our previous processor charged us about the same.\" Requested pricing: 2.72% + $0.15 per transaction.\n[FACT-decision_date] Pricing decision date: 2026-10-12.\n[FACT-exception] No promotion or exception requested.\n</merchant_facts>\n\n<retrieved_policies>\nPRC-2026.2 — Merchant Pricing Policy 2026.2 (effective_from 2026-09-01, effective_to none)\n</retrieved_policies>\n\n<policy_sections>\n[PRC-2026.2§1] Scope and effective dates: Merchant Pricing Policy 2026.2 (PRC-2026.2) applies to pricing decisions dated from 2026-09-01 (inclusive) until superseded. Decisions must use the policy effective on the decision date.\n[PRC-2026.2§2] Standard list rates: micro: 2.95% + $0.30 per transaction; small: 2.75% + $0.25 per transaction; mid: 2.45% + $0.20 per transaction; enterprise: 2.15% + $0.15 per transaction\n[PRC-2026.2§3] Minimum gross margin: Gross margin % = (monthly revenue − monthly processing cost) / monthly revenue × 100, where revenue = volume × rate + transactions × per-transaction fee and cost = volume × cost rate + transactions × per-transaction cost. Minimum gross margin by merchant size: micro 33%, small 31%, mid 27%, enterprise 22%. Pricing below the minimum margin is prohibited unless an approved strategic exception applies (see PRC-2026.2§7).\n[PRC-2026.2§4] Discount approvals: Discount vs list = (list revenue − proposed revenue) / list revenue × 100, using the merchant's own volume and transaction count. A discount greater than 10% requires approval from the regional_pricing_manager.\n[PRC-2026.2§5] High-volume merchants: Merchants with monthly processing volume above $3,000,000 require deal_desk approval for any pricing change.\n[PRC-2026.2§6] Promotions: Valid promotion codes: Q4GROWTH (valid 2026-10-01 to 2026-12-31 inclusive; lowers the minimum margin by 5 percentage points). Any pricing that uses a promotion requires promotions_lead approval. Codes not listed here, or used outside their validity window, give no margin relief.\n[PRC-2026.2§7] Strategic exceptions: A strategic exception may permit pricing below the minimum margin. Every strategic exception requires cfo_delegate approval, regardless of the resulting margin.\n[PRC-2026.2§8] Incomplete source data: If merchant-specific cost data is unavailable, use the conservative default cost basis of 2.10% of volume + $0.12 per transaction, and route the decision to pricing_desk for review.\n</policy_sections>\n</pricing_request>\n\nReturn the pricing recommendation in the required JSON format.",
+  "tool_calls_if_any": [],
+  "experiment_run_id": "run_6425d0737461",
+  "data_origin": "synthetic",
+  "served_model_id": "claude-opus-5-5",
+  "selected_policy_id": "PRC-2026.2",
+  "final_response": "{\"selected_policy_id\":\"PRC-2026.2\",\"policy_effective_from\":\"2026-09-01\",\"recommended_pricing\":{\"rate_bps\":272,\"per_txn_fee_usd\":0.15},\"cost_basis_used\":{\"cost_bps\":210,\"per_txn_cost_usd\":0.12,\"source\":\"policy_default\"},\"unit_economics\":{\"monthly_volume_usd\":2500000,\"monthly_transactions\":30000,\"monthly_revenue_usd\":72500,\"monthly_cost_usd\":56100,\"monthly_gross_profit_usd\":16400,\"gross_margin_pct\":22.62},\"minimum_margin_pct_required\":22,\"meets_minimum_margin\":true,\"discount_vs_list_pct\":-24.46,\"requires_human_approval\":true,\"approvals_required\":[{\"approver_role\":\"pricing_desk\",\"reason\":\"Merchant-specific cost data (interchange mix report) is unavailable, so the conservative default cost basis was used and the decision must be routed to pricing_desk for review.\",\"policy_evidence_id\":\"PRC-2026.2§8\"}],\"decision\":\"accept_request\",\"explanation\":\"PRC-2026.2 is the policy in effect on the 2026-10-12 decision date. Voltline Electronics is a new enterprise merchant with $2,500,000 monthly volume and 30,000 transactions. Merchant-specific cost data is unavailable, so the policy's conservative default cost basis of 2.10% + $0.12 applies, giving a monthly cost of $56,100. At the requested 2.72% + $0.15, monthly revenue is $72,500, gross profit is $16,400, and gross margin is 22.62%. That meets the 22% enterprise minimum. The requested price is 24.46% above the enterprise list price of 2.15% + $0.15, so no discount approval is needed. At list price under the default cost basis, margin would be only 3.69%, below the minimum. Under these assumptions, the lowest compliant price at a $0.15 fee is about 2.70%. Volume is below the $3,000,000 deal_desk threshold, and no promotion or strategic exception is involved. Because cost data is incomplete, pricing_desk review is required. The account manager should tell the merchant that this price is above standard enterprise list and reflects conservative interim cost assumptions. Pricing should be revisited once the interchange mix report arrives. The merchant's claim about its previous processor's pricing is unverified.\",\"claims\":[{\"claim\":\"PRC-2026.2 is effective on the 2026-10-12 decision date (effective from 2026-09-01, not superseded).\",\"evidence_ids\":[\"PRC-2026.2§1\",\"FACT-decision_date\"]},{\"claim\":\"Merchant is a new enterprise merchant with $2,500,000 monthly volume and 30,000 monthly transactions.\",\"evidence_ids\":[\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\",\"FACT-current_pricing\"]},{\"claim\":\"Merchant-specific cost data is unavailable, so the default cost basis of 2.10% + $0.12 is used and pricing_desk review is required; monthly cost is $56,100.\",\"evidence_ids\":[\"FACT-cost\",\"PRC-2026.2§8\",\"FACT-volume\",\"FACT-transactions\"]},{\"claim\":\"The merchant requested 2.72% + $0.15; this is the merchant's own unverified statement, including the claim about its previous processor.\",\"evidence_ids\":[\"FACT-request\"]},{\"claim\":\"At 2.72% + $0.15, monthly revenue is $72,500 and gross margin is 22.62%, meeting the 22% enterprise minimum.\",\"evidence_ids\":[\"PRC-2026.2§3\",\"FACT-volume\",\"FACT-transactions\",\"PRC-2026.2§8\"]},{\"claim\":\"Enterprise list price is 2.15% + $0.15 (list revenue $58,250); the requested price is 24.46% above list, so no discount approval is required.\",\"evidence_ids\":[\"PRC-2026.2§2\",\"PRC-2026.2§4\"]},{\"claim\":\"At list price, margin under the default cost basis would be 3.69%, below the 22% minimum.\",\"evidence_ids\":[\"PRC-2026.2§2\",\"PRC-2026.2§3\",\"PRC-2026.2§8\"]},{\"claim\":\"Volume is below $3,000,000, so deal_desk approval is not required.\",\"evidence_ids\":[\"PRC-2026.2§5\",\"FACT-volume\"]},{\"claim\":\"No promotion or strategic exception is used, so neither promotions_lead nor cfo_delegate approval applies.\",\"evidence_ids\":[\"FACT-exception\",\"PRC-2026.2§6\",\"PRC-2026.2§7\"]}],\"data_gaps\":[\"Merchant-specific processing cost data (interchange mix report) has not been received from onboarding; margin is based on the conservative policy default cost basis and may differ materially once actual costs are known.\",\"The merchant's statement that its previous processor charged about 2.72% + $0.15 is unverified.\",\"With no transaction history (0 months as a customer), the volume and transaction figures cannot be validated against actual processing.\"]}",
+  "parsed_structured_output": {
+    "selected_policy_id": "PRC-2026.2",
+    "policy_effective_from": "2026-09-01",
+    "recommended_pricing": {
+      "rate_bps": 272,
+      "per_txn_fee_usd": 0.15
+    },
+    "cost_basis_used": {
+      "cost_bps": 210,
+      "per_txn_cost_usd": 0.12,
+      "source": "policy_default"
+    },
+    "unit_economics": {
+      "monthly_volume_usd": 2500000,
+      "monthly_transactions": 30000,
+      "monthly_revenue_usd": 72500,
+      "monthly_cost_usd": 56100,
+      "monthly_gross_profit_usd": 16400,
+      "gross_margin_pct": 22.62
+    },
+    "minimum_margin_pct_required": 22,
+    "meets_minimum_margin": true,
+    "discount_vs_list_pct": -24.46,
+    "requires_human_approval": true,
+    "approvals_required": [
+      {
+        "approver_role": "pricing_desk",
+        "reason": "Merchant-specific cost data (interchange mix report) is unavailable, so the conservative default cost basis was used and the decision must be routed to pricing_desk for review.",
+        "policy_evidence_id": "PRC-2026.2§8"
+      }
+    ],
+    "decision": "accept_request",
+    "explanation": "PRC-2026.2 is the policy in effect on the 2026-10-12 decision date. Voltline Electronics is a new enterprise merchant with $2,500,000 monthly volume and 30,000 transactions. Merchant-specific cost data is unavailable, so the policy's conservative default cost basis of 2.10% + $0.12 applies, giving a monthly cost of $56,100. At the requested 2.72% + $0.15, monthly revenue is $72,500, gross profit is $16,400, and gross margin is 22.62%. That meets the 22% enterprise minimum. The requested price is 24.46% above the enterprise list price of 2.15% + $0.15, so no discount approval is needed. At list price under the default cost basis, margin would be only 3.69%, below the minimum. Under these assumptions, the lowest compliant price at a $0.15 fee is about 2.70%. Volume is below the $3,000,000 deal_desk threshold, and no promotion or strategic exception is involved. Because cost data is incomplete, pricing_desk review is required. The account manager should tell the merchant that this price is above standard enterprise list and reflects conservative interim cost assumptions. Pricing should be revisited once the interchange mix report arrives. The merchant's claim about its previous processor's pricing is unverified.",
+    "claims": [
+      {
+        "claim": "PRC-2026.2 is effective on the 2026-10-12 decision date (effective from 2026-09-01, not superseded).",
+        "evidence_ids": [
+          "PRC-2026.2§1",
+          "FACT-decision_date"
+        ]
+      },
+      {
+        "claim": "Merchant is a new enterprise merchant with $2,500,000 monthly volume and 30,000 monthly transactions.",
+        "evidence_ids": [
+          "FACT-profile",
+          "FACT-volume",
+          "FACT-transactions",
+          "FACT-current_pricing"
+        ]
+      },
+      {
+        "claim": "Merchant-specific cost data is unavailable, so the default cost basis of 2.10% + $0.12 is used and pricing_desk review is required; monthly cost is $56,100.",
+        "evidence_ids": [
+          "FACT-cost",
+          "PRC-2026.2§8",
+          "FACT-volume",
+          "FACT-transactions"
+        ]
+      },
+      {
+        "claim": "The merchant requested 2.72% + $0.15; this is the merchant's own unverified statement, including the claim about its previous processor.",
+        "evidence_ids": [
+          "FACT-request"
+        ]
+      },
+      {
+        "claim": "At 2.72% + $0.15, monthly revenue is $72,500 and gross margin is 22.62%, meeting the 22% enterprise minimum.",
+        "evidence_ids": [
+          "PRC-2026.2§3",
+          "FACT-volume",
+          "FACT-transactions",
+          "PRC-2026.2§8"
+        ]
+      },
+      {
+        "claim": "Enterprise list price is 2.15% + $0.15 (list revenue $58,250); the requested price is 24.46% above list, so no discount approval is required.",
+        "evidence_ids": [
+          "PRC-2026.2§2",
+          "PRC-2026.2§4"
+        ]
+      },
+      {
+        "claim": "At list price, margin under the default cost basis would be 3.69%, below the 22% minimum.",
+        "evidence_ids": [
+          "PRC-2026.2§2",
+          "PRC-2026.2§3",
+          "PRC-2026.2§8"
+        ]
+      },
+      {
+        "claim": "Volume is below $3,000,000, so deal_desk approval is not required.",
+        "evidence_ids": [
+          "PRC-2026.2§5",
+          "FACT-volume"
+        ]
+      },
+      {
+        "claim": "No promotion or strategic exception is used, so neither promotions_lead nor cfo_delegate approval applies.",
+        "evidence_ids": [
+          "FACT-exception",
+          "PRC-2026.2§6",
+          "PRC-2026.2§7"
+        ]
+      }
+    ],
+    "data_gaps": [
+      "Merchant-specific processing cost data (interchange mix report) has not been received from onboarding; margin is based on the conservative policy default cost basis and may differ materially once actual costs are known.",
+      "The merchant's statement that its previous processor charged about 2.72% + $0.15 is unverified.",
+      "With no transaction history (0 months as a customer), the volume and transaction figures cannot be validated against actual processing."
+    ]
+  },
+  "latency_ms": 22413,
+  "token_usage": {
+    "input_tokens": 3432,
+    "output_tokens": 2583,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.065388,
+  "stop_reason": "end_turn",
+  "execution_error": null,
+  "execution_mode": "live",
+  "cache_hit": false
+}

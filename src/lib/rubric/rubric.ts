@@ -33,6 +33,16 @@ export const JudgeCriterion = z.object({
 });
 export type JudgeCriterion = z.infer<typeof JudgeCriterion>;
 
+/** Models the AI judge can run on. Changing the model starts a new judge version. */
+export const JUDGE_MODELS = [
+  { id: "claude-haiku-5-5", label: "Haiku 5.5", note: "fastest, cheapest", input_per_m: 0.1, output_per_m: 0.5 },
+  { id: "claude-sonnet-5-5", label: "Sonnet 5.5", note: "balanced", input_per_m: 2, output_per_m: 10 },
+  { id: "claude-opus-5-5", label: "Opus 5.5", note: "most capable (default)", input_per_m: 4, output_per_m: 20 },
+] as const;
+export const JudgeModel = z.enum(["claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5"]);
+export type JudgeModel = z.infer<typeof JudgeModel>;
+export const DEFAULT_JUDGE_MODEL: JudgeModel = "claude-opus-5-5";
+
 export const RubricVersion = z.object({
   version: z.number().int(),
   created_at: z.string(),
@@ -40,6 +50,7 @@ export const RubricVersion = z.object({
   change_note: z.string(),
   review_checklist: z.array(ChecklistItem).min(1).max(8),
   judge_criterion: JudgeCriterion,
+  judge_model: JudgeModel.default(DEFAULT_JUDGE_MODEL),
 });
 export type RubricVersion = z.infer<typeof RubricVersion>;
 
@@ -48,6 +59,7 @@ export const DEFAULT_RUBRIC: RubricVersion = {
   created_at: "2026-10-13T00:00:00.000Z",
   author: "system (default)",
   change_note: "Initial rubric from the project brief.",
+  judge_model: DEFAULT_JUDGE_MODEL,
   review_checklist: [
     {
       id: "policy",

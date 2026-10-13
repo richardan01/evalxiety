@@ -42,6 +42,8 @@ export interface JudgeDefinition {
   prompt_version: string;
   live_version: string;
   mock_version: string;
+  /** Claude model the judge runs on (from the rubric). */
+  model?: string;
   status: "experimental";
 }
 

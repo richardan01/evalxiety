@@ -23,6 +23,7 @@ const GRID = "#e5e7eb";
 
 const pct = (r: number | null | undefined) => (r === null || r === undefined ? "—" : `${Math.round(r * 100)}%`);
 const shortDate = (iso: string) => new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+const shortTime = (iso: string) => new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 
 function value(h: History[number], key: string): number | null {
   return key === "pass_all" ? h.pass_all_rate : (h.checks[key] ?? null);
@@ -123,7 +124,7 @@ export function TrendsChart({ history }: { history: History }) {
                   {h.label}
                 </text>
                 <text x={x(i)} y={H - P.b + 29} textAnchor={n > 1 && i === 0 ? "start" : n > 1 && i === n - 1 ? "end" : "middle"} fontSize={9} fill="#94a3b8">
-                  {shortDate(h.created_at)}
+                  {n > 4 ? shortTime(h.created_at) : shortDate(h.created_at)}
                   {h.current_content ? "" : " · old"}
                 </text>
                 <rect x={x(i) - 30} y={P.t} width={60} height={H - P.t - P.b} fill="transparent" onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)} />

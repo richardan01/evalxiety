@@ -8,9 +8,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { cx } from "./ui";
+import { Mascot } from "./Mascot";
 
 const NAV: Array<{ section: string; items: Array<{ href: string; label: string; icon: string; hint: string }> }> = [
-  { section: "Overview", items: [{ href: "/", label: "Dashboard", icon: "▦", hint: "Eval progress and release status" }] },
+  {
+    section: "Overview",
+    items: [
+      { href: "/start", label: "Start here", icon: "➜", hint: "The 5-stage path, what to improve next, how to bring your own agent" },
+      { href: "/", label: "Dashboard", icon: "▦", hint: "Eval progress and release status" },
+    ],
+  },
   {
     section: "Human review",
     items: [
@@ -71,12 +78,10 @@ export function Sidebar() {
   return (
     <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col bg-slate-950 text-slate-300">
       <Link href="/" className="flex items-center gap-2.5 px-5 pb-4 pt-5">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-sky-500 text-sm font-bold text-white">
-          AT
-        </span>
+        <Mascot mood="worried" size={34} />
         <span>
-          <span className="block text-sm font-semibold text-white">AgentTrust</span>
-          <span className="block text-[11px] text-slate-500">Prove it&apos;s ready to ship</span>
+          <span className="block text-sm font-semibold text-white">Evalxiety</span>
+          <span className="block text-[11px] text-slate-500">Nervous before shipping</span>
         </span>
       </Link>
 

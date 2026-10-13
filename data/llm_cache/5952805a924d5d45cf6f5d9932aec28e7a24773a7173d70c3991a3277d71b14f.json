@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"The recommended price is a 15.00% discount versus list, not greater than 15%, so regional_pricing_manager approval is not required.\",\"The counter-offer still reduces the merchant's rate from the current 2.40% while honoring the 48-month relationship.\",\"The requested 1.92% + $0.20 yields a 23.28% margin, below the 24% minimum, and a 17.14% discount versus list.\"],\"evidence_ids\":[\"PRC-2025.1§1\",\"PRC-2025.1§2\",\"PRC-2025.1§3\",\"PRC-2025.1§4\",\"PRC-2025.1§5\",\"PRC-2025.1§7\",\"PRC-2025.1§8\",\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-current_pricing\",\"FACT-request\",\"FACT-exception\",\"FACT-decision_date\"],\"explanation\":\"Every material claim traces to the evidence. The policy choice follows from FACT-decision_date and PRC-2025.1§1 / PRC-2026.1§1. The mid list rate (2.40% + $0.20) comes from PRC-2025.1§2, and the 24% minimum margin and strategic-exception rule come from PRC-2025.1§3 and §7. Costs, revenue and margins follow by arithmetic from FACT-cost, FACT-volume and FACT-transactions: cost $8,544, list revenue $13,440, requested revenue $11,136 (23.28% margin), recommended revenue $11,424 (25.21% margin). The 15.00% discount is not greater than the 15% threshold in PRC-2025.1§4, so no regional_pricing_manager approval is needed. The $480,000 volume is well below the $5,000,000 deal_desk threshold in PRC-2025.1§5. Cost data is available, so PRC-2025.1§8 is not triggered. No exception or promotion was requested (FACT-exception). The current rate of 2.40% comes from FACT-current_pricing. The 48-month tenure is stated as fact in FACT-profile, not taken from the merchant's unverified request. No market benchmarks, risk claims or invented policy rules appear.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 4651,
+    "output_tokens": 1050,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.039604,
+  "latency_ms": 9382,
+  "cached_at": "2026-10-13T08:58:02.383Z"
+}

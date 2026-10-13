@@ -13,3 +13,17 @@ body {
   background: #f8fafc;
   color: #0f172a;
 }
+
+/* Evalxiety mascot: nervous jitter (disabled for reduced motion) */
+@keyframes evx-jitter {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  20% { transform: translate(-0.5px, 0.5px) rotate(-1deg); }
+  40% { transform: translate(0.5px, -0.5px) rotate(1deg); }
+  60% { transform: translate(-0.5px, 0) rotate(-0.5deg); }
+  80% { transform: translate(0.5px, 0.5px) rotate(0.5deg); }
+}
+.evx-jitter { animation: evx-jitter 1.6s ease-in-out infinite; }
+.evx-jitter-fast { animation: evx-jitter 0.35s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .evx-jitter, .evx-jitter-fast { animation: none; }
+}

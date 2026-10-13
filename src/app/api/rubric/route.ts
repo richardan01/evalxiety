@@ -1,7 +1,7 @@
 import { connection } from "next/server";
 import { z } from "zod";
 import { fail, handle, ok } from "@/lib/api/http";
-import { ChecklistItem, JudgeCriterion } from "@/lib/rubric/rubric";
+import { ChecklistItem, DEFAULT_JUDGE_MODEL, JUDGE_MODELS, JudgeCriterion, JudgeModel } from "@/lib/rubric/rubric";
 import { buildJudgeSystemPrompt, judgeVersion } from "@/lib/judge/judge";
 import { POLICIES } from "@/lib/domain/policies";
 import { DETERMINISTIC_EVALUATORS } from "@/lib/evaluators/deterministic";
@@ -11,7 +11,7 @@ import { appendRubricVersion, audit, getHeldoutState, latestTaxonomy, listRubric
 export async function GET() {
   await connection();
   return handle(async () => {
-    const [versions, taxonomy] = await Promise.all([listRubricVersions(), latestTaxonomy()]);
+    const [versions, taxonomy, heldout] = await Promise.all([listRubricVersions(), latestTaxonomy(), getHeldoutState()]);
     const rubric = versions[versions.length - 1];
     return ok({
       rubric,
@@ -20,8 +20,11 @@ export async function GET() {
         .reverse(),
       judge: {
         system_prompt: buildJudgeSystemPrompt(rubric.judge_criterion),
-        live_version: judgeVersion("live", rubric.judge_criterion),
-        mock_version: judgeVersion("mock", rubric.judge_criterion),
+        live_version: judgeVersion("live", rubric.judge_criterion, rubric.judge_model),
+        mock_version: judgeVersion("mock", rubric.judge_criterion, rubric.judge_model),
+        model: rubric.judge_model,
+        models: JUDGE_MODELS,
+        heldout_revealed: heldout.revealed,
       },
       failure_modes: taxonomy.failure_modes
         .filter((m) => m.status !== "merged" && m.status !== "retired")
@@ -49,6 +52,7 @@ const Body = z.object({
   base_version: z.number().int(),
   review_checklist: z.array(ChecklistItem).min(1).max(8),
   judge_criterion: JudgeCriterion,
+  judge_model: JudgeModel.default(DEFAULT_JUDGE_MODEL),
 });
 
 /** POST /api/rubric → save a new rubric version. Changing the judge criterion starts a new judge version. */
@@ -59,13 +63,11 @@ export async function POST(req: Request) {
     const ids = body.review_checklist.map((c) => c.id);
     if (new Set(ids).size !== ids.length) return fail(400, "Checklist item ids must be unique");
     const before = (await listRubricVersions()).at(-1)!;
-    const judgeEdit = JSON.stringify(before.judge_criterion) !== JSON.stringify(body.judge_criterion);
-    if (judgeEdit && (await getHeldoutState()).revealed) {
-      return fail(
-        409,
-        "The held-out cases have been revealed, so the judge criterion is frozen: a judge tuned after seeing held-out results would make the held-out check meaningless. Checklist wording can still change.",
-      );
-    }
+    const judgeEdit =
+      JSON.stringify(before.judge_criterion) !== JSON.stringify(body.judge_criterion) || before.judge_model !== body.judge_model;
+    // After the held-out reveal a judge change is allowed but labelled: its held-out calibration is no longer
+    // a clean final check (see calibrationView.judge_changed_after_reveal).
+    const afterReveal = judgeEdit && (await getHeldoutState()).revealed;
     let created;
     try {
       created = await appendRubricVersion(body.author, body.change_note, body, body.base_version);
@@ -73,13 +75,22 @@ export async function POST(req: Request) {
       if (err instanceof RubricConflictError) return fail(409, err.message);
       throw err;
     }
-    const judgeChanged = judgeVersion("live", before.judge_criterion) !== judgeVersion("live", created.judge_criterion);
+    const judgeChanged =
+      judgeVersion("live", before.judge_criterion, before.judge_model) !== judgeVersion("live", created.judge_criterion, created.judge_model);
     await audit(body.author, "rubric.saved", {
       version: created.version,
       change_note: body.change_note,
       judge_version_changed: judgeChanged,
-      new_live_judge_version: judgeVersion("live", created.judge_criterion),
+      new_live_judge_version: judgeVersion("live", created.judge_criterion, created.judge_model),
+      judge_model: created.judge_model,
+      judge_changed_after_heldout_reveal: afterReveal,
     });
-    return ok({ rubric: created, judge_version_changed: judgeChanged });
+    return ok({
+      rubric: created,
+      judge_version_changed: judgeChanged,
+      warning: afterReveal
+        ? "Judge changed after the held-out reveal: held-out calibration for this judge is no longer a clean final check."
+        : null,
+    });
   });
 }

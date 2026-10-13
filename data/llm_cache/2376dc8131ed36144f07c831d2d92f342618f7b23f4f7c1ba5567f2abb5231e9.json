@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"We used PRC-2026.1, the most recent policy, as a provisional basis and flagged the gap for review.\",\"approvals_required includes pricing_desk\",\"The claim that 'strategic pricing was promised' is also unverified.\",\"2.08% + $0.20, the lowest whole-basis-point rate that meets the 26% minimum\"],\"evidence_ids\":[\"FACT-decision_date\",\"PRC-2026.1§1\",\"PRC-2025.1§1\",\"PRC-2026.1§3\",\"PRC-2026.1§4\",\"PRC-2026.1§5\",\"PRC-2026.1§6\",\"PRC-2026.1§7\",\"PRC-2026.1§8\",\"FACT-request\",\"FACT-exception\",\"FACT-cost\",\"FACT-volume\",\"FACT-transactions\",\"FACT-current_pricing\"],\"explanation\":\"No material claim is unsupported. The policy-gap statement follows from the effective-date rules: FACT-decision_date is 2026-09-22, PRC-2026.1§1 ends 2026-09-01 and PRC-2025.1§1 ends 2026-04-01. Using PRC-2026.1 provisionally is a disclosed choice, and whether it was the right policy is checked elsewhere. Every figure the agent uses appears in the evidence or follows from it by arithmetic: costs (FACT-cost), volume and transactions (FACT-volume, FACT-transactions), the 26% mid minimum (PRC-2026.1§3), the 2.45% + $0.20 mid list rate (PRC-2026.1§2), the 12% discount threshold (PRC-2026.1§4), the $4M deal_desk threshold (PRC-2026.1§5), SPRING26 expiring 2026-06-30 (PRC-2026.1§6), and cfo_delegate approval for strategic exceptions (PRC-2026.1§7). The 'lowest whole basis point' claim also checks out: 2.07% gives about a 25.9% margin, below the minimum. The requested rate and the 'strategic pricing' statement are correctly labeled as the merchant's unverified claims (FACT-request). The exception is described as requested but not approved, matching FACT-exception. One point for analysts to note: pricing_desk routing is listed in the summary but not justified. PRC-2026.1§8 requires pricing_desk only when cost data is missing, and here cost data is present. However, the agent never claims a policy rule requires it; it reads as the review escalation for the policy gap that the agent disclosed, not an invented fact.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 5043,
+    "output_tokens": 1306,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.046292,
+  "latency_ms": 12389,
+  "cached_at": "2026-10-13T08:57:29.924Z"
+}

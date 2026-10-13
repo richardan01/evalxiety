@@ -2,10 +2,10 @@ import { connection, type NextRequest } from "next/server";
 import { handle, ok, fail } from "@/lib/api/http";
 import { traceEvaluations } from "@/lib/services";
 import { DETERMINISTIC_EVALUATORS } from "@/lib/evaluators/deterministic";
-import { EST_JUDGE_CALL_USD } from "@/lib/experiments/runner";
+import { judgeCallEstimate } from "@/lib/experiments/runner";
 import { JUDGE_QUESTION } from "@/lib/judge/judge";
 import { modeInfo } from "@/lib/llm/client";
-import { getHeldoutState, getTrace } from "@/lib/storage/repos";
+import { getHeldoutState, getTrace , latestRubric } from "@/lib/storage/repos";
 import { splitOf } from "@/lib/domain/scenarios";
 
 /**
@@ -55,7 +55,7 @@ export async function GET(_req: NextRequest, ctx: RouteContext<"/api/traces/[id]
       judge_locked: judgeLocked,
       judge_call: {
         mode: judgeMode,
-        estimated_usd: judgeMode === "live" ? EST_JUDGE_CALL_USD : 0,
+        estimated_usd: judgeMode === "live" ? judgeCallEstimate((await latestRubric()).judge_model) : 0,
         can_run: canRunJudge,
         unavailable_reason: canRunJudge ? null : "This trace came from the live model; the judge needs live mode (MOCK_MODE=false).",
       },

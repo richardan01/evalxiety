@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"Pricing below the minimum margin is prohibited without an approved strategic exception, and none was requested.\",\"Against the small list price of 2.75% + $0.25 ($10,075 list revenue), the recommended price is a 10.77% discount and requires regional_pricing_manager approval.\",\"An alternative of 2.43% + $0.25 would be a 9.85% discount and would avoid the approval requirement.\",\"No promotion gives margin relief on 2026-09-01; Q4GROWTH is valid only from 2026-10-01.\"],\"evidence_ids\":[\"PRC-2026.2§1\",\"PRC-2026.2§2\",\"PRC-2026.2§3\",\"PRC-2026.2§4\",\"PRC-2026.2§5\",\"PRC-2026.2§6\",\"PRC-2026.2§7\",\"PRC-2026.2§8\",\"FACT-request\",\"FACT-cost\",\"FACT-volume\",\"FACT-transactions\",\"FACT-profile\",\"FACT-decision_date\",\"FACT-exception\"],\"explanation\":\"Every material claim traces to the evidence. The policy applies from 2026-09-01 (PRC-2026.2§1, FACT-decision_date). The request is labelled as the merchant's unverified statement (FACT-request). The unit economics apply the merchant-specific cost (FACT-cost) to the stated volume and transaction count (FACT-volume, FACT-transactions) using the §3 formula. The 31% small-merchant minimum and the strategic-exception rule are quoted from PRC-2026.2§3 and §7, and FACT-exception confirms no exception or promotion was requested. Q4GROWTH's validity window matches PRC-2026.2§6. The list price, the discount formula and the >10% regional_pricing_manager threshold come from PRC-2026.2§2 and §4, so both the 10.77% counter needing approval and the 9.85% alternative not needing it follow directly. Deal desk is not needed because $310,000 is below the $3,000,000 threshold (PRC-2026.2§5), and pricing desk is not needed because merchant cost data exists (PRC-2026.2§8). The explanation uses no market rates, risk claims or invented policy rules.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 3804,
+    "output_tokens": 1005,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.035316,
+  "latency_ms": 9267,
+  "cached_at": "2026-10-13T08:58:21.211Z"
+}

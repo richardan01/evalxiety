@@ -4,6 +4,7 @@
  *  - live multi-case batches require explicit confirmation of an estimated cost;
  *  - cached responses are reused, so re-running identical cases costs nothing.
  */
+import { DEFAULT_JUDGE_MODEL, JUDGE_MODELS } from "../rubric/rubric";
 import type { ExperimentRun, Trace } from "../domain/schemas";
 import { getScenario } from "../domain/scenarios";
 import { getAgentConfig } from "../agent/configs";
@@ -26,7 +27,13 @@ import { newId, withLock } from "../storage/store";
 
 /** Rough per-call estimates (not a bound — long outputs can exceed them) for Claude Opus 5.5 at medium effort (input $4/M, output $20/M). */
 export const EST_AGENT_CALL_USD = 0.07;
-export const EST_JUDGE_CALL_USD = 0.045;
+export const EST_JUDGE_CALL_USD = 0.045; // on Claude Opus 5.5
+
+/** Rough judge-call estimate for a model, scaled from the Opus figure by output price. */
+export function judgeCallEstimate(model: string): number {
+  const m = JUDGE_MODELS.find((x) => x.id === model);
+  return m ? EST_JUDGE_CALL_USD * (m.output_per_m / 20) : EST_JUDGE_CALL_USD;
+}
 
 export class HeldoutLockedError extends Error {}
 export class PaidBatchConfirmationRequired extends Error {
@@ -45,14 +52,14 @@ export interface BatchEstimate {
   note: string;
 }
 
-export function estimateBatch(nCases: number, withJudge: boolean): BatchEstimate {
+export function estimateBatch(nCases: number, withJudge: boolean, judgeModel: string = DEFAULT_JUDGE_MODEL): BatchEstimate {
   const mode = modeInfo().mode;
   const judgeCalls = withJudge ? nCases : 0;
   return {
     mode,
     agent_calls: nCases,
     judge_calls: judgeCalls,
-    estimated_max_usd: mode === "live" ? nCases * EST_AGENT_CALL_USD + judgeCalls * EST_JUDGE_CALL_USD : 0,
+    estimated_max_usd: mode === "live" ? nCases * EST_AGENT_CALL_USD + judgeCalls * judgeCallEstimate(judgeModel) : 0,
     note:
       mode === "live"
         ? "Rough estimate before cache hits; responses already cached for identical prompts cost $0."
@@ -107,7 +114,7 @@ export async function prepareRun(opts: StartRunOptions): Promise<ExperimentRun> 
   if (!set) throw new Error(`Unknown frozen set ${opts.frozen_set_id}`);
   if (!verifyFrozenSet(set)) throw new Error(`Frozen set ${set.frozen_set_id} content changed — refusing to run`);
   await assertHeldoutAccess(set.case_ids);
-  const estimate = estimateBatch(set.case_ids.length, opts.run_judge !== false);
+  const estimate = estimateBatch(set.case_ids.length, opts.run_judge !== false, (await latestRubric()).judge_model);
   const mode = opts.force_mock ? "mock" : estimate.mode;
   if (mode === "live" && set.case_ids.length > 1 && !opts.confirm_paid_batch) {
     throw new PaidBatchConfirmationRequired(estimate);
@@ -207,14 +214,14 @@ async function judgeMissingUnlocked(
   const run = await getExperimentRun(runId);
   if (!run) throw new Error(`Unknown run ${runId}`);
   const existing = await listJudgeResults();
-  const { judge_criterion: criterion } = await latestRubric();
+  const { judge_criterion: criterion, judge_model: judgeModel } = await latestRubric();
   const traces = (await Promise.all(Object.values(run.trace_ids).map((id) => getTrace(id)))).filter(
     (t): t is Trace => t !== null,
   );
   const todo = traces.filter(
     (t) =>
       !existing.some(
-        (j) => j.trace_id === t.trace_id && j.judge_version === judgeVersion(t.execution_mode === "mock" ? "mock" : "live", criterion),
+        (j) => j.trace_id === t.trace_id && j.judge_version === judgeVersion(t.execution_mode === "mock" ? "mock" : "live", criterion, judgeModel),
       ),
   );
   const live = todo.filter((t) => t.execution_mode === "live");
@@ -226,12 +233,12 @@ async function judgeMissingUnlocked(
       mode: "live",
       agent_calls: 0,
       judge_calls: live.length,
-      estimated_max_usd: live.length * EST_JUDGE_CALL_USD,
+      estimated_max_usd: live.length * judgeCallEstimate(judgeModel),
       note: "Rough estimate before cache hits; judge responses already cached for identical prompts cost $0.",
     });
   }
   await pool(runnable, 3, async (t) => {
-    await saveJudgeResult(await runJudge(t, { criterion }));
+    await saveJudgeResult(await runJudge(t, { criterion, model: judgeModel }));
   });
   await audit(opts.actor, "judge.batch", { run_id: runId, judged: runnable.length, skipped_live_in_mock_mode: todo.length - runnable.length });
   return {

@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"Pricing_desk review is required because cost data is incomplete and because of the policy-date gap.\",\"The decision date is 2026-10-12, but no retrieved policy covers that date. PRC-2026.1 applied only until 2026-09-01, and PRC-2025.1 ended 2026-04-01.\",\"The lowest compliant price at a $0.15 fee is about 2.485%.\",\"The merchant's statement about its previous processor's pricing is unverified.\"],\"evidence_ids\":[\"PRC-2026.1§1\",\"PRC-2025.1§1\",\"FACT-decision_date\",\"PRC-2026.1§8\",\"FACT-cost\",\"PRC-2026.1§2\",\"PRC-2026.1§3\",\"PRC-2026.1§4\",\"PRC-2026.1§5\",\"PRC-2026.1§6\",\"FACT-request\",\"FACT-exception\",\"FACT-volume\",\"FACT-transactions\",\"FACT-profile\"],\"explanation\":\"No material claim is unsupported. The policy-date gap is stated correctly from FACT-decision_date and the §1 scope clauses: PRC-2026.1 ends 2026-09-01 and PRC-2025.1 ends 2026-04-01. Merchant facts match FACT-profile, FACT-volume and FACT-transactions. The default cost of 2.00% + $0.11 and the pricing_desk routing follow directly from PRC-2026.1§8, because FACT-cost says cost data is unavailable. Margins follow by straightforward arithmetic from §2, §3 and §8: 26.48% at the requested price, 6.49% at list, and a floor of about 2.485%. The 'no discount approval' conclusion applies §4, since the price is above list rather than discounted. The deal_desk threshold comes from §5, and the promotion and exception statements come from FACT-exception, §6 and §7. The merchant's remark about its previous processor (FACT-request) is explicitly labelled unverified, not presented as fact. The only borderline item is naming the policy-date gap as a second reason for pricing_desk review: no policy text requires that. However, it reads as the agent's own provisional escalation, and §8 already independently requires the same routing, so it does not change the decision or the approvals.\",\"uncertainty_reason\":\"It is debatable whether citing the policy-date gap as a reason for pricing_desk review counts as asserting an approval requirement absent from policy, or merely as a prudent escalation, given that §8 already mandates the same routing.\",\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 4681,
+    "output_tokens": 1575,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.050224,
+  "latency_ms": 15896,
+  "cached_at": "2026-10-13T08:57:30.297Z"
+}

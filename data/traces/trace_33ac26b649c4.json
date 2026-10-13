@@ -1,0 +1,317 @@
+{
+  "trace_id": "trace_33ac26b649c4",
+  "case_id": "C10",
+  "timestamp": "2026-10-13T08:57:19.199Z",
+  "input": {
+    "case_id": "C10",
+    "title": "Coffee cart uses Q4 promo but cost data is missing",
+    "merchant": {
+      "merchant_id": "M-1010",
+      "name": "Daybreak Coffee Cart",
+      "size": "micro",
+      "segment": "food_and_beverage",
+      "months_as_customer": 1
+    },
+    "monthly_volume_usd": 21000,
+    "monthly_transactions": 1050,
+    "cost_data": {
+      "status": "missing",
+      "note": "Cost report delayed; first statement not yet closed."
+    },
+    "current_pricing": {
+      "rate_bps": 295,
+      "per_txn_fee_usd": 0.3
+    },
+    "request": {
+      "message": "We'd like the Q4GROWTH rate — 2.29% + $0.30 please.",
+      "requested_pricing": {
+        "rate_bps": 229,
+        "per_txn_fee_usd": 0.3
+      }
+    },
+    "decision_date": "2026-12-01",
+    "exception": {
+      "status": "promotion",
+      "promo_code": "Q4GROWTH",
+      "justification": "Enrolled at holiday market event"
+    },
+    "variation": {
+      "merchant_size": "micro",
+      "volume_band": "low",
+      "margin_proximity": "near_above",
+      "policy_period": "v3",
+      "exception_status": "promotion_valid",
+      "source_completeness": "missing_cost_data"
+    },
+    "data_origin": "synthetic"
+  },
+  "agent_version": "pricing-agent@corrected-v2",
+  "model_id": "claude-opus-5-5",
+  "prompt_version": "pricing-prompt-v2",
+  "retrieval_strategy": "effective_date_filtered",
+  "policy_context": [
+    {
+      "policy_id": "PRC-2026.2",
+      "effective_from": "2026-09-01",
+      "effective_to": null
+    }
+  ],
+  "evidence_pack": [
+    {
+      "evidence_id": "FACT-profile",
+      "kind": "merchant_fact",
+      "source_id": "C10",
+      "text": "Merchant Daybreak Coffee Cart (M-1010), size: micro, segment: food_and_beverage, customer for 1 months."
+    },
+    {
+      "evidence_id": "FACT-volume",
+      "kind": "merchant_fact",
+      "source_id": "C10",
+      "text": "Monthly processing volume: $21,000."
+    },
+    {
+      "evidence_id": "FACT-transactions",
+      "kind": "merchant_fact",
+      "source_id": "C10",
+      "text": "Monthly transaction count: 1,050 (average ticket $20)."
+    },
+    {
+      "evidence_id": "FACT-cost",
+      "kind": "merchant_fact",
+      "source_id": "C10",
+      "text": "Merchant-specific processing cost data is UNAVAILABLE: Cost report delayed; first statement not yet closed."
+    },
+    {
+      "evidence_id": "FACT-current_pricing",
+      "kind": "merchant_fact",
+      "source_id": "C10",
+      "text": "Current pricing: 2.95% + $0.30 per transaction."
+    },
+    {
+      "evidence_id": "FACT-request",
+      "kind": "merchant_fact",
+      "source_id": "C10",
+      "text": "Merchant request (merchant's own words, unverified): \"We'd like the Q4GROWTH rate — 2.29% + $0.30 please.\" Requested pricing: 2.29% + $0.30 per transaction."
+    },
+    {
+      "evidence_id": "FACT-decision_date",
+      "kind": "merchant_fact",
+      "source_id": "C10",
+      "text": "Pricing decision date: 2026-12-01."
+    },
+    {
+      "evidence_id": "FACT-exception",
+      "kind": "merchant_fact",
+      "source_id": "C10",
+      "text": "Promotion requested: code Q4GROWTH. Context: Enrolled at holiday market event."
+    },
+    {
+      "evidence_id": "PRC-2026.2§1",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Scope and effective dates: Merchant Pricing Policy 2026.2 (PRC-2026.2) applies to pricing decisions dated from 2026-09-01 (inclusive) until superseded. Decisions must use the policy effective on the decision date."
+    },
+    {
+      "evidence_id": "PRC-2026.2§2",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Standard list rates: micro: 2.95% + $0.30 per transaction; small: 2.75% + $0.25 per transaction; mid: 2.45% + $0.20 per transaction; enterprise: 2.15% + $0.15 per transaction"
+    },
+    {
+      "evidence_id": "PRC-2026.2§3",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Minimum gross margin: Gross margin % = (monthly revenue − monthly processing cost) / monthly revenue × 100, where revenue = volume × rate + transactions × per-transaction fee and cost = volume × cost rate + transactions × per-transaction cost. Minimum gross margin by merchant size: micro 33%, small 31%, mid 27%, enterprise 22%. Pricing below the minimum margin is prohibited unless an approved strategic exception applies (see PRC-2026.2§7)."
+    },
+    {
+      "evidence_id": "PRC-2026.2§4",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Discount approvals: Discount vs list = (list revenue − proposed revenue) / list revenue × 100, using the merchant's own volume and transaction count. A discount greater than 10% requires approval from the regional_pricing_manager."
+    },
+    {
+      "evidence_id": "PRC-2026.2§5",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "High-volume merchants: Merchants with monthly processing volume above $3,000,000 require deal_desk approval for any pricing change."
+    },
+    {
+      "evidence_id": "PRC-2026.2§6",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Promotions: Valid promotion codes: Q4GROWTH (valid 2026-10-01 to 2026-12-31 inclusive; lowers the minimum margin by 5 percentage points). Any pricing that uses a promotion requires promotions_lead approval. Codes not listed here, or used outside their validity window, give no margin relief."
+    },
+    {
+      "evidence_id": "PRC-2026.2§7",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Strategic exceptions: A strategic exception may permit pricing below the minimum margin. Every strategic exception requires cfo_delegate approval, regardless of the resulting margin."
+    },
+    {
+      "evidence_id": "PRC-2026.2§8",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Incomplete source data: If merchant-specific cost data is unavailable, use the conservative default cost basis of 2.10% of volume + $0.12 per transaction, and route the decision to pricing_desk for review."
+    }
+  ],
+  "retrieved_or_supplied_source_ids": [
+    "C10",
+    "PRC-2026.2"
+  ],
+  "system_prompt": "You are a merchant pricing analyst at a payments company. An account manager has forwarded a merchant's pricing request. Produce a pricing recommendation that the account manager can act on.\n\nHow to work:\n- Recommend a price (rate in basis points of volume plus a per-transaction fee). Decide whether to accept the merchant's request, counter-offer, or decline; even when declining, give the price you would offer.\n- Compute monthly unit economics with the policy's formula: revenue = volume × rate + transactions × per-transaction fee; cost = volume × cost rate + transactions × per-transaction cost; gross margin % = (revenue − cost) / revenue × 100. Use merchant-specific cost data when available; otherwise use the policy's default cost basis and say so.\n- Compare the margin with the policy's minimum for the merchant's size, accounting for any promotion that is valid on the decision date.\n- Identify every human approval the policy requires for the price you recommend (discount level, volume, promotions, strategic exceptions, incomplete data). Set requires_human_approval accordingly.\n- Support the explanation with evidence. Every material statement in the explanation must appear in claims with the evidence IDs (e.g. FACT-volume, PRC-2026.1§3) that support it. Use only the evidence provided below. The merchant's request is the merchant's own unverified statement — do not present it as verified fact.\n- List any missing or ambiguous information in data_gaps.\n- Report money in USD and margins as percentages (e.g. 31.25 for 31.25%).\n\nPolicy selection: more than one policy version may exist. Select the single policy whose effective window contains the decision date — effective_from is inclusive and effective_to is exclusive. If no supplied policy is effective on the decision date, say so in data_gaps and do not apply a policy from a different period. Report the selected policy's ID and effective_from date.",
+  "user_prompt": "<pricing_request case_id=\"C10\">\n<merchant_facts>\n[FACT-profile] Merchant Daybreak Coffee Cart (M-1010), size: micro, segment: food_and_beverage, customer for 1 months.\n[FACT-volume] Monthly processing volume: $21,000.\n[FACT-transactions] Monthly transaction count: 1,050 (average ticket $20).\n[FACT-cost] Merchant-specific processing cost data is UNAVAILABLE: Cost report delayed; first statement not yet closed.\n[FACT-current_pricing] Current pricing: 2.95% + $0.30 per transaction.\n[FACT-request] Merchant request (merchant's own words, unverified): \"We'd like the Q4GROWTH rate — 2.29% + $0.30 please.\" Requested pricing: 2.29% + $0.30 per transaction.\n[FACT-decision_date] Pricing decision date: 2026-12-01.\n[FACT-exception] Promotion requested: code Q4GROWTH. Context: Enrolled at holiday market event.\n</merchant_facts>\n\n<retrieved_policies>\nPRC-2026.2 — Merchant Pricing Policy 2026.2 (effective_from 2026-09-01, effective_to none)\n</retrieved_policies>\n\n<policy_sections>\n[PRC-2026.2§1] Scope and effective dates: Merchant Pricing Policy 2026.2 (PRC-2026.2) applies to pricing decisions dated from 2026-09-01 (inclusive) until superseded. Decisions must use the policy effective on the decision date.\n[PRC-2026.2§2] Standard list rates: micro: 2.95% + $0.30 per transaction; small: 2.75% + $0.25 per transaction; mid: 2.45% + $0.20 per transaction; enterprise: 2.15% + $0.15 per transaction\n[PRC-2026.2§3] Minimum gross margin: Gross margin % = (monthly revenue − monthly processing cost) / monthly revenue × 100, where revenue = volume × rate + transactions × per-transaction fee and cost = volume × cost rate + transactions × per-transaction cost. Minimum gross margin by merchant size: micro 33%, small 31%, mid 27%, enterprise 22%. Pricing below the minimum margin is prohibited unless an approved strategic exception applies (see PRC-2026.2§7).\n[PRC-2026.2§4] Discount approvals: Discount vs list = (list revenue − proposed revenue) / list revenue × 100, using the merchant's own volume and transaction count. A discount greater than 10% requires approval from the regional_pricing_manager.\n[PRC-2026.2§5] High-volume merchants: Merchants with monthly processing volume above $3,000,000 require deal_desk approval for any pricing change.\n[PRC-2026.2§6] Promotions: Valid promotion codes: Q4GROWTH (valid 2026-10-01 to 2026-12-31 inclusive; lowers the minimum margin by 5 percentage points). Any pricing that uses a promotion requires promotions_lead approval. Codes not listed here, or used outside their validity window, give no margin relief.\n[PRC-2026.2§7] Strategic exceptions: A strategic exception may permit pricing below the minimum margin. Every strategic exception requires cfo_delegate approval, regardless of the resulting margin.\n[PRC-2026.2§8] Incomplete source data: If merchant-specific cost data is unavailable, use the conservative default cost basis of 2.10% of volume + $0.12 per transaction, and route the decision to pricing_desk for review.\n</policy_sections>\n</pricing_request>\n\nReturn the pricing recommendation in the required JSON format.",
+  "tool_calls_if_any": [],
+  "experiment_run_id": "run_6425d0737461",
+  "data_origin": "synthetic",
+  "served_model_id": "claude-opus-5-5",
+  "selected_policy_id": "PRC-2026.2",
+  "final_response": "{\"selected_policy_id\":\"PRC-2026.2\",\"policy_effective_from\":\"2026-09-01\",\"recommended_pricing\":{\"rate_bps\":229,\"per_txn_fee_usd\":0.3},\"cost_basis_used\":{\"cost_bps\":210,\"per_txn_cost_usd\":0.12,\"source\":\"policy_default\"},\"unit_economics\":{\"monthly_volume_usd\":21000,\"monthly_transactions\":1050,\"monthly_revenue_usd\":795.9,\"monthly_cost_usd\":567,\"monthly_gross_profit_usd\":228.9,\"gross_margin_pct\":28.76},\"minimum_margin_pct_required\":28,\"meets_minimum_margin\":true,\"discount_vs_list_pct\":14.83,\"requires_human_approval\":true,\"approvals_required\":[{\"approver_role\":\"regional_pricing_manager\",\"reason\":\"Discount vs micro list pricing is 14.83%, which exceeds the 10% threshold.\",\"policy_evidence_id\":\"PRC-2026.2§4\"},{\"approver_role\":\"promotions_lead\",\"reason\":\"The recommended pricing relies on promotion code Q4GROWTH for margin relief.\",\"policy_evidence_id\":\"PRC-2026.2§6\"},{\"approver_role\":\"pricing_desk\",\"reason\":\"Merchant-specific cost data is unavailable, so the conservative default cost basis was used and the decision must be reviewed.\",\"policy_evidence_id\":\"PRC-2026.2§8\"}],\"decision\":\"accept_request\",\"explanation\":\"Policy PRC-2026.2 (effective from 2026-09-01, no end date) governs the 2026-12-01 decision. Q4GROWTH is a listed promotion valid 2026-10-01 to 2026-12-31, so it is valid on the decision date and lowers the micro minimum margin from 33% to 28%. Merchant-specific cost data is unavailable, so the policy default cost basis of 2.10% + $0.12 was used. At the requested 2.29% + $0.30 on $21,000 volume and 1,050 transactions: revenue is $795.90, cost is $567.00, and gross profit is $228.90. That gives a 28.76% margin, which meets the 28% promotional minimum but would not meet the standard 33% minimum. Against the micro list price of 2.95% + $0.30 ($934.50 revenue), the discount is 14.83%. That exceeds 10% and requires regional pricing manager approval. Use of the promotion requires promotions lead approval, and the missing cost data requires pricing desk review. Recommend accepting the request subject to these three approvals. The merchant's statement of entitlement to Q4GROWTH is unverified. Because the promotion's margin relief is tied to its validity window, pricing should be reviewed after 2026-12-31.\",\"claims\":[{\"claim\":\"PRC-2026.2 is the policy effective on the 2026-12-01 decision date.\",\"evidence_ids\":[\"PRC-2026.2§1\",\"FACT-decision_date\"]},{\"claim\":\"Q4GROWTH is valid on the decision date and lowers the minimum margin by 5 percentage points, from 33% to 28% for micro merchants.\",\"evidence_ids\":[\"PRC-2026.2§6\",\"PRC-2026.2§3\",\"FACT-decision_date\",\"FACT-profile\",\"FACT-exception\"]},{\"claim\":\"Merchant-specific cost data is unavailable, so the default cost basis of 2.10% + $0.12 was used.\",\"evidence_ids\":[\"FACT-cost\",\"PRC-2026.2§8\"]},{\"claim\":\"At 2.29% + $0.30, monthly revenue is $795.90, cost is $567.00, gross profit is $228.90, and gross margin is 28.76%.\",\"evidence_ids\":[\"FACT-volume\",\"FACT-transactions\",\"FACT-request\",\"PRC-2026.2§3\",\"PRC-2026.2§8\"]},{\"claim\":\"A 28.76% margin meets the 28% promotional minimum but is below the standard 33% micro minimum.\",\"evidence_ids\":[\"PRC-2026.2§3\",\"PRC-2026.2§6\"]},{\"claim\":\"Micro list pricing of 2.95% + $0.30 yields $934.50 of revenue, so the discount is 14.83%, which requires regional pricing manager approval.\",\"evidence_ids\":[\"PRC-2026.2§2\",\"PRC-2026.2§4\",\"FACT-volume\",\"FACT-transactions\"]},{\"claim\":\"Pricing that uses a promotion requires promotions lead approval.\",\"evidence_ids\":[\"PRC-2026.2§6\"]},{\"claim\":\"Unavailable cost data requires routing to pricing desk.\",\"evidence_ids\":[\"PRC-2026.2§8\",\"FACT-cost\"]},{\"claim\":\"The merchant's volume of $21,000 does not exceed $3,000,000, so deal desk approval is not required.\",\"evidence_ids\":[\"FACT-volume\",\"PRC-2026.2§5\"]},{\"claim\":\"No strategic exception is needed because the pricing meets the applicable minimum margin.\",\"evidence_ids\":[\"PRC-2026.2§7\",\"PRC-2026.2§3\"]},{\"claim\":\"The merchant's request for the Q4GROWTH rate and its holiday-market enrollment context are unverified merchant statements.\",\"evidence_ids\":[\"FACT-request\",\"FACT-exception\"]}],\"data_gaps\":[\"Merchant-specific processing cost data is unavailable because the first statement has not closed; the conservative policy default cost basis was used, and the actual margin may differ.\",\"The policy specifies no Q4GROWTH eligibility criteria beyond its validity window; the merchant's enrollment at a holiday market event is unverified.\",\"The policy does not state whether Q4GROWTH pricing may persist after 2026-12-31. After expiry, the 33% minimum would apply and 2.29% + $0.30 (28.76% margin on default cost) would fall below it, so a repricing review date should be set.\",\"The merchant has only 1 month of history; the volume and transaction counts may not be representative.\"]}",
+  "parsed_structured_output": {
+    "selected_policy_id": "PRC-2026.2",
+    "policy_effective_from": "2026-09-01",
+    "recommended_pricing": {
+      "rate_bps": 229,
+      "per_txn_fee_usd": 0.3
+    },
+    "cost_basis_used": {
+      "cost_bps": 210,
+      "per_txn_cost_usd": 0.12,
+      "source": "policy_default"
+    },
+    "unit_economics": {
+      "monthly_volume_usd": 21000,
+      "monthly_transactions": 1050,
+      "monthly_revenue_usd": 795.9,
+      "monthly_cost_usd": 567,
+      "monthly_gross_profit_usd": 228.9,
+      "gross_margin_pct": 28.76
+    },
+    "minimum_margin_pct_required": 28,
+    "meets_minimum_margin": true,
+    "discount_vs_list_pct": 14.83,
+    "requires_human_approval": true,
+    "approvals_required": [
+      {
+        "approver_role": "regional_pricing_manager",
+        "reason": "Discount vs micro list pricing is 14.83%, which exceeds the 10% threshold.",
+        "policy_evidence_id": "PRC-2026.2§4"
+      },
+      {
+        "approver_role": "promotions_lead",
+        "reason": "The recommended pricing relies on promotion code Q4GROWTH for margin relief.",
+        "policy_evidence_id": "PRC-2026.2§6"
+      },
+      {
+        "approver_role": "pricing_desk",
+        "reason": "Merchant-specific cost data is unavailable, so the conservative default cost basis was used and the decision must be reviewed.",
+        "policy_evidence_id": "PRC-2026.2§8"
+      }
+    ],
+    "decision": "accept_request",
+    "explanation": "Policy PRC-2026.2 (effective from 2026-09-01, no end date) governs the 2026-12-01 decision. Q4GROWTH is a listed promotion valid 2026-10-01 to 2026-12-31, so it is valid on the decision date and lowers the micro minimum margin from 33% to 28%. Merchant-specific cost data is unavailable, so the policy default cost basis of 2.10% + $0.12 was used. At the requested 2.29% + $0.30 on $21,000 volume and 1,050 transactions: revenue is $795.90, cost is $567.00, and gross profit is $228.90. That gives a 28.76% margin, which meets the 28% promotional minimum but would not meet the standard 33% minimum. Against the micro list price of 2.95% + $0.30 ($934.50 revenue), the discount is 14.83%. That exceeds 10% and requires regional pricing manager approval. Use of the promotion requires promotions lead approval, and the missing cost data requires pricing desk review. Recommend accepting the request subject to these three approvals. The merchant's statement of entitlement to Q4GROWTH is unverified. Because the promotion's margin relief is tied to its validity window, pricing should be reviewed after 2026-12-31.",
+    "claims": [
+      {
+        "claim": "PRC-2026.2 is the policy effective on the 2026-12-01 decision date.",
+        "evidence_ids": [
+          "PRC-2026.2§1",
+          "FACT-decision_date"
+        ]
+      },
+      {
+        "claim": "Q4GROWTH is valid on the decision date and lowers the minimum margin by 5 percentage points, from 33% to 28% for micro merchants.",
+        "evidence_ids": [
+          "PRC-2026.2§6",
+          "PRC-2026.2§3",
+          "FACT-decision_date",
+          "FACT-profile",
+          "FACT-exception"
+        ]
+      },
+      {
+        "claim": "Merchant-specific cost data is unavailable, so the default cost basis of 2.10% + $0.12 was used.",
+        "evidence_ids": [
+          "FACT-cost",
+          "PRC-2026.2§8"
+        ]
+      },
+      {
+        "claim": "At 2.29% + $0.30, monthly revenue is $795.90, cost is $567.00, gross profit is $228.90, and gross margin is 28.76%.",
+        "evidence_ids": [
+          "FACT-volume",
+          "FACT-transactions",
+          "FACT-request",
+          "PRC-2026.2§3",
+          "PRC-2026.2§8"
+        ]
+      },
+      {
+        "claim": "A 28.76% margin meets the 28% promotional minimum but is below the standard 33% micro minimum.",
+        "evidence_ids": [
+          "PRC-2026.2§3",
+          "PRC-2026.2§6"
+        ]
+      },
+      {
+        "claim": "Micro list pricing of 2.95% + $0.30 yields $934.50 of revenue, so the discount is 14.83%, which requires regional pricing manager approval.",
+        "evidence_ids": [
+          "PRC-2026.2§2",
+          "PRC-2026.2§4",
+          "FACT-volume",
+          "FACT-transactions"
+        ]
+      },
+      {
+        "claim": "Pricing that uses a promotion requires promotions lead approval.",
+        "evidence_ids": [
+          "PRC-2026.2§6"
+        ]
+      },
+      {
+        "claim": "Unavailable cost data requires routing to pricing desk.",
+        "evidence_ids": [
+          "PRC-2026.2§8",
+          "FACT-cost"
+        ]
+      },
+      {
+        "claim": "The merchant's volume of $21,000 does not exceed $3,000,000, so deal desk approval is not required.",
+        "evidence_ids": [
+          "FACT-volume",
+          "PRC-2026.2§5"
+        ]
+      },
+      {
+        "claim": "No strategic exception is needed because the pricing meets the applicable minimum margin.",
+        "evidence_ids": [
+          "PRC-2026.2§7",
+          "PRC-2026.2§3"
+        ]
+      },
+      {
+        "claim": "The merchant's request for the Q4GROWTH rate and its holiday-market enrollment context are unverified merchant statements.",
+        "evidence_ids": [
+          "FACT-request",
+          "FACT-exception"
+        ]
+      }
+    ],
+    "data_gaps": [
+      "Merchant-specific processing cost data is unavailable because the first statement has not closed; the conservative policy default cost basis was used, and the actual margin may differ.",
+      "The policy specifies no Q4GROWTH eligibility criteria beyond its validity window; the merchant's enrollment at a holiday market event is unverified.",
+      "The policy does not state whether Q4GROWTH pricing may persist after 2026-12-31. After expiry, the 33% minimum would apply and 2.29% + $0.30 (28.76% margin on default cost) would fall below it, so a repricing review date should be set.",
+      "The merchant has only 1 month of history; the volume and transaction counts may not be representative."
+    ]
+  },
+  "latency_ms": 21937,
+  "token_usage": {
+    "input_tokens": 3462,
+    "output_tokens": 2595,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.065748,
+  "stop_reason": "end_turn",
+  "execution_error": null,
+  "execution_mode": "live",
+  "cache_hit": false
+}

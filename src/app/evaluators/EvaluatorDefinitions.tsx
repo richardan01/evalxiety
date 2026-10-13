@@ -27,8 +27,11 @@ export function EvaluatorDefinitions({ deterministic, judge, rows }: {
         right={<ModeMix shown={rows.length} live={mix.live} mock={mix.mock} />}
       />
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        {checks.map((d) => {
+      <div className="grid gap-4 lg:grid-cols-[4fr_1fr]">
+        <div>
+          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Code ({checks.length})</h3>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {checks.map((d) => {
           const t = tallyEvaluator(rows, d.evaluator_id);
           return (
             <CheckCard
@@ -47,20 +50,32 @@ export function EvaluatorDefinitions({ deterministic, judge, rows }: {
             />
           );
         })}
-        <CheckCard
-          judge
-          name={plainName(judge.id)}
-          tag={<CheckTag kind="judge" />}
-          pass={jt.pass}
-          total={jt.total}
-          extras={[
-            [jt.fail, "flagged", "text-rose-700"],
-            [jt.requires_review, "unsure", "text-amber-700"],
-            [jt.error, "error", "text-violet-700"],
-            [jt.not_judged, "not judged", "text-slate-500"],
-          ]}
-          info={<JudgeInfo judge={judge} />}
-        />
+          </div>
+        </div>
+        <div>
+          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">AI judge (1)</h3>
+          <div className="grid gap-3">
+            <CheckCard
+              judge
+              name={plainName(judge.id)}
+              tag={
+                <span className="flex flex-wrap items-center gap-1">
+                  <CheckTag kind="judge" />
+                  {judge.model && <span className="font-mono text-[10px] text-slate-500">{judge.model.replace("claude-", "")}</span>}
+                </span>
+              }
+              pass={jt.pass}
+              total={jt.total}
+              extras={[
+                [jt.fail, "flagged", "text-rose-700"],
+                [jt.requires_review, "unsure", "text-amber-700"],
+                [jt.error, "error", "text-violet-700"],
+                [jt.not_judged, "not judged", "text-slate-500"],
+              ]}
+              info={<JudgeInfo judge={judge} />}
+            />
+          </div>
+        </div>
       </div>
     </section>
   );

@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"Q4GROWTH is not a valid promotion code under the policy, so it gives no margin relief.\",\"No retrieved policy is in effect on the decision date of 2026-12-01... PRC-2026.1, the most recent policy, is applied provisionally, and the case is flagged for confirmation.\",\"Merchant cost data is unavailable, so the default cost basis of 2.00% + $0.11 per transaction applies, and the case must go to pricing_desk.\",\"The resulting margin is 34.28% and the discount is 11.82%, below the 12% approval threshold.\"],\"evidence_ids\":[\"FACT-decision_date\",\"PRC-2026.1§1\",\"PRC-2025.1§1\",\"FACT-exception\",\"PRC-2026.1§6\",\"FACT-cost\",\"PRC-2026.1§8\",\"PRC-2026.1§2\",\"PRC-2026.1§3\",\"PRC-2026.1§4\",\"PRC-2026.1§5\",\"PRC-2026.1§7\",\"FACT-request\",\"FACT-volume\",\"FACT-transactions\",\"FACT-profile\"],\"explanation\":\"Every material claim traces to the evidence. The merchant facts (micro size, $21,000 volume, 1,050 transactions) come from FACT-profile, FACT-volume and FACT-transactions. The list rate, 32% floor and 12% discount threshold come from PRC-2026.1§2, §3 and §4. The default cost basis and pricing_desk routing come from FACT-cost and PRC-2026.1§8. Q4GROWTH giving no relief follows directly from PRC-2026.1§6, which lists only SPRING26 and says unlisted codes give no margin relief. No deal_desk approval follows from PRC-2026.1§5, since $21,000 is far below $4,000,000. No strategic exception is needed because the margin clears the floor (PRC-2026.1§3 and §7). The merchant's 2.29% request is presented as a request, not as fact (FACT-request). The statements about policy dates accurately restate PRC-2026.1§1 and PRC-2025.1§1. Whether applying an expired policy is correct is out of scope here. No market benchmarks, risk claims or invented policy rules appear.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 4635,
+    "output_tokens": 1064,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.03982,
+  "latency_ms": 9841,
+  "cached_at": "2026-10-13T08:58:06.808Z"
+}
