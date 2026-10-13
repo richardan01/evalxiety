@@ -1,0 +1,312 @@
+{
+  "total_estimated_usd": 2.5917184000000004,
+  "live_calls": 51,
+  "entries": [
+    {
+      "at": "2026-10-13T07:24:38.095Z",
+      "purpose": "agent:pricing-agent@baseline-v1:C04",
+      "estimated_usd": 0.076624,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:26:48.170Z",
+      "purpose": "agent:pricing-agent@baseline-v1:C01",
+      "estimated_usd": 0.068708,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:30:33.287Z",
+      "purpose": "agent:pricing-agent@corrected-v2:C02",
+      "estimated_usd": 0.047864,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:30:33.376Z",
+      "purpose": "judge:trace_562292cc3688",
+      "estimated_usd": 0.038584,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:30:38.179Z",
+      "purpose": "agent:pricing-agent@corrected-v2:C03",
+      "estimated_usd": 0.056668,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:30:41.526Z",
+      "purpose": "judge:trace_4d02ef4c99ca",
+      "estimated_usd": 0.030384,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:30:41.785Z",
+      "purpose": "agent:pricing-agent@corrected-v2:C01",
+      "estimated_usd": 0.063364,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:30:42.261Z",
+      "purpose": "agent:pricing-agent@baseline-v1:C02",
+      "estimated_usd": 0.070508,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:30:45.707Z",
+      "purpose": "judge:trace_1466d732c96c",
+      "estimated_usd": 0.045368,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:30:48.169Z",
+      "purpose": "judge:trace_5003f29c2eb4",
+      "estimated_usd": 0.036684,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:30:50.381Z",
+      "purpose": "judge:trace_d69bcfddaa1c",
+      "estimated_usd": 0.033612,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:30:51.137Z",
+      "purpose": "agent:pricing-agent@baseline-v1:C03",
+      "estimated_usd": 0.089312,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:30:59.167Z",
+      "purpose": "judge:trace_af54490d0ea0",
+      "estimated_usd": 0.037076,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:31:04.195Z",
+      "purpose": "judge:trace_4b9d7b0995a6",
+      "estimated_usd": 0.048132,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:31:05.141Z",
+      "purpose": "agent:pricing-agent@corrected-v2:C04",
+      "estimated_usd": 0.06664,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:31:07.025Z",
+      "purpose": "agent:pricing-agent@corrected-v2:C05",
+      "estimated_usd": 0.059532,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:31:11.639Z",
+      "purpose": "agent:pricing-agent@baseline-v1:C05",
+      "estimated_usd": 0.077456,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:31:12.729Z",
+      "purpose": "agent:pricing-agent@corrected-v2:C09",
+      "estimated_usd": 0.064996,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:31:13.799Z",
+      "purpose": "judge:trace_afd549f98902",
+      "estimated_usd": 0.033488,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:31:17.586Z",
+      "purpose": "judge:trace_81ce7d9e6c76",
+      "estimated_usd": 0.037692,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:31:23.472Z",
+      "purpose": "judge:trace_6323ff501293",
+      "estimated_usd": 0.043088,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:31:24.236Z",
+      "purpose": "judge:trace_803befcd07c6",
+      "estimated_usd": 0.035812,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:31:24.366Z",
+      "purpose": "agent:pricing-agent@baseline-v1:C09",
+      "estimated_usd": 0.07008,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:31:24.450Z",
+      "purpose": "agent:pricing-agent@baseline-v1:C11",
+      "estimated_usd": 0.064944,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:31:33.423Z",
+      "purpose": "agent:pricing-agent@corrected-v2:C11",
+      "estimated_usd": 0.060396,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:31:33.670Z",
+      "purpose": "judge:trace_32fb25fd102e",
+      "estimated_usd": 0.037592,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:31:34.284Z",
+      "purpose": "judge:trace_f4e330f4b025",
+      "estimated_usd": 0.039104,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:31:41.736Z",
+      "purpose": "judge:trace_901ea8abffce",
+      "estimated_usd": 0.033584,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:31:43.059Z",
+      "purpose": "agent:pricing-agent@corrected-v2:C12",
+      "estimated_usd": 0.075336,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:31:47.328Z",
+      "purpose": "agent:pricing-agent@corrected-v2:C13",
+      "estimated_usd": 0.06742,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:31:49.930Z",
+      "purpose": "agent:pricing-agent@baseline-v1:C12",
+      "estimated_usd": 0.078624,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:31:52.760Z",
+      "purpose": "agent:pricing-agent@baseline-v1:C16",
+      "estimated_usd": 0.05938,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:31:53.556Z",
+      "purpose": "judge:trace_213575c26660",
+      "estimated_usd": 0.03784,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:31:59.068Z",
+      "purpose": "judge:trace_e9e7e7f4efdb",
+      "estimated_usd": 0.039684,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:32:00.178Z",
+      "purpose": "judge:trace_4708a396173e",
+      "estimated_usd": 0.041988,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:32:02.066Z",
+      "purpose": "agent:pricing-agent@corrected-v2:C16",
+      "estimated_usd": 0.063132,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:32:02.443Z",
+      "purpose": "judge:trace_b2f5827664a5",
+      "estimated_usd": 0.038596,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:32:05.549Z",
+      "purpose": "agent:pricing-agent@baseline-v1:C13",
+      "estimated_usd": 0.086688,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:32:11.647Z",
+      "purpose": "judge:trace_c17a551705c6",
+      "estimated_usd": 0.035764,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:32:14.211Z",
+      "purpose": "agent:pricing-agent@corrected-v2:C18",
+      "estimated_usd": 0.06064,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:32:18.232Z",
+      "purpose": "agent:pricing-agent@corrected-v2:C20",
+      "estimated_usd": 0.060392,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:32:18.955Z",
+      "purpose": "judge:trace_d1db737832a3",
+      "estimated_usd": 0.046692,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:32:19.451Z",
+      "purpose": "agent:pricing-agent@baseline-v1:C18",
+      "estimated_usd": 0.061448,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:32:22.490Z",
+      "purpose": "agent:pricing-agent@baseline-v1:C20",
+      "estimated_usd": 0.06558,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:32:26.740Z",
+      "purpose": "judge:trace_6dc691f949bc",
+      "estimated_usd": 0.031384,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:32:29.143Z",
+      "purpose": "judge:trace_cd288e29bbe8",
+      "estimated_usd": 0.036776,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:32:29.908Z",
+      "purpose": "judge:trace_d8a8f6b42bb5",
+      "estimated_usd": 0.03954,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:32:32.444Z",
+      "purpose": "judge:trace_ce36bed66dfb",
+      "estimated_usd": 0.040552,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:38:03.351Z",
+      "purpose": "guide",
+      "estimated_usd": 0.022112,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:39:58.577Z",
+      "purpose": "guide",
+      "estimated_usd": 0.0118424,
+      "model": "claude-opus-5-5"
+    },
+    {
+      "at": "2026-10-13T07:49:27.869Z",
+      "purpose": "guide",
+      "estimated_usd": 0.023016,
+      "model": "claude-opus-5-5"
+    }
+  ]
+}

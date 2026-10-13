@@ -1,0 +1,39 @@
+{
+  "run_id": "run_f876bc3d1265",
+  "created_at": "2026-10-13T07:30:19.197Z",
+  "completed_at": "2026-10-13T07:32:29.915Z",
+  "agent_config_id": "pricing-agent@corrected-v2",
+  "frozen_set_id": "FROZEN-DEV-v1",
+  "frozen_set_hash": "fe3b9b9a4672a8bde53db509675c512669f8b4d2575afc4618f1f3a407a33ab9",
+  "case_ids": [
+    "C01",
+    "C02",
+    "C03",
+    "C04",
+    "C05",
+    "C09",
+    "C11",
+    "C12",
+    "C13",
+    "C16",
+    "C18",
+    "C20"
+  ],
+  "execution_mode": "live",
+  "status": "completed",
+  "trace_ids": {
+    "C02": "trace_4d02ef4c99ca",
+    "C03": "trace_5003f29c2eb4",
+    "C01": "trace_d69bcfddaa1c",
+    "C04": "trace_afd549f98902",
+    "C05": "trace_81ce7d9e6c76",
+    "C09": "trace_803befcd07c6",
+    "C11": "trace_901ea8abffce",
+    "C12": "trace_213575c26660",
+    "C13": "trace_e9e7e7f4efdb",
+    "C16": "trace_c17a551705c6",
+    "C18": "trace_6dc691f949bc",
+    "C20": "trace_d8a8f6b42bb5"
+  },
+  "notes": null
+}

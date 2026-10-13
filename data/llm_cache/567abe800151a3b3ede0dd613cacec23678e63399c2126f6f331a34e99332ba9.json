@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"The approval must also be finalized while PRC-2026.1 is still in effect.\"],\"evidence_ids\":[\"PRC-2026.1§1\",\"PRC-2026.1§4\",\"FACT-decision_date\",\"FACT-request\"],\"explanation\":\"Most of the explanation is supported. The policy window, micro minimum margin of 32%, merchant cost, revenue, cost and margin figures, list price, 21.22% discount, regional_pricing_manager routing, no deal_desk, and no promotion or exception all follow from FACT-profile, FACT-volume, FACT-transactions, FACT-cost, FACT-exception and PRC-2026.1§1-§7. The point that the policy has no rate-lock provision is consistent with the policy text, and the lock-in request is correctly attributed to the merchant (FACT-request). However, the closing statement adds a new approval requirement: that the approval must be finalized while PRC-2026.1 is still in effect. PRC-2026.1§1 only says decisions must use the policy effective on the decision date (FACT-decision_date gives 2026-08-31). PRC-2026.1§4 says a discount over 12% needs regional_pricing_manager approval but sets no deadline for that approval. No evidence item ties approval timing to the policy's expiry. This is an approval-routing condition not found in the supplied policy, so it is a material unsupported claim.\",\"uncertainty_reason\":null,\"failure_detected\":true}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 4464,
+    "output_tokens": 946,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.036776,
+  "latency_ms": 9687,
+  "cached_at": "2026-10-13T07:32:29.145Z"
+}

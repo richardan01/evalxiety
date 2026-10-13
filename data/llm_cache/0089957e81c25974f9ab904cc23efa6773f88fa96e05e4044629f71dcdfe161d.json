@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"Because PRC-2025.1 expires on 2026-04-01, the decision should be finalized on 2026-03-31.\",\"The margin headroom is thin, at about 0.73 percentage points above the minimum.\",\"Merchant-specific cost data is unavailable, so the default cost basis of 1.90% + $0.10 per transaction is used and the decision is routed to pricing_desk.\"],\"evidence_ids\":[\"PRC-2025.1§1\",\"FACT-decision_date\",\"PRC-2025.1§3\",\"PRC-2025.1§8\",\"FACT-cost\",\"FACT-request\",\"PRC-2025.1§2\",\"PRC-2025.1§4\",\"PRC-2025.1§5\",\"PRC-2025.1§6\",\"PRC-2025.1§7\",\"FACT-exception\",\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\"],\"explanation\":\"No material claim is unsupported.\\n- **Policy and date:** The policy window and decision date match PRC-2025.1§1 and FACT-decision_date.\\n- **Merchant request:** The requested price is correctly labeled as the merchant's unverified statement (FACT-request).\\n- **List rate:** Mid-size list pricing of 2.40% + $0.20 is quoted from PRC-2025.1§2.\\n- **Cost basis and routing:** FACT-cost confirms no merchant-specific cost data. PRC-2025.1§8 supplies the default 1.90% + $0.10 cost basis and the pricing_desk routing.\\n- **Margin:** Revenue, cost, profit and margin follow by straightforward arithmetic from FACT-volume, FACT-transactions and FACT-request using the PRC-2025.1§3 formula. The 24% mid-size minimum is stated in §3.\\n- **Discount:** The discount is computed per §4 against list revenue of $20,160 and checked against the §4 15% threshold.\\n- **Other approvals:** The deal_desk volume threshold is from §5. No promotion or exception is requested (FACT-exception), so the §6 and §7 approvals do not apply.\\n- **Headroom remark:** The 'thin headroom' comment is simply 24.73 − 24.\\n- **Finalize-date remark:** The closing advice to finalize on 2026-03-31 follows from the §1 expiry and the given decision date. It is not used to justify the price, the decision or the routing.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 3760,
+    "output_tokens": 1225,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.03954,
+  "latency_ms": 11671,
+  "cached_at": "2026-10-13T07:32:29.909Z"
+}

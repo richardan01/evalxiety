@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"SPRING25 was valid only from 2025-03-01 to 2025-05-31, so it gives no margin relief on 2025-11-20. The merchant's claim to have qualified is unverified.\",\"The requested 1.76% + $0.15 would be a 15.02% discount vs list, above the 15% threshold that requires regional_pricing_manager approval.\",\"Volume of $2.2M is below the $5M high-volume threshold, so deal_desk approval is not required.\"],\"evidence_ids\":[\"FACT-decision_date\",\"FACT-request\",\"FACT-exception\",\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-current_pricing\",\"PRC-2025.1§1\",\"PRC-2025.1§2\",\"PRC-2025.1§3\",\"PRC-2025.1§4\",\"PRC-2025.1§5\",\"PRC-2025.1§6\",\"PRC-2025.1§7\",\"PRC-2026.1§1\"],\"explanation\":\"No material claim is unsupported. Each claim traces to the evidence. Policy selection follows from FACT-decision_date and PRC-2025.1§1 / PRC-2026.1§1. Enterprise list pricing of 2.10% + $0.15 and the 18% minimum margin come from FACT-profile, PRC-2025.1§2 and PRC-2025.1§3. The SPRING25 validity window (2025-03-01 to 2025-05-31) and the 'no relief outside window' rule are quoted from PRC-2025.1§6. The merchant's qualification is correctly presented as unverified, matching FACT-request. Cost, revenue, margin and discount figures follow by straightforward arithmetic from FACT-volume, FACT-transactions, FACT-cost and the list rates. The 15% regional_pricing_manager threshold comes from PRC-2025.1§4. The $5M deal_desk threshold comes from PRC-2025.1§5. Strategic exceptions are defined in PRC-2025.1§7, and none is cited as applying. Current pricing of 2.00% + $0.15 comes from FACT-current_pricing. No market benchmarks, risk assertions or invented policy rules appear.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 4499,
+    "output_tokens": 1030,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.038596,
+  "latency_ms": 9675,
+  "cached_at": "2026-10-13T07:32:02.445Z"
+}

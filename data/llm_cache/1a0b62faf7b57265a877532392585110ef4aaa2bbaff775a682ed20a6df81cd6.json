@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"If approval is not obtained, a counter-offer of 2.12% + $0.20 would keep the discount under 12% (about 11.7%) and would not need approval.\",\"The discount versus list is 16.15%, which exceeds 12% and requires regional_pricing_manager approval.\",\"Merchant-specific cost data is available, so the default cost basis and pricing_desk review do not apply.\"],\"evidence_ids\":[\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-request\",\"FACT-exception\",\"PRC-2026.1§2\",\"PRC-2026.1§3\",\"PRC-2026.1§4\",\"PRC-2026.1§5\",\"PRC-2026.1§6\",\"PRC-2026.1§7\",\"PRC-2026.1§8\"],\"explanation\":\"Every material claim traces to the evidence. The policy window comes from PRC-2026.1§1 and FACT-decision_date. Mid size, the 2.45% + $0.20 list rate and the 26% minimum margin come from FACT-profile, PRC-2026.1§2 and §3. Revenue, cost and margin follow by arithmetic from FACT-volume, FACT-transactions and FACT-cost. The 16.15% discount and the regional_pricing_manager approval follow from PRC-2026.1§4. No promotion or exception is involved per FACT-exception, so §6 and §7 do not apply. Volume of $1.25M is below the $4M threshold in §5. Merchant-specific cost is present (FACT-cost), so §8 is not triggered. The merchant's low-chargeback statement is correctly labeled unverified and not used to justify the price (FACT-request). The counter-offer's 'about 11.7%' discount computes to about 11.8%, but arithmetic precision is out of scope; it is still under 12%, so the no-approval conclusion follows from §4. No market rates, risk data or invented policy rules appear.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 3801,
+    "output_tokens": 919,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.033584,
+  "latency_ms": 8308,
+  "cached_at": "2026-10-13T07:31:41.739Z"
+}

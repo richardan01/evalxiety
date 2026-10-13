@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"The decision should therefore be finalized and dated 2026-03-31.\",\"Under PRC-2026.1 (from 2026-04-01) the mid minimum margin is 26% and the default cost basis is 2.00% + $0.11, under which this price would yield about a 20.43% margin and fail.\",\"The only required approval is pricing_desk review, because cost data is missing.\"],\"evidence_ids\":[\"FACT-decision_date\",\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-request\",\"FACT-exception\",\"PRC-2025.1§1\",\"PRC-2025.1§2\",\"PRC-2025.1§3\",\"PRC-2025.1§4\",\"PRC-2025.1§5\",\"PRC-2025.1§6\",\"PRC-2025.1§7\",\"PRC-2025.1§8\",\"PRC-2026.1§1\",\"PRC-2026.1§3\",\"PRC-2026.1§8\"],\"explanation\":\"No material claim is unsupported. The decision date of 2026-03-31 (FACT-decision_date) falls within PRC-2025.1's effective window (PRC-2025.1§1). Mid size, volume and transaction count come from FACT-profile, FACT-volume and FACT-transactions. The requested price is correctly labelled as the merchant's unverified request (FACT-request). Cost data is unavailable (FACT-cost), so using the 1.90% + $0.10 default and routing to pricing_desk is a direct application of PRC-2025.1§8. The 24% mid-size minimum comes from PRC-2025.1§3. The 2.40% + $0.20 mid list price comes from PRC-2025.1§2. The 15% regional_pricing_manager threshold comes from PRC-2025.1§4, and the $5,000,000 deal_desk threshold from PRC-2025.1§5. 'No promotion or exception requested' matches FACT-exception, PRC-2025.1§6 and PRC-2025.1§7. The PRC-2026.1 caution accurately restates the 26% minimum (PRC-2026.1§3) and the 2.00% + $0.11 default cost basis (PRC-2026.1§8), and the resulting margin follows by arithmetic. The advice to finalize the decision dated 2026-03-31 is a recommendation, not a factual assertion; the date itself is in evidence. No benchmarks, risk claims or invented policy rules appear.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 4683,
+    "output_tokens": 1091,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.040552,
+  "latency_ms": 9946,
+  "cached_at": "2026-10-13T07:32:32.445Z"
+}

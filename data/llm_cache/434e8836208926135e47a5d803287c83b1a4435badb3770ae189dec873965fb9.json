@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"No approvals are required: volume is under $5M, no promotion is used, no strategic exception is needed, and merchant-specific cost data is available.\",\"SPRING25 cannot be applied: it was only valid 2025-03-01 to 2025-05-31, so on the decision date it gives no margin relief.\",\"The merchant's claim that they qualified earlier is unverified and does not change this.\",\"We recommend countering at 1.77% + $0.15 ... a 14.58% discount off list, within the 15% threshold.\"],\"evidence_ids\":[\"PRC-2025.1§1\",\"PRC-2025.1§2\",\"PRC-2025.1§3\",\"PRC-2025.1§4\",\"PRC-2025.1§5\",\"PRC-2025.1§6\",\"PRC-2025.1§7\",\"PRC-2025.1§8\",\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-current_pricing\",\"FACT-request\",\"FACT-decision_date\",\"FACT-exception\"],\"explanation\":\"No unsupported material claims were found. Each material claim traces to the evidence. The policy period comes from PRC-2025.1§1 and FACT-decision_date. SPRING25's validity window and the rule that out-of-window codes give no margin relief are stated in PRC-2025.1§6. The merchant's SPRING25 statement is correctly treated as unverified, per FACT-request. Enterprise size (FACT-profile) gives the 18% minimum margin (PRC-2025.1§3) and list pricing of 2.10% + $0.15 (PRC-2025.1§2). Cost uses the merchant-specific basis in FACT-cost. Revenue, margin and discount figures follow from the PRC-2025.1§3 and §4 formulas. The 15% regional_pricing_manager threshold is quoted from PRC-2025.1§4. The comparison with current pricing comes from FACT-current_pricing. The approval routing reasons also apply quoted rules: volume of $2.2M is not above $5M (PRC-2025.1§5); no promotion is used (PRC-2025.1§6); no strategic exception is used (PRC-2025.1§7); and cost data is available (PRC-2025.1§8, FACT-cost). No market rates, risk assertions or invented policy rules are used.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 3906,
+    "output_tokens": 1007,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.035764,
+  "latency_ms": 9573,
+  "cached_at": "2026-10-13T07:32:11.649Z"
+}

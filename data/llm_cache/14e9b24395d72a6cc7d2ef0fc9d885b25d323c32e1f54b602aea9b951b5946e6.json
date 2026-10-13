@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"No strategic exception applies, so pricing below the minimum margin is prohibited.\",\"SPRING26 is valid on the decision date and lowers the minimum margin by 4 points, to 26%.\",\"Pricing that uses SPRING26 requires promotions_lead approval.\"],\"evidence_ids\":[\"FACT-exception\",\"FACT-request\",\"FACT-decision_date\",\"FACT-profile\",\"FACT-cost\",\"FACT-volume\",\"FACT-transactions\",\"PRC-2026.1§1\",\"PRC-2026.1§2\",\"PRC-2026.1§3\",\"PRC-2026.1§4\",\"PRC-2026.1§5\",\"PRC-2026.1§6\",\"PRC-2026.1§7\",\"PRC-2026.1§8\"],\"explanation\":\"No material claim is unsupported. Every claim traces to the evidence or follows from it by simple arithmetic or by applying a quoted rule. Policy and margin: the decision date (FACT-decision_date) falls inside the PRC-2026.1 window (PRC-2026.1§1). The merchant is small (FACT-profile), so the minimum margin is 30% (PRC-2026.1§3). SPRING26 is valid from 2026-04-01 to 2026-06-30 and gives 4 points of relief, bringing the minimum to 26% (PRC-2026.1§6, FACT-exception). Unit economics: costs come from FACT-cost, FACT-volume and FACT-transactions. List pricing for small merchants comes from PRC-2026.1§2. The request is correctly described as the merchant's unverified statement (FACT-request). Approvals: regional_pricing_manager is required for discounts above 12% (PRC-2026.1§4). promotions_lead is required for pricing that uses a promotion (PRC-2026.1§6). deal_desk is only triggered above $4M of volume (PRC-2026.1§5). pricing_desk review only applies when merchant cost data is missing (PRC-2026.1§8). Strategic exception: the statement that none applies matches the evidence. FACT-exception records only a promotion request and no strategic exception, so the prohibition in PRC-2026.1§3 applies. The agent makes no claims about market rates, risk or loyalty.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 4902,
+    "output_tokens": 1119,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.041988,
+  "latency_ms": 10243,
+  "cached_at": "2026-10-13T07:32:00.179Z"
+}

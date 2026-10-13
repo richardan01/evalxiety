@@ -1,0 +1,39 @@
+{
+  "run_id": "run_3b08898972c8",
+  "created_at": "2026-10-13T07:30:19.171Z",
+  "completed_at": "2026-10-13T07:32:32.450Z",
+  "agent_config_id": "pricing-agent@baseline-v1",
+  "frozen_set_id": "FROZEN-DEV-v1",
+  "frozen_set_hash": "fe3b9b9a4672a8bde53db509675c512669f8b4d2575afc4618f1f3a407a33ab9",
+  "case_ids": [
+    "C01",
+    "C02",
+    "C03",
+    "C04",
+    "C05",
+    "C09",
+    "C11",
+    "C12",
+    "C13",
+    "C16",
+    "C18",
+    "C20"
+  ],
+  "execution_mode": "live",
+  "status": "completed",
+  "trace_ids": {
+    "C01": "trace_562292cc3688",
+    "C04": "trace_1466d732c96c",
+    "C02": "trace_af54490d0ea0",
+    "C03": "trace_4b9d7b0995a6",
+    "C05": "trace_6323ff501293",
+    "C09": "trace_32fb25fd102e",
+    "C11": "trace_f4e330f4b025",
+    "C12": "trace_4708a396173e",
+    "C16": "trace_b2f5827664a5",
+    "C13": "trace_d1db737832a3",
+    "C18": "trace_cd288e29bbe8",
+    "C20": "trace_ce36bed66dfb"
+  },
+  "notes": null
+}

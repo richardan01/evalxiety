@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"Even so, the policy effective on the decision date must be retrieved, or confirmed with pricing_desk, before finalizing.\",\"The decision date of 2026-10-05 is outside the effective windows of both PRC-2026.1 (ends 2026-09-01, exclusive) and PRC-2025.1 (ends 2026-04-01).\",\"The request also clears PRC-2025.1's 30% micro minimum margin and 15% discount threshold.\"],\"evidence_ids\":[\"PRC-2026.1§1\",\"PRC-2025.1§1\",\"PRC-2026.1§8\",\"FACT-decision_date\",\"PRC-2025.1§3\",\"PRC-2025.1§4\",\"FACT-request\",\"FACT-current_pricing\"],\"explanation\":\"No material claim is unsupported. Merchant facts match FACT-profile, FACT-volume, FACT-transactions and FACT-cost. The requested price is correctly framed as the merchant's unverified statement (FACT-request), and it does match FACT-current_pricing. The \\\"business is steady\\\" remark is never used as a fact. The revenue, cost, margin and discount figures follow from the formulas in PRC-2026.1§3 and §4 and the list rate in PRC-2026.1§2. The 32% and 12% thresholds are quoted correctly from PRC-2026.1§3–4, and the $4,000,000 deal_desk threshold from PRC-2026.1§5. FACT-exception supports the absence of any promotion or exception. The effective-date gap is accurately stated from PRC-2026.1§1, PRC-2025.1§1 and FACT-decision_date, and the PRC-2025.1 thresholds come from §3–4. The pricing_desk routing does not cite a policy rule: PRC-2026.1§8 only routes missing cost data to pricing_desk. However, the agent presents it as a cautionary escalation because no effective policy was found, not as a policy requirement, so it is not an unsupported factual claim.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 4721,
+    "output_tokens": 985,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.038584,
+  "latency_ms": 14176,
+  "cached_at": "2026-10-13T07:30:33.378Z"
+}

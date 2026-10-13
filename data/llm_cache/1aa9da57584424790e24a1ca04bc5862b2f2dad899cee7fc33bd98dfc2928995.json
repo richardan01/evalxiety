@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"Gross margin is 31.67%, above the 31% minimum for small merchants.\",\"Discount vs the small list price of 2.75% + $0.25 is 7.69%, below the 10% threshold that requires regional_pricing_manager approval.\",\"Merchant-specific cost data is available, so pricing_desk review is not required.\",\"The merchant's competitor quote (2.45% flat) and claimed 40% volume growth were not verified and were not needed to support this decision.\"],\"evidence_ids\":[\"PRC-2026.2§1\",\"PRC-2026.2§2\",\"PRC-2026.2§3\",\"PRC-2026.2§4\",\"PRC-2026.2§5\",\"PRC-2026.2§6\",\"PRC-2026.2§7\",\"PRC-2026.2§8\",\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-request\",\"FACT-decision_date\",\"FACT-exception\"],\"explanation\":\"No material claim is unsupported. Every material claim traces to the evidence. The policy choice follows from the decision date (FACT-decision_date) and the effective dates in PRC-2026.2§1. Revenue, cost, margin and discount all follow by arithmetic from FACT-volume, FACT-transactions and FACT-cost, using the formulas in PRC-2026.2§3 and §4 and the small list price in §2. The 31% small-merchant minimum is stated in §3, and FACT-profile confirms the merchant is small. Each approval threshold is quoted correctly: the 10% discount trigger in §4, the $3,000,000 deal_desk threshold in §5, pricing_desk review only when cost data is missing in §8, and cfo_delegate approval only for strategic exceptions in §7. The no-promotion and no-exception statements match FACT-exception. The merchant's competitor quote and 40% growth claim are explicitly labelled as unverified (FACT-request) and are not used to justify the decision.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 3586,
+    "output_tokens": 802,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.030384,
+  "latency_ms": 8228,
+  "cached_at": "2026-10-13T07:30:41.529Z"
+}

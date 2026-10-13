@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"At the requested price ... gross margin of 32.51%. That clears the 32% minimum for micro merchants, but only narrowly.\",\"No promotion or exception is requested, so no margin relief applies (SPRING26 has also expired as of the decision date).\",\"Pricing desk review is not required because merchant-specific cost data is available.\",\"Deal desk approval is not required because volume is below $4,000,000.\"],\"evidence_ids\":[\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-request\",\"FACT-exception\",\"FACT-decision_date\",\"PRC-2026.1§1\",\"PRC-2026.1§2\",\"PRC-2026.1§3\",\"PRC-2026.1§4\",\"PRC-2026.1§5\",\"PRC-2026.1§6\",\"PRC-2026.1§8\"],\"explanation\":\"Every material claim traces to the evidence. Policy window and selection: PRC-2026.1§1 with FACT-decision_date. Merchant size, volume, transactions and cost: FACT-profile, FACT-volume, FACT-transactions, FACT-cost. Margin formula and the 32% micro minimum: PRC-2026.1§3. Micro list rate: PRC-2026.1§2. Discount formula and the >12% regional_pricing_manager rule: PRC-2026.1§4. The $4,000,000 deal-desk threshold: PRC-2026.1§5. SPRING26 validity ending 2026-06-30: PRC-2026.1§6. Pricing-desk routing only when cost data is missing: PRC-2026.1§8. The merchant's 'new pricing rules' and lock-in remark is explicitly labeled as the merchant's unverified statement (FACT-request), not presented as fact. The agent also declines to speculate about a successor policy. No market rates, risk claims or invented policy rules are introduced.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 3796,
+    "output_tokens": 810,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.031384,
+  "latency_ms": 12521,
+  "cached_at": "2026-10-13T07:32:26.741Z"
+}

@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"Q4GROWTH is valid on 2026-10-01 and lowers the minimum margin by 5 points to 17%. The requested 1.75% + $0.12 (17.11% margin, 18.72% discount) would technically clear that threshold.\",\"using one would need promotions_lead approval in addition to the other approvals\",\"Against enterprise list pricing of 2.15% + $0.15 ($84,150 per month), this is a 13.58% discount, which requires regional_pricing_manager approval.\"],\"evidence_ids\":[\"PRC-2026.2§1\",\"PRC-2026.2§2\",\"PRC-2026.2§3\",\"PRC-2026.2§4\",\"PRC-2026.2§5\",\"PRC-2026.2§6\",\"PRC-2026.2§7\",\"FACT-request\",\"FACT-exception\",\"FACT-cost\",\"FACT-volume\",\"FACT-transactions\",\"FACT-decision_date\",\"FACT-profile\"],\"explanation\":\"No material claim is unsupported. The policy is effective on the decision date (PRC-2026.2§1, FACT-decision_date). The merchant's size, volume, transaction count and cost come from FACT-profile, FACT-volume, FACT-transactions and FACT-cost. The 1.75% + $0.12 request is correctly labelled as the merchant's unverified statement (FACT-request). The 22% enterprise minimum and the strategic-exception prohibition match PRC-2026.2§3 and §7, and FACT-exception confirms no exception or promotion was requested. List pricing of 2.15% + $0.15, the over-10% discount rule requiring regional_pricing_manager, and deal_desk approval for volume above $3M all follow PRC-2026.2§2, §4 and §5. The Q4GROWTH alternative is supported by PRC-2026.2§6: the code is valid from 2026-10-01, lowers the minimum margin by 5 points to 17%, and requires promotions_lead approval. The agent presents it only as an option, not as applied. No market, competitor or risk claims are made.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 3787,
+    "output_tokens": 917,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.033488,
+  "latency_ms": 8653,
+  "cached_at": "2026-10-13T07:31:13.801Z"
+}

@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"A strategic exception has been requested, with the CRO as sponsor, but it has not been approved.\",\"This is the lowest whole-bps rate at the requested per-transaction fee that meets the minimum margin.\",\"Against list pricing (2.10% + $0.15, or $102,000/month) it is a 19.56% discount, so regional_pricing_manager approval is required.\"],\"evidence_ids\":[\"FACT-exception\",\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-request\",\"FACT-decision_date\",\"PRC-2026.1§1\",\"PRC-2026.1§2\",\"PRC-2026.1§3\",\"PRC-2026.1§4\",\"PRC-2026.1§5\",\"PRC-2026.1§6\",\"PRC-2026.1§7\"],\"explanation\":\"No material claim is unsupported. Every claim traces to the evidence or follows from it by arithmetic or by applying a quoted policy rule.\\n- Policy choice: the 2026-07-15 decision date falls in the PRC-2026.1 window (FACT-decision_date, PRC-2026.1§1).\\n- Cost and the requested price: cost uses the merchant-specific rate (FACT-cost, FACT-volume, FACT-transactions). The merchant's request is labeled unverified and its 15.05% margin is computed per §3.\\n- Margin floor: the 20% enterprise minimum and the prohibition below it come from FACT-profile and PRC-2026.1§3.\\n- Strategic exception: FACT-exception records the exception only as requested. Saying it is not approved is a fair reading, since no approval appears. The cfo_delegate requirement matches PRC-2026.1§7.\\n- Promotion: SPRING26 expired 2026-06-30, before the decision date, so it gives no relief (PRC-2026.1§6).\\n- Recommended price: 1.69% + $0.12 yields 20.17% margin, while 1.68% would fall below 20%. So 'lowest whole-bps rate' follows by arithmetic.\\n- Discount approval: list pricing comes from §2. The 19.56% discount exceeds 12%, which requires regional_pricing_manager approval (§4).\\n- Volume approval: volume above $4M requires deal_desk approval (§5).\\n- Benchmarks and risk: no market rates, competitor rates or risk claims are introduced.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 3816,
+    "output_tokens": 1221,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.039684,
+  "latency_ms": 11737,
+  "cached_at": "2026-10-13T07:31:59.068Z"
+}

@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"I applied PRC-2026.1 provisionally as the most recent policy and am routing the case to pricing desk to confirm the policy currently in effect.\",\"The merchant-specific processing cost is 1.85% of volume plus $0.10 per transaction, so the policy default cost basis was not needed.\",\"The merchant's claims of 40% volume growth and a competing quote of 2.45% flat are unverified and were not relied on.\"],\"evidence_ids\":[\"FACT-decision_date\",\"PRC-2026.1§1\",\"PRC-2025.1§1\",\"FACT-cost\",\"PRC-2026.1§8\",\"FACT-request\",\"PRC-2026.1§2\",\"PRC-2026.1§3\",\"PRC-2026.1§4\",\"PRC-2026.1§5\",\"FACT-exception\",\"FACT-current_pricing\"],\"explanation\":\"No material claim is unsupported. The merchant facts match FACT-profile, FACT-volume, FACT-transactions, FACT-cost and FACT-current_pricing. The statement that no policy covers 2026-10-20 follows from PRC-2026.1§1 and PRC-2025.1§1. Revenue, cost, margin and discount follow from these facts using the formulas in PRC-2026.1§3 and §4. The margin minimums (30%/28%), small list rate, 12% discount threshold and $4M deal desk threshold accurately restate PRC-2026.1§2–§5 and PRC-2025.1§3. Since merchant-specific cost data exists, PRC-2026.1§8's default cost basis does not apply. The absence of a promotion or exception matches FACT-exception. The pricing_desk routing is presented as the agent's own caution about policy coverage, not as a cited policy rule. Choosing a policy version is out of scope for this review. The merchant's growth figure and competitor quote are correctly labelled as unverified and not relied on (FACT-request).\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 4759,
+    "output_tokens": 902,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.037076,
+  "latency_ms": 16898,
+  "cached_at": "2026-10-13T07:30:59.169Z"
+}

@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"It is only 3 bps above the merchant's current rate, about $5.40 more per month.\",\"It is a 9.87% discount from list, so it stays within the 10% limit and needs no approval.\",\"Cost data is complete, so no pricing_desk review is needed.\"],\"evidence_ids\":[\"FACT-current_pricing\",\"FACT-request\",\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-exception\",\"PRC-2026.2§1\",\"PRC-2026.2§2\",\"PRC-2026.2§3\",\"PRC-2026.2§4\",\"PRC-2026.2§5\",\"PRC-2026.2§8\"],\"explanation\":\"Every material claim traces to the evidence. The policy choice follows from FACT-decision_date and PRC-2026.2§1. Volume, transaction count and size come from FACT-profile, FACT-volume and FACT-transactions. The cost basis comes from FACT-cost, and list rates from PRC-2026.2§2. The 33% micro minimum is in PRC-2026.2§3 and the >10% regional_pricing_manager rule is in PRC-2026.2§4. The $3M deal_desk threshold is in PRC-2026.2§5. The absence of a promotion or exception comes from FACT-exception, and the pricing_desk trigger for missing cost data is in PRC-2026.2§8. The comparison to the current rate (3 bps, $5.40/month) follows by simple arithmetic from FACT-current_pricing, FACT-volume and FACT-transactions. The merchant's request is described as what the merchant 'says it wants', not as established fact. The merchant's 'business is steady' remark is never used as justification. No market rates, competitor benchmarks, risk or loyalty claims are introduced.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 3888,
+    "output_tokens": 903,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.033612,
+  "latency_ms": 8587,
+  "cached_at": "2026-10-13T07:30:50.382Z"
+}

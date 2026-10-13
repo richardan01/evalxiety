@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"It is the lowest whole-basis-point rate at the current $0.20 fee that meets the minimum.\",\"PRC-2026.2 applies because the 2026-09-15 decision date falls within its effective window, which starts 2026-09-01 and has no end date.\",\"The counter is a 14.41% discount versus the mid list price of 2.45% + $0.20, which is $44,400 in list revenue. Because this exceeds 10%, regional_pricing_manager approval is required.\"],\"evidence_ids\":[\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-current_pricing\",\"FACT-request\",\"FACT-decision_date\",\"FACT-exception\",\"PRC-2026.2§1\",\"PRC-2026.2§2\",\"PRC-2026.2§3\",\"PRC-2026.2§4\",\"PRC-2026.2§5\",\"PRC-2026.2§6\",\"PRC-2026.2§7\"],\"explanation\":\"Every material claim traces to the evidence. Policy choice: PRC-2026.2§1 says the policy applies from 2026-09-01 'until superseded', so 'no end date' is a fair paraphrase. Cost basis: the cost basis comes from FACT-cost, and the volume and transaction counts come from FACT-volume and FACT-transactions. Revenue and margin figures: these follow from the formula in PRC-2026.2§3. The requested price comes out below the 27% mid minimum, and the counter at 2.05% comes out above it. 'Lowest whole bp' claim: 2.04% would give a margin of about 26.85%, which is below 27%, so the claim follows by arithmetic. Prohibition of the request: this applies PRC-2026.2§3 and PRC-2026.2§7. FACT-exception confirms no exception was requested, and PRC-2026.2§6 dates Q4GROWTH from 2026-10-01. Comparison to current price: 25 bps below current pricing follows from FACT-current_pricing. Approvals: the list price and the discount above 10% that triggers regional_pricing_manager approval come from PRC-2026.2§2 and PRC-2026.2§4. Deal desk approval is correctly not required under PRC-2026.2§5. Merchant statement: the switching threat is explicitly labeled unverified, consistent with FACT-request. No market benchmarks, risk claims or invented policy rules appear.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 3746,
+    "output_tokens": 1085,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.036684,
+  "latency_ms": 9983,
+  "cached_at": "2026-10-13T07:30:48.170Z"
+}

@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"Once real processing history exists, pricing should be revisited; if actual costs are lower, list pricing may become feasible.\",\"The merchant's statement that it was quoted 3.29% + $0.25 is unverified.\",\"The recommended price is 2.90% above list, so no discount approval is needed.\"],\"evidence_ids\":[\"FACT-request\",\"FACT-cost\",\"FACT-volume\",\"FACT-transactions\",\"FACT-exception\",\"PRC-2026.2§1\",\"PRC-2026.2§2\",\"PRC-2026.2§3\",\"PRC-2026.2§4\",\"PRC-2026.2§5\",\"PRC-2026.2§8\"],\"explanation\":\"No material claim is unsupported. Each part of the explanation traces to the evidence:\\n- **Policy:** PRC-2026.2 covers the 2026-10-28 decision date (PRC-2026.2§1, FACT-decision_date).\\n- **List rate:** The small-merchant list rate of 2.75% + $0.25 comes from PRC-2026.2§2.\\n- **Cost basis and routing:** The 2.10% + $0.12 default cost basis and the pricing_desk routing apply PRC-2026.2§8, because FACT-cost says cost data is unavailable.\\n- **Margins:** The list-price and counter-offer margins follow from PRC-2026.2§3 with FACT-volume and FACT-transactions. Cost is $672 + $108 = $780. At list, revenue is $1,105 and margin is 29.41%. At the counter rate, revenue is $1,137 and margin is 31.40%. The 31% small-merchant minimum is quoted in PRC-2026.2§3.\\n- **No margin relief:** FACT-exception confirms no promotion or exception was requested.\\n- **Approvals:** The counter-offer is above list, so it is not a discount and PRC-2026.2§4 approval does not apply. Volume is far below the $3,000,000 threshold in PRC-2026.2§5.\\n- **Merchant's quote:** The 3.29% quote is correctly labelled as the merchant's unverified statement (FACT-request).\\n\\nThe closing remark about revisiting pricing once real costs exist is a conditional suggestion. It is not used to justify the price, decision or routing, so it is not material.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 3703,
+    "output_tokens": 1050,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.035812,
+  "latency_ms": 11501,
+  "cached_at": "2026-10-13T07:31:24.238Z"
+}

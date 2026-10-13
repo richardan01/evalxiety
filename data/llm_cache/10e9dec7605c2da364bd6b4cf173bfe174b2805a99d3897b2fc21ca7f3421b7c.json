@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"No retrieved policy covers the decision date, so the most recent policy, PRC-2026.1, was applied provisionally and the case is routed for policy confirmation.\",\"approvals_required includes pricing_desk\",\"It is a 13.66% discount vs the enterprise list revenue of $82,350, which exceeds the 12% threshold and requires regional_pricing_manager approval.\",\"Deal desk approval is not required because volume ($3.6M) is below the $4M high-volume threshold.\"],\"evidence_ids\":[\"FACT-decision_date\",\"PRC-2026.1§1\",\"PRC-2025.1§1\",\"PRC-2026.1§8\",\"PRC-2026.1§2\",\"PRC-2026.1§3\",\"PRC-2026.1§4\",\"PRC-2026.1§5\",\"PRC-2025.1§3\",\"FACT-cost\",\"FACT-volume\",\"FACT-transactions\",\"FACT-request\",\"FACT-exception\",\"FACT-profile\"],\"explanation\":\"No material claim is unsupported. The decision date (FACT-decision_date) does fall outside both policy windows (PRC-2026.1§1, PRC-2025.1§1). The agent says so openly and does not invent a covering policy. The merchant's board-approval statement is correctly labelled as unverified (FACT-request). The cost basis matches FACT-cost, FACT-volume and FACT-transactions. The 20% enterprise minimum comes from PRC-2026.1§3 and the 18% prior minimum from PRC-2025.1§3; enterprise size is in FACT-profile. List rates come from PRC-2026.1§2. The 12% regional_pricing_manager threshold is in PRC-2026.1§4, and the $4M deal_desk threshold is in PRC-2026.1§5. The 'no promotion or exception' statement matches FACT-exception. The hardest item to verify is pricing_desk appearing in approvals_required. The only policy rule that routes to pricing_desk is PRC-2026.1§8, which covers missing cost data, and that does not apply here. However, the agent never claims a policy requires this routing. It presents it as an escalation for policy confirmation because no policy covers the decision date, which is a transparent judgment rather than an invented rule or fact. Whether that routing is correct falls under policy-selection handling, which is out of scope here.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 4697,
+    "output_tokens": 1329,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.045368,
+  "latency_ms": 12308,
+  "cached_at": "2026-10-13T07:30:45.709Z"
+}

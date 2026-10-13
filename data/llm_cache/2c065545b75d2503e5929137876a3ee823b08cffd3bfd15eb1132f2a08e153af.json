@@ -1,0 +1,14 @@
+{
+  "raw_text": "{\"relevant_claims\":[\"Q4GROWTH is valid on 2026-10-10 and lowers the minimum margin by 5 points to 28%, so the requested price meets the promotional minimum.\",\"No strategic exception is being used, so cfo_delegate approval is not required.\",\"Recommend accepting the request, subject to both approvals and to confirming the merchant's eligibility for Q4GROWTH.\"],\"evidence_ids\":[\"PRC-2026.2§1\",\"PRC-2026.2§2\",\"PRC-2026.2§3\",\"PRC-2026.2§4\",\"PRC-2026.2§5\",\"PRC-2026.2§6\",\"PRC-2026.2§7\",\"PRC-2026.2§8\",\"FACT-exception\",\"FACT-decision_date\",\"FACT-cost\",\"FACT-volume\",\"FACT-transactions\",\"FACT-profile\",\"FACT-request\"],\"explanation\":\"Every material claim traces to the evidence. Policy applicability follows from PRC-2026.2§1 and FACT-decision_date. Cost, revenue, margin and list-revenue figures come from FACT-cost, FACT-request, FACT-volume, FACT-transactions and PRC-2026.2§2/§3 by straightforward arithmetic. The 33% micro minimum is in PRC-2026.2§3, and FACT-profile confirms the merchant is micro. Q4GROWTH's validity window, its 5-point margin relief and the promotions_lead approval requirement are quoted from PRC-2026.2§6. The 10% discount threshold for regional_pricing_manager approval is in PRC-2026.2§4. The deal_desk threshold ($3,000,000) is in PRC-2026.2§5. The pricing_desk trigger applies only when cost data is missing (PRC-2026.2§8), and FACT-cost shows the data is present. FACT-exception records only a promotion request, not a strategic exception, so not needing cfo_delegate under PRC-2026.2§7 is supported. The merchant's own words in FACT-request are not presented as established fact. The closing caveat about confirming Q4GROWTH eligibility is a recommended check, not an asserted fact, so it is not an unsupported claim.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+  "served_model_id": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 3803,
+    "output_tokens": 1124,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0.037692,
+  "latency_ms": 10547,
+  "cached_at": "2026-10-13T07:31:17.587Z"
+}
