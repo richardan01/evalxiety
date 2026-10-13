@@ -46,3 +46,7 @@ next-env.d.ts
 /data/**/*.tmp
 .env.local
 !.env.example
+
+# Local pre-publish review stamps (not part of the project)
+*.riddler-passed
+*.vicki-passed
