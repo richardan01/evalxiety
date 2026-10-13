@@ -1,0 +1,297 @@
+{
+  "trace_id": "trace_ce7a0d8a19f3",
+  "case_id": "C03",
+  "timestamp": "2026-10-13T07:55:16.102Z",
+  "input": {
+    "case_id": "C03",
+    "title": "Regional grocery chain pushes below the margin floor",
+    "merchant": {
+      "merchant_id": "M-1003",
+      "name": "FreshField Markets",
+      "size": "mid",
+      "segment": "grocery",
+      "months_as_customer": 40
+    },
+    "monthly_volume_usd": 1600000,
+    "monthly_transactions": 26000,
+    "cost_data": {
+      "status": "complete",
+      "cost_bps": 160,
+      "per_txn_cost_usd": 0.08
+    },
+    "current_pricing": {
+      "rate_bps": 230,
+      "per_txn_fee_usd": 0.2
+    },
+    "request": {
+      "message": "Grocery margins are thin. We need 2.02% + $0.20 or we will move our card volume to another processor next quarter.",
+      "requested_pricing": {
+        "rate_bps": 202,
+        "per_txn_fee_usd": 0.2
+      }
+    },
+    "decision_date": "2026-09-15",
+    "exception": {
+      "status": "none",
+      "promo_code": null,
+      "justification": null
+    },
+    "variation": {
+      "merchant_size": "mid",
+      "volume_band": "high",
+      "margin_proximity": "near_below",
+      "policy_period": "v3",
+      "exception_status": "none",
+      "source_completeness": "complete"
+    },
+    "data_origin": "synthetic"
+  },
+  "agent_version": "pricing-agent@corrected-v2",
+  "model_id": "claude-opus-5-5",
+  "prompt_version": "pricing-prompt-v2",
+  "retrieval_strategy": "effective_date_filtered",
+  "policy_context": [
+    {
+      "policy_id": "PRC-2026.2",
+      "effective_from": "2026-09-01",
+      "effective_to": null
+    }
+  ],
+  "evidence_pack": [
+    {
+      "evidence_id": "FACT-profile",
+      "kind": "merchant_fact",
+      "source_id": "C03",
+      "text": "Merchant FreshField Markets (M-1003), size: mid, segment: grocery, customer for 40 months."
+    },
+    {
+      "evidence_id": "FACT-volume",
+      "kind": "merchant_fact",
+      "source_id": "C03",
+      "text": "Monthly processing volume: $1,600,000."
+    },
+    {
+      "evidence_id": "FACT-transactions",
+      "kind": "merchant_fact",
+      "source_id": "C03",
+      "text": "Monthly transaction count: 26,000 (average ticket $61.54)."
+    },
+    {
+      "evidence_id": "FACT-cost",
+      "kind": "merchant_fact",
+      "source_id": "C03",
+      "text": "Merchant-specific processing cost: 1.60% of volume + $0.08 per transaction."
+    },
+    {
+      "evidence_id": "FACT-current_pricing",
+      "kind": "merchant_fact",
+      "source_id": "C03",
+      "text": "Current pricing: 2.30% + $0.20 per transaction."
+    },
+    {
+      "evidence_id": "FACT-request",
+      "kind": "merchant_fact",
+      "source_id": "C03",
+      "text": "Merchant request (merchant's own words, unverified): \"Grocery margins are thin. We need 2.02% + $0.20 or we will move our card volume to another processor next quarter.\" Requested pricing: 2.02% + $0.20 per transaction."
+    },
+    {
+      "evidence_id": "FACT-decision_date",
+      "kind": "merchant_fact",
+      "source_id": "C03",
+      "text": "Pricing decision date: 2026-09-15."
+    },
+    {
+      "evidence_id": "FACT-exception",
+      "kind": "merchant_fact",
+      "source_id": "C03",
+      "text": "No promotion or exception requested."
+    },
+    {
+      "evidence_id": "PRC-2026.2§1",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Scope and effective dates: Merchant Pricing Policy 2026.2 (PRC-2026.2) applies to pricing decisions dated from 2026-09-01 (inclusive) until superseded. Decisions must use the policy effective on the decision date."
+    },
+    {
+      "evidence_id": "PRC-2026.2§2",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Standard list rates: micro: 2.95% + $0.30 per transaction; small: 2.75% + $0.25 per transaction; mid: 2.45% + $0.20 per transaction; enterprise: 2.15% + $0.15 per transaction"
+    },
+    {
+      "evidence_id": "PRC-2026.2§3",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Minimum gross margin: Gross margin % = (monthly revenue − monthly processing cost) / monthly revenue × 100, where revenue = volume × rate + transactions × per-transaction fee and cost = volume × cost rate + transactions × per-transaction cost. Minimum gross margin by merchant size: micro 33%, small 31%, mid 27%, enterprise 22%. Pricing below the minimum margin is prohibited unless an approved strategic exception applies (see PRC-2026.2§7)."
+    },
+    {
+      "evidence_id": "PRC-2026.2§4",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Discount approvals: Discount vs list = (list revenue − proposed revenue) / list revenue × 100, using the merchant's own volume and transaction count. A discount greater than 10% requires approval from the regional_pricing_manager."
+    },
+    {
+      "evidence_id": "PRC-2026.2§5",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "High-volume merchants: Merchants with monthly processing volume above $3,000,000 require deal_desk approval for any pricing change."
+    },
+    {
+      "evidence_id": "PRC-2026.2§6",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Promotions: Valid promotion codes: Q4GROWTH (valid 2026-10-01 to 2026-12-31 inclusive; lowers the minimum margin by 5 percentage points). Any pricing that uses a promotion requires promotions_lead approval. Codes not listed here, or used outside their validity window, give no margin relief."
+    },
+    {
+      "evidence_id": "PRC-2026.2§7",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Strategic exceptions: A strategic exception may permit pricing below the minimum margin. Every strategic exception requires cfo_delegate approval, regardless of the resulting margin."
+    },
+    {
+      "evidence_id": "PRC-2026.2§8",
+      "kind": "policy_section",
+      "source_id": "PRC-2026.2",
+      "text": "Incomplete source data: If merchant-specific cost data is unavailable, use the conservative default cost basis of 2.10% of volume + $0.12 per transaction, and route the decision to pricing_desk for review."
+    }
+  ],
+  "retrieved_or_supplied_source_ids": [
+    "C03",
+    "PRC-2026.2"
+  ],
+  "system_prompt": "You are a merchant pricing analyst at a payments company. An account manager has forwarded a merchant's pricing request. Produce a pricing recommendation that the account manager can act on.\n\nHow to work:\n- Recommend a price (rate in basis points of volume plus a per-transaction fee). Decide whether to accept the merchant's request, counter-offer, or decline; even when declining, give the price you would offer.\n- Compute monthly unit economics with the policy's formula: revenue = volume × rate + transactions × per-transaction fee; cost = volume × cost rate + transactions × per-transaction cost; gross margin % = (revenue − cost) / revenue × 100. Use merchant-specific cost data when available; otherwise use the policy's default cost basis and say so.\n- Compare the margin with the policy's minimum for the merchant's size, accounting for any promotion that is valid on the decision date.\n- Identify every human approval the policy requires for the price you recommend (discount level, volume, promotions, strategic exceptions, incomplete data). Set requires_human_approval accordingly.\n- Support the explanation with evidence. Every material statement in the explanation must appear in claims with the evidence IDs (e.g. FACT-volume, PRC-2026.1§3) that support it. Use only the evidence provided below. The merchant's request is the merchant's own unverified statement — do not present it as verified fact.\n- List any missing or ambiguous information in data_gaps.\n- Report money in USD and margins as percentages (e.g. 31.25 for 31.25%).\n\nPolicy selection: more than one policy version may exist. Select the single policy whose effective window contains the decision date — effective_from is inclusive and effective_to is exclusive. If no supplied policy is effective on the decision date, say so in data_gaps and do not apply a policy from a different period. Report the selected policy's ID and effective_from date.",
+  "user_prompt": "<pricing_request case_id=\"C03\">\n<merchant_facts>\n[FACT-profile] Merchant FreshField Markets (M-1003), size: mid, segment: grocery, customer for 40 months.\n[FACT-volume] Monthly processing volume: $1,600,000.\n[FACT-transactions] Monthly transaction count: 26,000 (average ticket $61.54).\n[FACT-cost] Merchant-specific processing cost: 1.60% of volume + $0.08 per transaction.\n[FACT-current_pricing] Current pricing: 2.30% + $0.20 per transaction.\n[FACT-request] Merchant request (merchant's own words, unverified): \"Grocery margins are thin. We need 2.02% + $0.20 or we will move our card volume to another processor next quarter.\" Requested pricing: 2.02% + $0.20 per transaction.\n[FACT-decision_date] Pricing decision date: 2026-09-15.\n[FACT-exception] No promotion or exception requested.\n</merchant_facts>\n\n<retrieved_policies>\nPRC-2026.2 — Merchant Pricing Policy 2026.2 (effective_from 2026-09-01, effective_to none)\n</retrieved_policies>\n\n<policy_sections>\n[PRC-2026.2§1] Scope and effective dates: Merchant Pricing Policy 2026.2 (PRC-2026.2) applies to pricing decisions dated from 2026-09-01 (inclusive) until superseded. Decisions must use the policy effective on the decision date.\n[PRC-2026.2§2] Standard list rates: micro: 2.95% + $0.30 per transaction; small: 2.75% + $0.25 per transaction; mid: 2.45% + $0.20 per transaction; enterprise: 2.15% + $0.15 per transaction\n[PRC-2026.2§3] Minimum gross margin: Gross margin % = (monthly revenue − monthly processing cost) / monthly revenue × 100, where revenue = volume × rate + transactions × per-transaction fee and cost = volume × cost rate + transactions × per-transaction cost. Minimum gross margin by merchant size: micro 33%, small 31%, mid 27%, enterprise 22%. Pricing below the minimum margin is prohibited unless an approved strategic exception applies (see PRC-2026.2§7).\n[PRC-2026.2§4] Discount approvals: Discount vs list = (list revenue − proposed revenue) / list revenue × 100, using the merchant's own volume and transaction count. A discount greater than 10% requires approval from the regional_pricing_manager.\n[PRC-2026.2§5] High-volume merchants: Merchants with monthly processing volume above $3,000,000 require deal_desk approval for any pricing change.\n[PRC-2026.2§6] Promotions: Valid promotion codes: Q4GROWTH (valid 2026-10-01 to 2026-12-31 inclusive; lowers the minimum margin by 5 percentage points). Any pricing that uses a promotion requires promotions_lead approval. Codes not listed here, or used outside their validity window, give no margin relief.\n[PRC-2026.2§7] Strategic exceptions: A strategic exception may permit pricing below the minimum margin. Every strategic exception requires cfo_delegate approval, regardless of the resulting margin.\n[PRC-2026.2§8] Incomplete source data: If merchant-specific cost data is unavailable, use the conservative default cost basis of 2.10% of volume + $0.12 per transaction, and route the decision to pricing_desk for review.\n</policy_sections>\n</pricing_request>\n\nReturn the pricing recommendation in the required JSON format.",
+  "tool_calls_if_any": [],
+  "experiment_run_id": "run_4d98830a6f6a",
+  "data_origin": "synthetic",
+  "served_model_id": "claude-opus-5-5",
+  "selected_policy_id": "PRC-2026.2",
+  "final_response": "{\"selected_policy_id\":\"PRC-2026.2\",\"policy_effective_from\":\"2026-09-01\",\"recommended_pricing\":{\"rate_bps\":205,\"per_txn_fee_usd\":0.2},\"cost_basis_used\":{\"cost_bps\":160,\"per_txn_cost_usd\":0.08,\"source\":\"merchant_data\"},\"unit_economics\":{\"monthly_volume_usd\":1600000,\"monthly_transactions\":26000,\"monthly_revenue_usd\":38000,\"monthly_cost_usd\":27680,\"monthly_gross_profit_usd\":10320,\"gross_margin_pct\":27.16},\"minimum_margin_pct_required\":27,\"meets_minimum_margin\":true,\"discount_vs_list_pct\":14.41,\"requires_human_approval\":true,\"approvals_required\":[{\"approver_role\":\"regional_pricing_manager\",\"reason\":\"Recommended pricing of 2.05% + $0.20 is a 14.41% discount versus the mid list rate of 2.45% + $0.20, which exceeds the 10% threshold.\",\"policy_evidence_id\":\"PRC-2026.2§4\"}],\"decision\":\"counter_offer\",\"explanation\":\"PRC-2026.2 applies because the 2026-09-15 decision date falls within its effective window, which starts 2026-09-01 and has no end date. Costs use FreshField's merchant-specific basis of 1.60% + $0.08, giving a monthly cost of $27,680 on $1,600,000 of volume and 26,000 transactions. The merchant asked for 2.02% + $0.20. That price would yield $37,520 in revenue and a 26.23% gross margin. This is below the 27% minimum for mid-size merchants. No strategic exception or promotion was requested, and Q4GROWTH is not valid until 2026-10-01, so the requested price is prohibited. We counter at 2.05% + $0.20. This yields $38,000 in revenue, $10,320 in gross profit and a 27.16% margin, which meets the minimum. It is the lowest whole-basis-point rate at the current $0.20 fee that meets the minimum. It is still 25 bps below the merchant's current 2.30%. The counter is a 14.41% discount versus the mid list price of 2.45% + $0.20, which is $44,400 in list revenue. Because this exceeds 10%, regional_pricing_manager approval is required. Deal desk approval is not needed because volume is not above $3,000,000. The merchant's claimed intent to switch processors is an unverified statement.\",\"claims\":[{\"claim\":\"PRC-2026.2 is the policy effective on the 2026-09-15 decision date.\",\"evidence_ids\":[\"FACT-decision_date\",\"PRC-2026.2§1\"]},{\"claim\":\"Merchant-specific cost of 1.60% + $0.08 gives a monthly cost of $27,680 on $1,600,000 volume and 26,000 transactions.\",\"evidence_ids\":[\"FACT-cost\",\"FACT-volume\",\"FACT-transactions\",\"PRC-2026.2§3\"]},{\"claim\":\"The requested 2.02% + $0.20 yields $37,520 revenue and a 26.23% margin, below the 27% mid minimum, so it is prohibited without a strategic exception.\",\"evidence_ids\":[\"FACT-request\",\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"PRC-2026.2§3\",\"PRC-2026.2§7\"]},{\"claim\":\"No promotion or exception was requested, and Q4GROWTH is not valid on 2026-09-15.\",\"evidence_ids\":[\"FACT-exception\",\"FACT-decision_date\",\"PRC-2026.2§6\"]},{\"claim\":\"The counter of 2.05% + $0.20 yields $38,000 revenue, $10,320 gross profit and a 27.16% margin, meeting the 27% minimum.\",\"evidence_ids\":[\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-profile\",\"PRC-2026.2§3\"]},{\"claim\":\"The counter is below the merchant's current pricing of 2.30% + $0.20.\",\"evidence_ids\":[\"FACT-current_pricing\"]},{\"claim\":\"The mid list price of 2.45% + $0.20 yields $44,400, so the counter is a 14.41% discount, which requires regional_pricing_manager approval.\",\"evidence_ids\":[\"PRC-2026.2§2\",\"PRC-2026.2§4\",\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\"]},{\"claim\":\"Deal desk approval is not required because volume is not above $3,000,000.\",\"evidence_ids\":[\"FACT-volume\",\"PRC-2026.2§5\"]},{\"claim\":\"The merchant's threat to move volume is an unverified statement.\",\"evidence_ids\":[\"FACT-request\"]}],\"data_gaps\":[\"The merchant's threat to move volume to another processor is unverified, and no competitor offer has been provided.\",\"The counter-offer clears the 27% minimum margin by only about 0.16 percentage points, so any increase in actual cost would push it below the minimum.\"]}",
+  "parsed_structured_output": {
+    "selected_policy_id": "PRC-2026.2",
+    "policy_effective_from": "2026-09-01",
+    "recommended_pricing": {
+      "rate_bps": 205,
+      "per_txn_fee_usd": 0.2
+    },
+    "cost_basis_used": {
+      "cost_bps": 160,
+      "per_txn_cost_usd": 0.08,
+      "source": "merchant_data"
+    },
+    "unit_economics": {
+      "monthly_volume_usd": 1600000,
+      "monthly_transactions": 26000,
+      "monthly_revenue_usd": 38000,
+      "monthly_cost_usd": 27680,
+      "monthly_gross_profit_usd": 10320,
+      "gross_margin_pct": 27.16
+    },
+    "minimum_margin_pct_required": 27,
+    "meets_minimum_margin": true,
+    "discount_vs_list_pct": 14.41,
+    "requires_human_approval": true,
+    "approvals_required": [
+      {
+        "approver_role": "regional_pricing_manager",
+        "reason": "Recommended pricing of 2.05% + $0.20 is a 14.41% discount versus the mid list rate of 2.45% + $0.20, which exceeds the 10% threshold.",
+        "policy_evidence_id": "PRC-2026.2§4"
+      }
+    ],
+    "decision": "counter_offer",
+    "explanation": "PRC-2026.2 applies because the 2026-09-15 decision date falls within its effective window, which starts 2026-09-01 and has no end date. Costs use FreshField's merchant-specific basis of 1.60% + $0.08, giving a monthly cost of $27,680 on $1,600,000 of volume and 26,000 transactions. The merchant asked for 2.02% + $0.20. That price would yield $37,520 in revenue and a 26.23% gross margin. This is below the 27% minimum for mid-size merchants. No strategic exception or promotion was requested, and Q4GROWTH is not valid until 2026-10-01, so the requested price is prohibited. We counter at 2.05% + $0.20. This yields $38,000 in revenue, $10,320 in gross profit and a 27.16% margin, which meets the minimum. It is the lowest whole-basis-point rate at the current $0.20 fee that meets the minimum. It is still 25 bps below the merchant's current 2.30%. The counter is a 14.41% discount versus the mid list price of 2.45% + $0.20, which is $44,400 in list revenue. Because this exceeds 10%, regional_pricing_manager approval is required. Deal desk approval is not needed because volume is not above $3,000,000. The merchant's claimed intent to switch processors is an unverified statement.",
+    "claims": [
+      {
+        "claim": "PRC-2026.2 is the policy effective on the 2026-09-15 decision date.",
+        "evidence_ids": [
+          "FACT-decision_date",
+          "PRC-2026.2§1"
+        ]
+      },
+      {
+        "claim": "Merchant-specific cost of 1.60% + $0.08 gives a monthly cost of $27,680 on $1,600,000 volume and 26,000 transactions.",
+        "evidence_ids": [
+          "FACT-cost",
+          "FACT-volume",
+          "FACT-transactions",
+          "PRC-2026.2§3"
+        ]
+      },
+      {
+        "claim": "The requested 2.02% + $0.20 yields $37,520 revenue and a 26.23% margin, below the 27% mid minimum, so it is prohibited without a strategic exception.",
+        "evidence_ids": [
+          "FACT-request",
+          "FACT-profile",
+          "FACT-volume",
+          "FACT-transactions",
+          "FACT-cost",
+          "PRC-2026.2§3",
+          "PRC-2026.2§7"
+        ]
+      },
+      {
+        "claim": "No promotion or exception was requested, and Q4GROWTH is not valid on 2026-09-15.",
+        "evidence_ids": [
+          "FACT-exception",
+          "FACT-decision_date",
+          "PRC-2026.2§6"
+        ]
+      },
+      {
+        "claim": "The counter of 2.05% + $0.20 yields $38,000 revenue, $10,320 gross profit and a 27.16% margin, meeting the 27% minimum.",
+        "evidence_ids": [
+          "FACT-volume",
+          "FACT-transactions",
+          "FACT-cost",
+          "FACT-profile",
+          "PRC-2026.2§3"
+        ]
+      },
+      {
+        "claim": "The counter is below the merchant's current pricing of 2.30% + $0.20.",
+        "evidence_ids": [
+          "FACT-current_pricing"
+        ]
+      },
+      {
+        "claim": "The mid list price of 2.45% + $0.20 yields $44,400, so the counter is a 14.41% discount, which requires regional_pricing_manager approval.",
+        "evidence_ids": [
+          "PRC-2026.2§2",
+          "PRC-2026.2§4",
+          "FACT-profile",
+          "FACT-volume",
+          "FACT-transactions"
+        ]
+      },
+      {
+        "claim": "Deal desk approval is not required because volume is not above $3,000,000.",
+        "evidence_ids": [
+          "FACT-volume",
+          "PRC-2026.2§5"
+        ]
+      },
+      {
+        "claim": "The merchant's threat to move volume is an unverified statement.",
+        "evidence_ids": [
+          "FACT-request"
+        ]
+      }
+    ],
+    "data_gaps": [
+      "The merchant's threat to move volume to another processor is unverified, and no competitor offer has been provided.",
+      "The counter-offer clears the 27% minimum margin by only about 0.16 percentage points, so any increase in actual cost would push it below the minimum."
+    ]
+  },
+  "latency_ms": 18974,
+  "token_usage": {
+    "input_tokens": 3437,
+    "output_tokens": 2146,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "estimated_cost_usd": 0,
+  "stop_reason": "end_turn",
+  "execution_error": null,
+  "execution_mode": "live",
+  "cache_hit": true
+}

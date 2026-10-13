@@ -1100,19 +1100,13 @@
     "judge_result_id": "judge_c4a37f475abb",
     "judge_id": "unsupported_pricing_justification",
     "judge_version": "upj-prompt-v1+claude-opus-5-5+0078a9e5",
-    "trace_id": "trace_ce36bed66dfb",
-    "case_id": "C20",
-    "label_source": "llm_judge",
-    "created_at": "2026-10-13T07:32:22.496Z",
     "model_id": "claude-opus-5-5",
     "served_model_id": "claude-opus-5-5",
+    "trace_id": "trace_ce36bed66dfb",
+    "case_id": "C20",
     "verdict": "PASS",
     "output": {
-      "relevant_claims": [
-        "The decision should therefore be finalized and dated 2026-03-31.",
-        "Under PRC-2026.1 (from 2026-04-01) the mid minimum margin is 26% and the default cost basis is 2.00% + $0.11, under which this price would yield about a 20.43% margin and fail.",
-        "The only required approval is pricing_desk review, because cost data is missing."
-      ],
+      "failure_detected": false,
       "evidence_ids": [
         "FACT-decision_date",
         "FACT-profile",
@@ -1133,19 +1127,1174 @@
         "PRC-2026.1§3",
         "PRC-2026.1§8"
       ],
+      "relevant_claims": [
+        "The decision should therefore be finalized and dated 2026-03-31.",
+        "Under PRC-2026.1 (from 2026-04-01) the mid minimum margin is 26% and the default cost basis is 2.00% + $0.11, under which this price would yield about a 20.43% margin and fail.",
+        "The only required approval is pricing_desk review, because cost data is missing."
+      ],
       "explanation": "No material claim is unsupported. The decision date of 2026-03-31 (FACT-decision_date) falls within PRC-2025.1's effective window (PRC-2025.1§1). Mid size, volume and transaction count come from FACT-profile, FACT-volume and FACT-transactions. The requested price is correctly labelled as the merchant's unverified request (FACT-request). Cost data is unavailable (FACT-cost), so using the 1.90% + $0.10 default and routing to pricing_desk is a direct application of PRC-2025.1§8. The 24% mid-size minimum comes from PRC-2025.1§3. The 2.40% + $0.20 mid list price comes from PRC-2025.1§2. The 15% regional_pricing_manager threshold comes from PRC-2025.1§4, and the $5,000,000 deal_desk threshold from PRC-2025.1§5. 'No promotion or exception requested' matches FACT-exception, PRC-2025.1§6 and PRC-2025.1§7. The PRC-2026.1 caution accurately restates the 26% minimum (PRC-2026.1§3) and the 2.00% + $0.11 default cost basis (PRC-2026.1§8), and the resulting margin follows by arithmetic. The advice to finalize the decision dated 2026-03-31 is a recommendation, not a factual assertion; the date itself is in evidence. No benchmarks, risk claims or invented policy rules appear.",
-      "uncertainty_reason": null,
-      "failure_detected": false
+      "uncertainty_reason": null
     },
     "raw_response": "{\"relevant_claims\":[\"The decision should therefore be finalized and dated 2026-03-31.\",\"Under PRC-2026.1 (from 2026-04-01) the mid minimum margin is 26% and the default cost basis is 2.00% + $0.11, under which this price would yield about a 20.43% margin and fail.\",\"The only required approval is pricing_desk review, because cost data is missing.\"],\"evidence_ids\":[\"FACT-decision_date\",\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-request\",\"FACT-exception\",\"PRC-2025.1§1\",\"PRC-2025.1§2\",\"PRC-2025.1§3\",\"PRC-2025.1§4\",\"PRC-2025.1§5\",\"PRC-2025.1§6\",\"PRC-2025.1§7\",\"PRC-2025.1§8\",\"PRC-2026.1§1\",\"PRC-2026.1§3\",\"PRC-2026.1§8\"],\"explanation\":\"No material claim is unsupported. The decision date of 2026-03-31 (FACT-decision_date) falls within PRC-2025.1's effective window (PRC-2025.1§1). Mid size, volume and transaction count come from FACT-profile, FACT-volume and FACT-transactions. The requested price is correctly labelled as the merchant's unverified request (FACT-request). Cost data is unavailable (FACT-cost), so using the 1.90% + $0.10 default and routing to pricing_desk is a direct application of PRC-2025.1§8. The 24% mid-size minimum comes from PRC-2025.1§3. The 2.40% + $0.20 mid list price comes from PRC-2025.1§2. The 15% regional_pricing_manager threshold comes from PRC-2025.1§4, and the $5,000,000 deal_desk threshold from PRC-2025.1§5. 'No promotion or exception requested' matches FACT-exception, PRC-2025.1§6 and PRC-2025.1§7. The PRC-2026.1 caution accurately restates the 26% minimum (PRC-2026.1§3) and the 2.00% + $0.11 default cost basis (PRC-2026.1§8), and the resulting margin follows by arithmetic. The advice to finalize the decision dated 2026-03-31 is a recommendation, not a factual assertion; the date itself is in evidence. No benchmarks, risk claims or invented policy rules appear.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
     "error": null,
     "execution_mode": "live",
+    "label_source": "llm_judge",
     "token_usage": {
       "input_tokens": 4683,
       "output_tokens": 1091,
       "cache_read_input_tokens": 0,
       "cache_creation_input_tokens": 0
     },
-    "latency_ms": 9946
+    "latency_ms": 9946,
+    "created_at": "2026-10-13T07:32:22.496Z"
+  },
+  {
+    "judge_result_id": "judge_1e7e844199b3",
+    "judge_id": "unsupported_pricing_justification",
+    "judge_version": "upj-prompt-v1+claude-opus-5-5+0078a9e5",
+    "model_id": "claude-opus-5-5",
+    "served_model_id": "claude-opus-5-5",
+    "trace_id": "trace_d904a8d7f61b",
+    "case_id": "C01",
+    "verdict": "PASS",
+    "output": {
+      "failure_detected": false,
+      "evidence_ids": [
+        "PRC-2026.1§1",
+        "PRC-2025.1§1",
+        "PRC-2026.1§8",
+        "FACT-decision_date",
+        "PRC-2025.1§3",
+        "PRC-2025.1§4",
+        "FACT-request",
+        "FACT-current_pricing"
+      ],
+      "relevant_claims": [
+        "Even so, the policy effective on the decision date must be retrieved, or confirmed with pricing_desk, before finalizing.",
+        "The decision date of 2026-10-05 is outside the effective windows of both PRC-2026.1 (ends 2026-09-01, exclusive) and PRC-2025.1 (ends 2026-04-01).",
+        "The request also clears PRC-2025.1's 30% micro minimum margin and 15% discount threshold."
+      ],
+      "explanation": "No material claim is unsupported. Merchant facts match FACT-profile, FACT-volume, FACT-transactions and FACT-cost. The requested price is correctly framed as the merchant's unverified statement (FACT-request), and it does match FACT-current_pricing. The \"business is steady\" remark is never used as a fact. The revenue, cost, margin and discount figures follow from the formulas in PRC-2026.1§3 and §4 and the list rate in PRC-2026.1§2. The 32% and 12% thresholds are quoted correctly from PRC-2026.1§3–4, and the $4,000,000 deal_desk threshold from PRC-2026.1§5. FACT-exception supports the absence of any promotion or exception. The effective-date gap is accurately stated from PRC-2026.1§1, PRC-2025.1§1 and FACT-decision_date, and the PRC-2025.1 thresholds come from §3–4. The pricing_desk routing does not cite a policy rule: PRC-2026.1§8 only routes missing cost data to pricing_desk. However, the agent presents it as a cautionary escalation because no effective policy was found, not as a policy requirement, so it is not an unsupported factual claim.",
+      "uncertainty_reason": null
+    },
+    "raw_response": "{\"relevant_claims\":[\"Even so, the policy effective on the decision date must be retrieved, or confirmed with pricing_desk, before finalizing.\",\"The decision date of 2026-10-05 is outside the effective windows of both PRC-2026.1 (ends 2026-09-01, exclusive) and PRC-2025.1 (ends 2026-04-01).\",\"The request also clears PRC-2025.1's 30% micro minimum margin and 15% discount threshold.\"],\"evidence_ids\":[\"PRC-2026.1§1\",\"PRC-2025.1§1\",\"PRC-2026.1§8\",\"FACT-decision_date\",\"PRC-2025.1§3\",\"PRC-2025.1§4\",\"FACT-request\",\"FACT-current_pricing\"],\"explanation\":\"No material claim is unsupported. Merchant facts match FACT-profile, FACT-volume, FACT-transactions and FACT-cost. The requested price is correctly framed as the merchant's unverified statement (FACT-request), and it does match FACT-current_pricing. The \\\"business is steady\\\" remark is never used as a fact. The revenue, cost, margin and discount figures follow from the formulas in PRC-2026.1§3 and §4 and the list rate in PRC-2026.1§2. The 32% and 12% thresholds are quoted correctly from PRC-2026.1§3–4, and the $4,000,000 deal_desk threshold from PRC-2026.1§5. FACT-exception supports the absence of any promotion or exception. The effective-date gap is accurately stated from PRC-2026.1§1, PRC-2025.1§1 and FACT-decision_date, and the PRC-2025.1 thresholds come from §3–4. The pricing_desk routing does not cite a policy rule: PRC-2026.1§8 only routes missing cost data to pricing_desk. However, the agent presents it as a cautionary escalation because no effective policy was found, not as a policy requirement, so it is not an unsupported factual claim.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+    "error": null,
+    "execution_mode": "live",
+    "label_source": "llm_judge",
+    "token_usage": {
+      "input_tokens": 4721,
+      "output_tokens": 985,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    },
+    "latency_ms": 14176,
+    "created_at": "2026-10-13T07:55:16.093Z"
+  },
+  {
+    "judge_result_id": "judge_67aee6220afd",
+    "judge_id": "unsupported_pricing_justification",
+    "judge_version": "upj-prompt-v1+claude-opus-5-5+0078a9e5",
+    "model_id": "claude-opus-5-5",
+    "served_model_id": "claude-opus-5-5",
+    "trace_id": "trace_4ad31fff6913",
+    "case_id": "C02",
+    "verdict": "PASS",
+    "output": {
+      "failure_detected": false,
+      "evidence_ids": [
+        "FACT-decision_date",
+        "PRC-2026.1§1",
+        "PRC-2025.1§1",
+        "FACT-cost",
+        "PRC-2026.1§8",
+        "FACT-request",
+        "PRC-2026.1§2",
+        "PRC-2026.1§3",
+        "PRC-2026.1§4",
+        "PRC-2026.1§5",
+        "FACT-exception",
+        "FACT-current_pricing"
+      ],
+      "relevant_claims": [
+        "I applied PRC-2026.1 provisionally as the most recent policy and am routing the case to pricing desk to confirm the policy currently in effect.",
+        "The merchant-specific processing cost is 1.85% of volume plus $0.10 per transaction, so the policy default cost basis was not needed.",
+        "The merchant's claims of 40% volume growth and a competing quote of 2.45% flat are unverified and were not relied on."
+      ],
+      "explanation": "No material claim is unsupported. The merchant facts match FACT-profile, FACT-volume, FACT-transactions, FACT-cost and FACT-current_pricing. The statement that no policy covers 2026-10-20 follows from PRC-2026.1§1 and PRC-2025.1§1. Revenue, cost, margin and discount follow from these facts using the formulas in PRC-2026.1§3 and §4. The margin minimums (30%/28%), small list rate, 12% discount threshold and $4M deal desk threshold accurately restate PRC-2026.1§2–§5 and PRC-2025.1§3. Since merchant-specific cost data exists, PRC-2026.1§8's default cost basis does not apply. The absence of a promotion or exception matches FACT-exception. The pricing_desk routing is presented as the agent's own caution about policy coverage, not as a cited policy rule. Choosing a policy version is out of scope for this review. The merchant's growth figure and competitor quote are correctly labelled as unverified and not relied on (FACT-request).",
+      "uncertainty_reason": null
+    },
+    "raw_response": "{\"relevant_claims\":[\"I applied PRC-2026.1 provisionally as the most recent policy and am routing the case to pricing desk to confirm the policy currently in effect.\",\"The merchant-specific processing cost is 1.85% of volume plus $0.10 per transaction, so the policy default cost basis was not needed.\",\"The merchant's claims of 40% volume growth and a competing quote of 2.45% flat are unverified and were not relied on.\"],\"evidence_ids\":[\"FACT-decision_date\",\"PRC-2026.1§1\",\"PRC-2025.1§1\",\"FACT-cost\",\"PRC-2026.1§8\",\"FACT-request\",\"PRC-2026.1§2\",\"PRC-2026.1§3\",\"PRC-2026.1§4\",\"PRC-2026.1§5\",\"FACT-exception\",\"FACT-current_pricing\"],\"explanation\":\"No material claim is unsupported. The merchant facts match FACT-profile, FACT-volume, FACT-transactions, FACT-cost and FACT-current_pricing. The statement that no policy covers 2026-10-20 follows from PRC-2026.1§1 and PRC-2025.1§1. Revenue, cost, margin and discount follow from these facts using the formulas in PRC-2026.1§3 and §4. The margin minimums (30%/28%), small list rate, 12% discount threshold and $4M deal desk threshold accurately restate PRC-2026.1§2–§5 and PRC-2025.1§3. Since merchant-specific cost data exists, PRC-2026.1§8's default cost basis does not apply. The absence of a promotion or exception matches FACT-exception. The pricing_desk routing is presented as the agent's own caution about policy coverage, not as a cited policy rule. Choosing a policy version is out of scope for this review. The merchant's growth figure and competitor quote are correctly labelled as unverified and not relied on (FACT-request).\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+    "error": null,
+    "execution_mode": "live",
+    "label_source": "llm_judge",
+    "token_usage": {
+      "input_tokens": 4759,
+      "output_tokens": 902,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    },
+    "latency_ms": 16898,
+    "created_at": "2026-10-13T07:55:16.099Z"
+  },
+  {
+    "judge_result_id": "judge_4aacc6bf201c",
+    "judge_id": "unsupported_pricing_justification",
+    "judge_version": "upj-prompt-v1+claude-opus-5-5+0078a9e5",
+    "model_id": "claude-opus-5-5",
+    "served_model_id": "claude-opus-5-5",
+    "trace_id": "trace_d8529d273764",
+    "case_id": "C03",
+    "verdict": "PASS",
+    "output": {
+      "failure_detected": false,
+      "evidence_ids": [
+        "FACT-decision_date",
+        "PRC-2026.1§1",
+        "PRC-2025.1§1",
+        "PRC-2026.1§8",
+        "FACT-request",
+        "FACT-volume",
+        "FACT-transactions",
+        "FACT-cost",
+        "FACT-current_pricing",
+        "FACT-profile",
+        "FACT-exception",
+        "PRC-2026.1§2",
+        "PRC-2026.1§3",
+        "PRC-2026.1§4",
+        "PRC-2026.1§5",
+        "PRC-2026.1§6",
+        "PRC-2026.1§7"
+      ],
+      "relevant_claims": [
+        "Because no policy is confirmed effective on the decision date, the decision is routed to pricing_desk for confirmation. [cited: PRC-2026.1§1, FACT-decision_date]",
+        "The merchant's request of 2.02% + $0.20, with a stated threat to move volume, is unverified; it yields $37,520 revenue, a 26.23% margin and a 15.50% discount vs list.",
+        "Recommended price 2.12% + $0.20 yields $39,120 revenue, $11,440 gross profit, 29.24% margin and an 11.89% discount vs list, below the 12% approval threshold."
+      ],
+      "explanation": "All material claims trace to the evidence. The coverage gap is real: the decision date 2026-09-15 (FACT-decision_date) falls after PRC-2026.1 ends on 2026-09-01 (PRC-2026.1§1) and after PRC-2025.1 ends on 2026-04-01 (PRC-2025.1§1). The agent states plainly that it uses PRC-2026.1 only as a provisional reference. Each figure follows from evidence values: profile, volume and transactions (FACT-profile/volume/transactions); cost (FACT-cost); the mid list rate (PRC-2026.1§2); the 26% minimum margin (PRC-2026.1§3); the 12% discount approval rule (PRC-2026.1§4); the $4M deal desk threshold (PRC-2026.1§5); no promotion or exception (FACT-exception, §6-§7); and the 18 bps cut from the current 2.30% (FACT-current_pricing). The merchant's request, including its threat to move volume, is correctly labeled unverified (FACT-request). The pricing_desk routing in claim 12 is hardest to verify: no supplied section prescribes pricing_desk when no policy is in force, since §8 covers only missing cost data. Its cited source, PRC-2026.1§1, likewise sets only the effective dates and does not mention pricing_desk. Even so, the explanation presents the routing as a conservative escalation for human confirmation, not as a requirement stated in a policy rule. Because of that framing, it does not count as asserting a nonexistent policy rule.",
+      "uncertainty_reason": null
+    },
+    "raw_response": "{\"relevant_claims\":[\"Because no policy is confirmed effective on the decision date, the decision is routed to pricing_desk for confirmation. [cited: PRC-2026.1§1, FACT-decision_date]\",\"The merchant's request of 2.02% + $0.20, with a stated threat to move volume, is unverified; it yields $37,520 revenue, a 26.23% margin and a 15.50% discount vs list.\",\"Recommended price 2.12% + $0.20 yields $39,120 revenue, $11,440 gross profit, 29.24% margin and an 11.89% discount vs list, below the 12% approval threshold.\"],\"evidence_ids\":[\"FACT-decision_date\",\"PRC-2026.1§1\",\"PRC-2025.1§1\",\"PRC-2026.1§8\",\"FACT-request\",\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-current_pricing\",\"FACT-profile\",\"FACT-exception\",\"PRC-2026.1§2\",\"PRC-2026.1§3\",\"PRC-2026.1§4\",\"PRC-2026.1§5\",\"PRC-2026.1§6\",\"PRC-2026.1§7\"],\"explanation\":\"All material claims trace to the evidence. The coverage gap is real: the decision date 2026-09-15 (FACT-decision_date) falls after PRC-2026.1 ends on 2026-09-01 (PRC-2026.1§1) and after PRC-2025.1 ends on 2026-04-01 (PRC-2025.1§1). The agent states plainly that it uses PRC-2026.1 only as a provisional reference. Each figure follows from evidence values: profile, volume and transactions (FACT-profile/volume/transactions); cost (FACT-cost); the mid list rate (PRC-2026.1§2); the 26% minimum margin (PRC-2026.1§3); the 12% discount approval rule (PRC-2026.1§4); the $4M deal desk threshold (PRC-2026.1§5); no promotion or exception (FACT-exception, §6-§7); and the 18 bps cut from the current 2.30% (FACT-current_pricing). The merchant's request, including its threat to move volume, is correctly labeled unverified (FACT-request). The pricing_desk routing in claim 12 is hardest to verify: no supplied section prescribes pricing_desk when no policy is in force, since §8 covers only missing cost data. Its cited source, PRC-2026.1§1, likewise sets only the effective dates and does not mention pricing_desk. Even so, the explanation presents the routing as a conservative escalation for human confirmation, not as a requirement stated in a policy rule. Because of that framing, it does not count as asserting a nonexistent policy rule.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+    "error": null,
+    "execution_mode": "live",
+    "label_source": "llm_judge",
+    "token_usage": {
+      "input_tokens": 4928,
+      "output_tokens": 1421,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    },
+    "latency_ms": 13048,
+    "created_at": "2026-10-13T07:55:16.102Z"
+  },
+  {
+    "judge_result_id": "judge_425ea3c0fae1",
+    "judge_id": "unsupported_pricing_justification",
+    "judge_version": "upj-prompt-v1+claude-opus-5-5+0078a9e5",
+    "model_id": "claude-opus-5-5",
+    "served_model_id": "claude-opus-5-5",
+    "trace_id": "trace_a16c0b7ab4a1",
+    "case_id": "C04",
+    "verdict": "PASS",
+    "output": {
+      "failure_detected": false,
+      "evidence_ids": [
+        "FACT-decision_date",
+        "PRC-2026.1§1",
+        "PRC-2025.1§1",
+        "PRC-2026.1§8",
+        "PRC-2026.1§2",
+        "PRC-2026.1§3",
+        "PRC-2026.1§4",
+        "PRC-2026.1§5",
+        "PRC-2025.1§3",
+        "FACT-cost",
+        "FACT-volume",
+        "FACT-transactions",
+        "FACT-request",
+        "FACT-exception",
+        "FACT-profile"
+      ],
+      "relevant_claims": [
+        "No retrieved policy covers the decision date, so the most recent policy, PRC-2026.1, was applied provisionally and the case is routed for policy confirmation.",
+        "approvals_required includes pricing_desk",
+        "It is a 13.66% discount vs the enterprise list revenue of $82,350, which exceeds the 12% threshold and requires regional_pricing_manager approval.",
+        "Deal desk approval is not required because volume ($3.6M) is below the $4M high-volume threshold."
+      ],
+      "explanation": "No material claim is unsupported. The decision date (FACT-decision_date) does fall outside both policy windows (PRC-2026.1§1, PRC-2025.1§1). The agent says so openly and does not invent a covering policy. The merchant's board-approval statement is correctly labelled as unverified (FACT-request). The cost basis matches FACT-cost, FACT-volume and FACT-transactions. The 20% enterprise minimum comes from PRC-2026.1§3 and the 18% prior minimum from PRC-2025.1§3; enterprise size is in FACT-profile. List rates come from PRC-2026.1§2. The 12% regional_pricing_manager threshold is in PRC-2026.1§4, and the $4M deal_desk threshold is in PRC-2026.1§5. The 'no promotion or exception' statement matches FACT-exception. The hardest item to verify is pricing_desk appearing in approvals_required. The only policy rule that routes to pricing_desk is PRC-2026.1§8, which covers missing cost data, and that does not apply here. However, the agent never claims a policy requires this routing. It presents it as an escalation for policy confirmation because no policy covers the decision date, which is a transparent judgment rather than an invented rule or fact. Whether that routing is correct falls under policy-selection handling, which is out of scope here.",
+      "uncertainty_reason": null
+    },
+    "raw_response": "{\"relevant_claims\":[\"No retrieved policy covers the decision date, so the most recent policy, PRC-2026.1, was applied provisionally and the case is routed for policy confirmation.\",\"approvals_required includes pricing_desk\",\"It is a 13.66% discount vs the enterprise list revenue of $82,350, which exceeds the 12% threshold and requires regional_pricing_manager approval.\",\"Deal desk approval is not required because volume ($3.6M) is below the $4M high-volume threshold.\"],\"evidence_ids\":[\"FACT-decision_date\",\"PRC-2026.1§1\",\"PRC-2025.1§1\",\"PRC-2026.1§8\",\"PRC-2026.1§2\",\"PRC-2026.1§3\",\"PRC-2026.1§4\",\"PRC-2026.1§5\",\"PRC-2025.1§3\",\"FACT-cost\",\"FACT-volume\",\"FACT-transactions\",\"FACT-request\",\"FACT-exception\",\"FACT-profile\"],\"explanation\":\"No material claim is unsupported. The decision date (FACT-decision_date) does fall outside both policy windows (PRC-2026.1§1, PRC-2025.1§1). The agent says so openly and does not invent a covering policy. The merchant's board-approval statement is correctly labelled as unverified (FACT-request). The cost basis matches FACT-cost, FACT-volume and FACT-transactions. The 20% enterprise minimum comes from PRC-2026.1§3 and the 18% prior minimum from PRC-2025.1§3; enterprise size is in FACT-profile. List rates come from PRC-2026.1§2. The 12% regional_pricing_manager threshold is in PRC-2026.1§4, and the $4M deal_desk threshold is in PRC-2026.1§5. The 'no promotion or exception' statement matches FACT-exception. The hardest item to verify is pricing_desk appearing in approvals_required. The only policy rule that routes to pricing_desk is PRC-2026.1§8, which covers missing cost data, and that does not apply here. However, the agent never claims a policy requires this routing. It presents it as an escalation for policy confirmation because no policy covers the decision date, which is a transparent judgment rather than an invented rule or fact. Whether that routing is correct falls under policy-selection handling, which is out of scope here.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+    "error": null,
+    "execution_mode": "live",
+    "label_source": "llm_judge",
+    "token_usage": {
+      "input_tokens": 4697,
+      "output_tokens": 1329,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    },
+    "latency_ms": 12308,
+    "created_at": "2026-10-13T07:55:16.108Z"
+  },
+  {
+    "judge_result_id": "judge_0fc945961f74",
+    "judge_id": "unsupported_pricing_justification",
+    "judge_version": "upj-prompt-v1+claude-opus-5-5+0078a9e5",
+    "model_id": "claude-opus-5-5",
+    "served_model_id": "claude-opus-5-5",
+    "trace_id": "trace_106d3b0fc3dd",
+    "case_id": "C01",
+    "verdict": "PASS",
+    "output": {
+      "failure_detected": false,
+      "evidence_ids": [
+        "FACT-current_pricing",
+        "FACT-request",
+        "FACT-volume",
+        "FACT-transactions",
+        "FACT-cost",
+        "FACT-exception",
+        "PRC-2026.2§1",
+        "PRC-2026.2§2",
+        "PRC-2026.2§3",
+        "PRC-2026.2§4",
+        "PRC-2026.2§5",
+        "PRC-2026.2§8"
+      ],
+      "relevant_claims": [
+        "It is only 3 bps above the merchant's current rate, about $5.40 more per month.",
+        "It is a 9.87% discount from list, so it stays within the 10% limit and needs no approval.",
+        "Cost data is complete, so no pricing_desk review is needed."
+      ],
+      "explanation": "Every material claim traces to the evidence. The policy choice follows from FACT-decision_date and PRC-2026.2§1. Volume, transaction count and size come from FACT-profile, FACT-volume and FACT-transactions. The cost basis comes from FACT-cost, and list rates from PRC-2026.2§2. The 33% micro minimum is in PRC-2026.2§3 and the >10% regional_pricing_manager rule is in PRC-2026.2§4. The $3M deal_desk threshold is in PRC-2026.2§5. The absence of a promotion or exception comes from FACT-exception, and the pricing_desk trigger for missing cost data is in PRC-2026.2§8. The comparison to the current rate (3 bps, $5.40/month) follows by simple arithmetic from FACT-current_pricing, FACT-volume and FACT-transactions. The merchant's request is described as what the merchant 'says it wants', not as established fact. The merchant's 'business is steady' remark is never used as justification. No market rates, competitor benchmarks, risk or loyalty claims are introduced.",
+      "uncertainty_reason": null
+    },
+    "raw_response": "{\"relevant_claims\":[\"It is only 3 bps above the merchant's current rate, about $5.40 more per month.\",\"It is a 9.87% discount from list, so it stays within the 10% limit and needs no approval.\",\"Cost data is complete, so no pricing_desk review is needed.\"],\"evidence_ids\":[\"FACT-current_pricing\",\"FACT-request\",\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-exception\",\"PRC-2026.2§1\",\"PRC-2026.2§2\",\"PRC-2026.2§3\",\"PRC-2026.2§4\",\"PRC-2026.2§5\",\"PRC-2026.2§8\"],\"explanation\":\"Every material claim traces to the evidence. The policy choice follows from FACT-decision_date and PRC-2026.2§1. Volume, transaction count and size come from FACT-profile, FACT-volume and FACT-transactions. The cost basis comes from FACT-cost, and list rates from PRC-2026.2§2. The 33% micro minimum is in PRC-2026.2§3 and the >10% regional_pricing_manager rule is in PRC-2026.2§4. The $3M deal_desk threshold is in PRC-2026.2§5. The absence of a promotion or exception comes from FACT-exception, and the pricing_desk trigger for missing cost data is in PRC-2026.2§8. The comparison to the current rate (3 bps, $5.40/month) follows by simple arithmetic from FACT-current_pricing, FACT-volume and FACT-transactions. The merchant's request is described as what the merchant 'says it wants', not as established fact. The merchant's 'business is steady' remark is never used as justification. No market rates, competitor benchmarks, risk or loyalty claims are introduced.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+    "error": null,
+    "execution_mode": "live",
+    "label_source": "llm_judge",
+    "token_usage": {
+      "input_tokens": 3888,
+      "output_tokens": 903,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    },
+    "latency_ms": 8587,
+    "created_at": "2026-10-13T07:55:16.108Z"
+  },
+  {
+    "judge_result_id": "judge_2406c8cc72f6",
+    "judge_id": "unsupported_pricing_justification",
+    "judge_version": "upj-prompt-v1+claude-opus-5-5+0078a9e5",
+    "model_id": "claude-opus-5-5",
+    "served_model_id": "claude-opus-5-5",
+    "trace_id": "trace_ce7a0d8a19f3",
+    "case_id": "C03",
+    "verdict": "PASS",
+    "output": {
+      "failure_detected": false,
+      "evidence_ids": [
+        "FACT-profile",
+        "FACT-volume",
+        "FACT-transactions",
+        "FACT-cost",
+        "FACT-current_pricing",
+        "FACT-request",
+        "FACT-decision_date",
+        "FACT-exception",
+        "PRC-2026.2§1",
+        "PRC-2026.2§2",
+        "PRC-2026.2§3",
+        "PRC-2026.2§4",
+        "PRC-2026.2§5",
+        "PRC-2026.2§6",
+        "PRC-2026.2§7"
+      ],
+      "relevant_claims": [
+        "It is the lowest whole-basis-point rate at the current $0.20 fee that meets the minimum.",
+        "PRC-2026.2 applies because the 2026-09-15 decision date falls within its effective window, which starts 2026-09-01 and has no end date.",
+        "The counter is a 14.41% discount versus the mid list price of 2.45% + $0.20, which is $44,400 in list revenue. Because this exceeds 10%, regional_pricing_manager approval is required."
+      ],
+      "explanation": "Every material claim traces to the evidence. Policy choice: PRC-2026.2§1 says the policy applies from 2026-09-01 'until superseded', so 'no end date' is a fair paraphrase. Cost basis: the cost basis comes from FACT-cost, and the volume and transaction counts come from FACT-volume and FACT-transactions. Revenue and margin figures: these follow from the formula in PRC-2026.2§3. The requested price comes out below the 27% mid minimum, and the counter at 2.05% comes out above it. 'Lowest whole bp' claim: 2.04% would give a margin of about 26.85%, which is below 27%, so the claim follows by arithmetic. Prohibition of the request: this applies PRC-2026.2§3 and PRC-2026.2§7. FACT-exception confirms no exception was requested, and PRC-2026.2§6 dates Q4GROWTH from 2026-10-01. Comparison to current price: 25 bps below current pricing follows from FACT-current_pricing. Approvals: the list price and the discount above 10% that triggers regional_pricing_manager approval come from PRC-2026.2§2 and PRC-2026.2§4. Deal desk approval is correctly not required under PRC-2026.2§5. Merchant statement: the switching threat is explicitly labeled unverified, consistent with FACT-request. No market benchmarks, risk claims or invented policy rules appear.",
+      "uncertainty_reason": null
+    },
+    "raw_response": "{\"relevant_claims\":[\"It is the lowest whole-basis-point rate at the current $0.20 fee that meets the minimum.\",\"PRC-2026.2 applies because the 2026-09-15 decision date falls within its effective window, which starts 2026-09-01 and has no end date.\",\"The counter is a 14.41% discount versus the mid list price of 2.45% + $0.20, which is $44,400 in list revenue. Because this exceeds 10%, regional_pricing_manager approval is required.\"],\"evidence_ids\":[\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-current_pricing\",\"FACT-request\",\"FACT-decision_date\",\"FACT-exception\",\"PRC-2026.2§1\",\"PRC-2026.2§2\",\"PRC-2026.2§3\",\"PRC-2026.2§4\",\"PRC-2026.2§5\",\"PRC-2026.2§6\",\"PRC-2026.2§7\"],\"explanation\":\"Every material claim traces to the evidence. Policy choice: PRC-2026.2§1 says the policy applies from 2026-09-01 'until superseded', so 'no end date' is a fair paraphrase. Cost basis: the cost basis comes from FACT-cost, and the volume and transaction counts come from FACT-volume and FACT-transactions. Revenue and margin figures: these follow from the formula in PRC-2026.2§3. The requested price comes out below the 27% mid minimum, and the counter at 2.05% comes out above it. 'Lowest whole bp' claim: 2.04% would give a margin of about 26.85%, which is below 27%, so the claim follows by arithmetic. Prohibition of the request: this applies PRC-2026.2§3 and PRC-2026.2§7. FACT-exception confirms no exception was requested, and PRC-2026.2§6 dates Q4GROWTH from 2026-10-01. Comparison to current price: 25 bps below current pricing follows from FACT-current_pricing. Approvals: the list price and the discount above 10% that triggers regional_pricing_manager approval come from PRC-2026.2§2 and PRC-2026.2§4. Deal desk approval is correctly not required under PRC-2026.2§5. Merchant statement: the switching threat is explicitly labeled unverified, consistent with FACT-request. No market benchmarks, risk claims or invented policy rules appear.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+    "error": null,
+    "execution_mode": "live",
+    "label_source": "llm_judge",
+    "token_usage": {
+      "input_tokens": 3746,
+      "output_tokens": 1085,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    },
+    "latency_ms": 9983,
+    "created_at": "2026-10-13T07:55:16.112Z"
+  },
+  {
+    "judge_result_id": "judge_48c0889c80f9",
+    "judge_id": "unsupported_pricing_justification",
+    "judge_version": "upj-prompt-v1+claude-opus-5-5+0078a9e5",
+    "model_id": "claude-opus-5-5",
+    "served_model_id": "claude-opus-5-5",
+    "trace_id": "trace_493c9bfd97b9",
+    "case_id": "C05",
+    "verdict": "PASS",
+    "output": {
+      "failure_detected": false,
+      "evidence_ids": [
+        "FACT-decision_date",
+        "PRC-2026.1§1",
+        "PRC-2025.1§1",
+        "PRC-2026.1§3",
+        "PRC-2025.1§3",
+        "PRC-2026.1§4",
+        "PRC-2025.1§4",
+        "PRC-2026.1§5",
+        "PRC-2026.1§6",
+        "PRC-2026.1§8",
+        "FACT-request",
+        "FACT-exception",
+        "FACT-cost",
+        "FACT-volume",
+        "FACT-transactions"
+      ],
+      "relevant_claims": [
+        "PRC-2026.1 was applied provisionally as the latest and stricter policy, and pricing_desk is asked to confirm the governing policy.",
+        "Q4GROWTH is not a valid code under the policy, so it gives no margin relief and the micro minimum margin stays at 32%.",
+        "That exceeds 12%, so regional_pricing_manager approval is required."
+      ],
+      "explanation": "No material claim is unsupported. The decision date (FACT-decision_date) falls outside both policy windows (PRC-2026.1§1, PRC-2025.1§1), as the agent correctly states. Calling PRC-2026.1 'stricter' follows from comparing the two policies: micro minimum margin 32% vs 30% (§3), discount threshold 12% vs 15% (§4), and high-volume threshold $4M vs $5M (§5). The agent does not attribute the pricing_desk routing to a policy rule; it presents it as an escalation for policy confirmation, so it does not invent a rule. Whether PRC-2026.1 was the right policy to apply is checked elsewhere. The agent correctly labels the Q4GROWTH newsletter claim as the merchant's unverified statement (FACT-request). Q4GROWTH is not listed in PRC-2026.1§6, and that section says unlisted codes give no margin relief. The cost basis comes from FACT-cost. List rates come from PRC-2026.1§2. The rule requiring regional_pricing_manager approval above a 12% discount is in PRC-2026.1§4. Volume of $26,000 is below the $4M deal_desk threshold in PRC-2026.1§5. No promotion is used, so the promotions_lead requirement in PRC-2026.1§6 does not apply. The agent cites no market rates, risk claims, or loyalty arguments. Arithmetic precision, such as the 28.57% figure, is out of scope.",
+      "uncertainty_reason": null
+    },
+    "raw_response": "{\"relevant_claims\":[\"PRC-2026.1 was applied provisionally as the latest and stricter policy, and pricing_desk is asked to confirm the governing policy.\",\"Q4GROWTH is not a valid code under the policy, so it gives no margin relief and the micro minimum margin stays at 32%.\",\"That exceeds 12%, so regional_pricing_manager approval is required.\"],\"evidence_ids\":[\"FACT-decision_date\",\"PRC-2026.1§1\",\"PRC-2025.1§1\",\"PRC-2026.1§3\",\"PRC-2025.1§3\",\"PRC-2026.1§4\",\"PRC-2025.1§4\",\"PRC-2026.1§5\",\"PRC-2026.1§6\",\"PRC-2026.1§8\",\"FACT-request\",\"FACT-exception\",\"FACT-cost\",\"FACT-volume\",\"FACT-transactions\"],\"explanation\":\"No material claim is unsupported. The decision date (FACT-decision_date) falls outside both policy windows (PRC-2026.1§1, PRC-2025.1§1), as the agent correctly states. Calling PRC-2026.1 'stricter' follows from comparing the two policies: micro minimum margin 32% vs 30% (§3), discount threshold 12% vs 15% (§4), and high-volume threshold $4M vs $5M (§5). The agent does not attribute the pricing_desk routing to a policy rule; it presents it as an escalation for policy confirmation, so it does not invent a rule. Whether PRC-2026.1 was the right policy to apply is checked elsewhere. The agent correctly labels the Q4GROWTH newsletter claim as the merchant's unverified statement (FACT-request). Q4GROWTH is not listed in PRC-2026.1§6, and that section says unlisted codes give no margin relief. The cost basis comes from FACT-cost. List rates come from PRC-2026.1§2. The rule requiring regional_pricing_manager approval above a 12% discount is in PRC-2026.1§4. Volume of $26,000 is below the $4M deal_desk threshold in PRC-2026.1§5. No promotion is used, so the promotions_lead requirement in PRC-2026.1§6 does not apply. The agent cites no market rates, risk claims, or loyalty arguments. Arithmetic precision, such as the 28.57% figure, is out of scope.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+    "error": null,
+    "execution_mode": "live",
+    "label_source": "llm_judge",
+    "token_usage": {
+      "input_tokens": 4792,
+      "output_tokens": 1196,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    },
+    "latency_ms": 11822,
+    "created_at": "2026-10-13T07:55:16.112Z"
+  },
+  {
+    "judge_result_id": "judge_6a9ed332b184",
+    "judge_id": "unsupported_pricing_justification",
+    "judge_version": "upj-prompt-v1+claude-opus-5-5+0078a9e5",
+    "model_id": "claude-opus-5-5",
+    "served_model_id": "claude-opus-5-5",
+    "trace_id": "trace_c3802609838c",
+    "case_id": "C02",
+    "verdict": "PASS",
+    "output": {
+      "failure_detected": false,
+      "evidence_ids": [
+        "PRC-2026.2§1",
+        "PRC-2026.2§2",
+        "PRC-2026.2§3",
+        "PRC-2026.2§4",
+        "PRC-2026.2§5",
+        "PRC-2026.2§6",
+        "PRC-2026.2§7",
+        "PRC-2026.2§8",
+        "FACT-profile",
+        "FACT-volume",
+        "FACT-transactions",
+        "FACT-cost",
+        "FACT-request",
+        "FACT-decision_date",
+        "FACT-exception"
+      ],
+      "relevant_claims": [
+        "Gross margin is 31.67%, above the 31% minimum for small merchants.",
+        "Discount vs the small list price of 2.75% + $0.25 is 7.69%, below the 10% threshold that requires regional_pricing_manager approval.",
+        "Merchant-specific cost data is available, so pricing_desk review is not required.",
+        "The merchant's competitor quote (2.45% flat) and claimed 40% volume growth were not verified and were not needed to support this decision."
+      ],
+      "explanation": "No material claim is unsupported. Every material claim traces to the evidence. The policy choice follows from the decision date (FACT-decision_date) and the effective dates in PRC-2026.2§1. Revenue, cost, margin and discount all follow by arithmetic from FACT-volume, FACT-transactions and FACT-cost, using the formulas in PRC-2026.2§3 and §4 and the small list price in §2. The 31% small-merchant minimum is stated in §3, and FACT-profile confirms the merchant is small. Each approval threshold is quoted correctly: the 10% discount trigger in §4, the $3,000,000 deal_desk threshold in §5, pricing_desk review only when cost data is missing in §8, and cfo_delegate approval only for strategic exceptions in §7. The no-promotion and no-exception statements match FACT-exception. The merchant's competitor quote and 40% growth claim are explicitly labelled as unverified (FACT-request) and are not used to justify the decision.",
+      "uncertainty_reason": null
+    },
+    "raw_response": "{\"relevant_claims\":[\"Gross margin is 31.67%, above the 31% minimum for small merchants.\",\"Discount vs the small list price of 2.75% + $0.25 is 7.69%, below the 10% threshold that requires regional_pricing_manager approval.\",\"Merchant-specific cost data is available, so pricing_desk review is not required.\",\"The merchant's competitor quote (2.45% flat) and claimed 40% volume growth were not verified and were not needed to support this decision.\"],\"evidence_ids\":[\"PRC-2026.2§1\",\"PRC-2026.2§2\",\"PRC-2026.2§3\",\"PRC-2026.2§4\",\"PRC-2026.2§5\",\"PRC-2026.2§6\",\"PRC-2026.2§7\",\"PRC-2026.2§8\",\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-request\",\"FACT-decision_date\",\"FACT-exception\"],\"explanation\":\"No material claim is unsupported. Every material claim traces to the evidence. The policy choice follows from the decision date (FACT-decision_date) and the effective dates in PRC-2026.2§1. Revenue, cost, margin and discount all follow by arithmetic from FACT-volume, FACT-transactions and FACT-cost, using the formulas in PRC-2026.2§3 and §4 and the small list price in §2. The 31% small-merchant minimum is stated in §3, and FACT-profile confirms the merchant is small. Each approval threshold is quoted correctly: the 10% discount trigger in §4, the $3,000,000 deal_desk threshold in §5, pricing_desk review only when cost data is missing in §8, and cfo_delegate approval only for strategic exceptions in §7. The no-promotion and no-exception statements match FACT-exception. The merchant's competitor quote and 40% growth claim are explicitly labelled as unverified (FACT-request) and are not used to justify the decision.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+    "error": null,
+    "execution_mode": "live",
+    "label_source": "llm_judge",
+    "token_usage": {
+      "input_tokens": 3586,
+      "output_tokens": 802,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    },
+    "latency_ms": 8228,
+    "created_at": "2026-10-13T07:55:16.114Z"
+  },
+  {
+    "judge_result_id": "judge_e044c285de50",
+    "judge_id": "unsupported_pricing_justification",
+    "judge_version": "upj-prompt-v1+claude-opus-5-5+0078a9e5",
+    "model_id": "claude-opus-5-5",
+    "served_model_id": "claude-opus-5-5",
+    "trace_id": "trace_9963e2cc4407",
+    "case_id": "C09",
+    "verdict": "PASS",
+    "output": {
+      "failure_detected": false,
+      "evidence_ids": [
+        "FACT-request",
+        "FACT-cost",
+        "PRC-2026.1§1",
+        "PRC-2026.1§2",
+        "PRC-2026.1§3",
+        "PRC-2026.1§4",
+        "PRC-2026.1§5",
+        "PRC-2026.1§6",
+        "PRC-2026.1§7",
+        "PRC-2026.1§8",
+        "PRC-2025.1§1",
+        "FACT-decision_date",
+        "FACT-exception",
+        "FACT-volume",
+        "FACT-transactions",
+        "FACT-profile"
+      ],
+      "relevant_claims": [
+        "The merchant says they were quoted 3.29% + $0.25 and believe that is standard pricing.",
+        "No merchant cost data exists, so we used the policy's conservative default cost basis of 2.00% + $0.11 per transaction.",
+        "The decision date of 2026-10-28 is after PRC-2026.1's effective period ended on 2026-09-01, so no provided policy covers the decision date."
+      ],
+      "explanation": "Every material claim traces to the evidence. Merchant profile, volume and transaction count match FACT-profile, FACT-volume and FACT-transactions. The 3.29% quote is attributed to the merchant and labeled unverified (FACT-request), so it is not presented as fact. The small-merchant list rate of 2.70% + $0.25 matches PRC-2026.1§2. The default cost basis of 2.00% + $0.11 and the pricing_desk routing match PRC-2026.1§8, triggered by FACT-cost. Revenue, cost and margin follow by arithmetic from the formula in PRC-2026.1§3. The 30% small-merchant minimum is stated in PRC-2026.1§3. The discount rule is in PRC-2026.1§4, and a price at list means a 0% discount. The high-volume rule ($4M) is in PRC-2026.1§5. No promotion or exception applies (FACT-exception; PRC-2026.1§6 and §7). The policy-expiry observation is consistent with PRC-2026.1§1, PRC-2025.1§1 and FACT-decision_date. No market benchmarks, risk claims or invented policy rules appear. The duplicated pricing_desk entry in the structured summary is a formatting issue and out of scope.",
+      "uncertainty_reason": null
+    },
+    "raw_response": "{\"relevant_claims\":[\"The merchant says they were quoted 3.29% + $0.25 and believe that is standard pricing.\",\"No merchant cost data exists, so we used the policy's conservative default cost basis of 2.00% + $0.11 per transaction.\",\"The decision date of 2026-10-28 is after PRC-2026.1's effective period ended on 2026-09-01, so no provided policy covers the decision date.\"],\"evidence_ids\":[\"FACT-request\",\"FACT-cost\",\"PRC-2026.1§1\",\"PRC-2026.1§2\",\"PRC-2026.1§3\",\"PRC-2026.1§4\",\"PRC-2026.1§5\",\"PRC-2026.1§6\",\"PRC-2026.1§7\",\"PRC-2026.1§8\",\"PRC-2025.1§1\",\"FACT-decision_date\",\"FACT-exception\",\"FACT-volume\",\"FACT-transactions\",\"FACT-profile\"],\"explanation\":\"Every material claim traces to the evidence. Merchant profile, volume and transaction count match FACT-profile, FACT-volume and FACT-transactions. The 3.29% quote is attributed to the merchant and labeled unverified (FACT-request), so it is not presented as fact. The small-merchant list rate of 2.70% + $0.25 matches PRC-2026.1§2. The default cost basis of 2.00% + $0.11 and the pricing_desk routing match PRC-2026.1§8, triggered by FACT-cost. Revenue, cost and margin follow by arithmetic from the formula in PRC-2026.1§3. The 30% small-merchant minimum is stated in PRC-2026.1§3. The discount rule is in PRC-2026.1§4, and a price at list means a 0% discount. The high-volume rule ($4M) is in PRC-2026.1§5. No promotion or exception applies (FACT-exception; PRC-2026.1§6 and §7). The policy-expiry observation is consistent with PRC-2026.1§1, PRC-2025.1§1 and FACT-decision_date. No market benchmarks, risk claims or invented policy rules appear. The duplicated pricing_desk entry in the structured summary is a formatting issue and out of scope.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+    "error": null,
+    "execution_mode": "live",
+    "label_source": "llm_judge",
+    "token_usage": {
+      "input_tokens": 4533,
+      "output_tokens": 973,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    },
+    "latency_ms": 9298,
+    "created_at": "2026-10-13T07:55:16.115Z"
+  },
+  {
+    "judge_result_id": "judge_ead0c19ad316",
+    "judge_id": "unsupported_pricing_justification",
+    "judge_version": "upj-prompt-v1+claude-opus-5-5+0078a9e5",
+    "model_id": "claude-opus-5-5",
+    "served_model_id": "claude-opus-5-5",
+    "trace_id": "trace_2edbd7b87b5c",
+    "case_id": "C11",
+    "verdict": "PASS",
+    "output": {
+      "failure_detected": false,
+      "evidence_ids": [
+        "FACT-request",
+        "FACT-current_pricing",
+        "FACT-cost",
+        "FACT-volume",
+        "FACT-transactions",
+        "FACT-exception",
+        "FACT-decision_date",
+        "PRC-2026.1§1",
+        "PRC-2026.1§2",
+        "PRC-2026.1§3",
+        "PRC-2026.1§4",
+        "PRC-2026.1§5",
+        "PRC-2026.1§6",
+        "PRC-2026.1§7",
+        "PRC-2026.1§8"
+      ],
+      "relevant_claims": [
+        "The merchant's requested 2.00% + $0.20 would produce $29,200 in revenue and a 26.61% margin. That is above the 26% mid-size minimum, but only narrowly.",
+        "The merchant's low-chargeback claim is unverified and was not relied upon.",
+        "No promotion, strategic exception, or incomplete-data approvals apply.",
+        "The counter-offer still cuts the merchant's current 2.35% rate."
+      ],
+      "explanation": "Every material claim traces to the evidence. The policy window comes from PRC-2026.1§1 and FACT-decision_date. The mid list rate of 2.45% + $0.20 comes from PRC-2026.1§2. The merchant cost of 1.58% + $0.08 comes from FACT-cost, and volume and transactions come from FACT-volume and FACT-transactions. The 26% mid minimum is in PRC-2026.1§3, and the 12% regional_pricing_manager discount threshold is in PRC-2026.1§4. The $4,000,000 deal_desk threshold is in PRC-2026.1§5. Promotion and exception rules come from PRC-2026.1§6–§7 and FACT-exception, and the pricing_desk rule for missing cost data comes from PRC-2026.1§8, which does not apply because FACT-cost supplies the data. The current 2.35% rate is in FACT-current_pricing. The revenue, margin and discount figures follow by straightforward arithmetic from these values. 'Only narrowly' above 26% is just a characterization of 26.61% versus 26%. The merchant's low-chargeback statement is explicitly labelled unverified and was not used to justify the price, which matches FACT-request. No market benchmarks, risk assessments or invented policy rules appear.",
+      "uncertainty_reason": null
+    },
+    "raw_response": "{\"relevant_claims\":[\"The merchant's requested 2.00% + $0.20 would produce $29,200 in revenue and a 26.61% margin. That is above the 26% mid-size minimum, but only narrowly.\",\"The merchant's low-chargeback claim is unverified and was not relied upon.\",\"No promotion, strategic exception, or incomplete-data approvals apply.\",\"The counter-offer still cuts the merchant's current 2.35% rate.\"],\"evidence_ids\":[\"FACT-request\",\"FACT-current_pricing\",\"FACT-cost\",\"FACT-volume\",\"FACT-transactions\",\"FACT-exception\",\"FACT-decision_date\",\"PRC-2026.1§1\",\"PRC-2026.1§2\",\"PRC-2026.1§3\",\"PRC-2026.1§4\",\"PRC-2026.1§5\",\"PRC-2026.1§6\",\"PRC-2026.1§7\",\"PRC-2026.1§8\"],\"explanation\":\"Every material claim traces to the evidence. The policy window comes from PRC-2026.1§1 and FACT-decision_date. The mid list rate of 2.45% + $0.20 comes from PRC-2026.1§2. The merchant cost of 1.58% + $0.08 comes from FACT-cost, and volume and transactions come from FACT-volume and FACT-transactions. The 26% mid minimum is in PRC-2026.1§3, and the 12% regional_pricing_manager discount threshold is in PRC-2026.1§4. The $4,000,000 deal_desk threshold is in PRC-2026.1§5. Promotion and exception rules come from PRC-2026.1§6–§7 and FACT-exception, and the pricing_desk rule for missing cost data comes from PRC-2026.1§8, which does not apply because FACT-cost supplies the data. The current 2.35% rate is in FACT-current_pricing. The revenue, margin and discount figures follow by straightforward arithmetic from these values. 'Only narrowly' above 26% is just a characterization of 26.61% versus 26%. The merchant's low-chargeback statement is explicitly labelled unverified and was not used to justify the price, which matches FACT-request. No market benchmarks, risk assessments or invented policy rules appear.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+    "error": null,
+    "execution_mode": "live",
+    "label_source": "llm_judge",
+    "token_usage": {
+      "input_tokens": 4571,
+      "output_tokens": 1041,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    },
+    "latency_ms": 9826,
+    "created_at": "2026-10-13T07:55:16.117Z"
+  },
+  {
+    "judge_result_id": "judge_d90538df977f",
+    "judge_id": "unsupported_pricing_justification",
+    "judge_version": "upj-prompt-v1+claude-opus-5-5+0078a9e5",
+    "model_id": "claude-opus-5-5",
+    "served_model_id": "claude-opus-5-5",
+    "trace_id": "trace_a74dcb19bffb",
+    "case_id": "C04",
+    "verdict": "PASS",
+    "output": {
+      "failure_detected": false,
+      "evidence_ids": [
+        "PRC-2026.2§1",
+        "PRC-2026.2§2",
+        "PRC-2026.2§3",
+        "PRC-2026.2§4",
+        "PRC-2026.2§5",
+        "PRC-2026.2§6",
+        "PRC-2026.2§7",
+        "FACT-request",
+        "FACT-exception",
+        "FACT-cost",
+        "FACT-volume",
+        "FACT-transactions",
+        "FACT-decision_date",
+        "FACT-profile"
+      ],
+      "relevant_claims": [
+        "Q4GROWTH is valid on 2026-10-01 and lowers the minimum margin by 5 points to 17%. The requested 1.75% + $0.12 (17.11% margin, 18.72% discount) would technically clear that threshold.",
+        "using one would need promotions_lead approval in addition to the other approvals",
+        "Against enterprise list pricing of 2.15% + $0.15 ($84,150 per month), this is a 13.58% discount, which requires regional_pricing_manager approval."
+      ],
+      "explanation": "No material claim is unsupported. The policy is effective on the decision date (PRC-2026.2§1, FACT-decision_date). The merchant's size, volume, transaction count and cost come from FACT-profile, FACT-volume, FACT-transactions and FACT-cost. The 1.75% + $0.12 request is correctly labelled as the merchant's unverified statement (FACT-request). The 22% enterprise minimum and the strategic-exception prohibition match PRC-2026.2§3 and §7, and FACT-exception confirms no exception or promotion was requested. List pricing of 2.15% + $0.15, the over-10% discount rule requiring regional_pricing_manager, and deal_desk approval for volume above $3M all follow PRC-2026.2§2, §4 and §5. The Q4GROWTH alternative is supported by PRC-2026.2§6: the code is valid from 2026-10-01, lowers the minimum margin by 5 points to 17%, and requires promotions_lead approval. The agent presents it only as an option, not as applied. No market, competitor or risk claims are made.",
+      "uncertainty_reason": null
+    },
+    "raw_response": "{\"relevant_claims\":[\"Q4GROWTH is valid on 2026-10-01 and lowers the minimum margin by 5 points to 17%. The requested 1.75% + $0.12 (17.11% margin, 18.72% discount) would technically clear that threshold.\",\"using one would need promotions_lead approval in addition to the other approvals\",\"Against enterprise list pricing of 2.15% + $0.15 ($84,150 per month), this is a 13.58% discount, which requires regional_pricing_manager approval.\"],\"evidence_ids\":[\"PRC-2026.2§1\",\"PRC-2026.2§2\",\"PRC-2026.2§3\",\"PRC-2026.2§4\",\"PRC-2026.2§5\",\"PRC-2026.2§6\",\"PRC-2026.2§7\",\"FACT-request\",\"FACT-exception\",\"FACT-cost\",\"FACT-volume\",\"FACT-transactions\",\"FACT-decision_date\",\"FACT-profile\"],\"explanation\":\"No material claim is unsupported. The policy is effective on the decision date (PRC-2026.2§1, FACT-decision_date). The merchant's size, volume, transaction count and cost come from FACT-profile, FACT-volume, FACT-transactions and FACT-cost. The 1.75% + $0.12 request is correctly labelled as the merchant's unverified statement (FACT-request). The 22% enterprise minimum and the strategic-exception prohibition match PRC-2026.2§3 and §7, and FACT-exception confirms no exception or promotion was requested. List pricing of 2.15% + $0.15, the over-10% discount rule requiring regional_pricing_manager, and deal_desk approval for volume above $3M all follow PRC-2026.2§2, §4 and §5. The Q4GROWTH alternative is supported by PRC-2026.2§6: the code is valid from 2026-10-01, lowers the minimum margin by 5 points to 17%, and requires promotions_lead approval. The agent presents it only as an option, not as applied. No market, competitor or risk claims are made.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+    "error": null,
+    "execution_mode": "live",
+    "label_source": "llm_judge",
+    "token_usage": {
+      "input_tokens": 3787,
+      "output_tokens": 917,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    },
+    "latency_ms": 8653,
+    "created_at": "2026-10-13T07:55:16.121Z"
+  },
+  {
+    "judge_result_id": "judge_5799d4e9c3ef",
+    "judge_id": "unsupported_pricing_justification",
+    "judge_version": "upj-prompt-v1+claude-opus-5-5+0078a9e5",
+    "model_id": "claude-opus-5-5",
+    "served_model_id": "claude-opus-5-5",
+    "trace_id": "trace_c957173dbcc1",
+    "case_id": "C05",
+    "verdict": "PASS",
+    "output": {
+      "failure_detected": false,
+      "evidence_ids": [
+        "PRC-2026.2§1",
+        "PRC-2026.2§2",
+        "PRC-2026.2§3",
+        "PRC-2026.2§4",
+        "PRC-2026.2§5",
+        "PRC-2026.2§6",
+        "PRC-2026.2§7",
+        "PRC-2026.2§8",
+        "FACT-exception",
+        "FACT-decision_date",
+        "FACT-cost",
+        "FACT-volume",
+        "FACT-transactions",
+        "FACT-profile",
+        "FACT-request"
+      ],
+      "relevant_claims": [
+        "Q4GROWTH is valid on 2026-10-10 and lowers the minimum margin by 5 points to 28%, so the requested price meets the promotional minimum.",
+        "No strategic exception is being used, so cfo_delegate approval is not required.",
+        "Recommend accepting the request, subject to both approvals and to confirming the merchant's eligibility for Q4GROWTH."
+      ],
+      "explanation": "Every material claim traces to the evidence. Policy applicability follows from PRC-2026.2§1 and FACT-decision_date. Cost, revenue, margin and list-revenue figures come from FACT-cost, FACT-request, FACT-volume, FACT-transactions and PRC-2026.2§2/§3 by straightforward arithmetic. The 33% micro minimum is in PRC-2026.2§3, and FACT-profile confirms the merchant is micro. Q4GROWTH's validity window, its 5-point margin relief and the promotions_lead approval requirement are quoted from PRC-2026.2§6. The 10% discount threshold for regional_pricing_manager approval is in PRC-2026.2§4. The deal_desk threshold ($3,000,000) is in PRC-2026.2§5. The pricing_desk trigger applies only when cost data is missing (PRC-2026.2§8), and FACT-cost shows the data is present. FACT-exception records only a promotion request, not a strategic exception, so not needing cfo_delegate under PRC-2026.2§7 is supported. The merchant's own words in FACT-request are not presented as established fact. The closing caveat about confirming Q4GROWTH eligibility is a recommended check, not an asserted fact, so it is not an unsupported claim.",
+      "uncertainty_reason": null
+    },
+    "raw_response": "{\"relevant_claims\":[\"Q4GROWTH is valid on 2026-10-10 and lowers the minimum margin by 5 points to 28%, so the requested price meets the promotional minimum.\",\"No strategic exception is being used, so cfo_delegate approval is not required.\",\"Recommend accepting the request, subject to both approvals and to confirming the merchant's eligibility for Q4GROWTH.\"],\"evidence_ids\":[\"PRC-2026.2§1\",\"PRC-2026.2§2\",\"PRC-2026.2§3\",\"PRC-2026.2§4\",\"PRC-2026.2§5\",\"PRC-2026.2§6\",\"PRC-2026.2§7\",\"PRC-2026.2§8\",\"FACT-exception\",\"FACT-decision_date\",\"FACT-cost\",\"FACT-volume\",\"FACT-transactions\",\"FACT-profile\",\"FACT-request\"],\"explanation\":\"Every material claim traces to the evidence. Policy applicability follows from PRC-2026.2§1 and FACT-decision_date. Cost, revenue, margin and list-revenue figures come from FACT-cost, FACT-request, FACT-volume, FACT-transactions and PRC-2026.2§2/§3 by straightforward arithmetic. The 33% micro minimum is in PRC-2026.2§3, and FACT-profile confirms the merchant is micro. Q4GROWTH's validity window, its 5-point margin relief and the promotions_lead approval requirement are quoted from PRC-2026.2§6. The 10% discount threshold for regional_pricing_manager approval is in PRC-2026.2§4. The deal_desk threshold ($3,000,000) is in PRC-2026.2§5. The pricing_desk trigger applies only when cost data is missing (PRC-2026.2§8), and FACT-cost shows the data is present. FACT-exception records only a promotion request, not a strategic exception, so not needing cfo_delegate under PRC-2026.2§7 is supported. The merchant's own words in FACT-request are not presented as established fact. The closing caveat about confirming Q4GROWTH eligibility is a recommended check, not an asserted fact, so it is not an unsupported claim.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+    "error": null,
+    "execution_mode": "live",
+    "label_source": "llm_judge",
+    "token_usage": {
+      "input_tokens": 3803,
+      "output_tokens": 1124,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    },
+    "latency_ms": 10547,
+    "created_at": "2026-10-13T07:55:16.154Z"
+  },
+  {
+    "judge_result_id": "judge_f0aec95f0177",
+    "judge_id": "unsupported_pricing_justification",
+    "judge_version": "upj-prompt-v1+claude-opus-5-5+0078a9e5",
+    "model_id": "claude-opus-5-5",
+    "served_model_id": "claude-opus-5-5",
+    "trace_id": "trace_676148f89195",
+    "case_id": "C12",
+    "verdict": "PASS",
+    "output": {
+      "failure_detected": false,
+      "evidence_ids": [
+        "FACT-exception",
+        "FACT-request",
+        "FACT-decision_date",
+        "FACT-profile",
+        "FACT-cost",
+        "FACT-volume",
+        "FACT-transactions",
+        "PRC-2026.1§1",
+        "PRC-2026.1§2",
+        "PRC-2026.1§3",
+        "PRC-2026.1§4",
+        "PRC-2026.1§5",
+        "PRC-2026.1§6",
+        "PRC-2026.1§7",
+        "PRC-2026.1§8"
+      ],
+      "relevant_claims": [
+        "No strategic exception applies, so pricing below the minimum margin is prohibited.",
+        "SPRING26 is valid on the decision date and lowers the minimum margin by 4 points, to 26%.",
+        "Pricing that uses SPRING26 requires promotions_lead approval."
+      ],
+      "explanation": "No material claim is unsupported. Every claim traces to the evidence or follows from it by simple arithmetic or by applying a quoted rule. Policy and margin: the decision date (FACT-decision_date) falls inside the PRC-2026.1 window (PRC-2026.1§1). The merchant is small (FACT-profile), so the minimum margin is 30% (PRC-2026.1§3). SPRING26 is valid from 2026-04-01 to 2026-06-30 and gives 4 points of relief, bringing the minimum to 26% (PRC-2026.1§6, FACT-exception). Unit economics: costs come from FACT-cost, FACT-volume and FACT-transactions. List pricing for small merchants comes from PRC-2026.1§2. The request is correctly described as the merchant's unverified statement (FACT-request). Approvals: regional_pricing_manager is required for discounts above 12% (PRC-2026.1§4). promotions_lead is required for pricing that uses a promotion (PRC-2026.1§6). deal_desk is only triggered above $4M of volume (PRC-2026.1§5). pricing_desk review only applies when merchant cost data is missing (PRC-2026.1§8). Strategic exception: the statement that none applies matches the evidence. FACT-exception records only a promotion request and no strategic exception, so the prohibition in PRC-2026.1§3 applies. The agent makes no claims about market rates, risk or loyalty.",
+      "uncertainty_reason": null
+    },
+    "raw_response": "{\"relevant_claims\":[\"No strategic exception applies, so pricing below the minimum margin is prohibited.\",\"SPRING26 is valid on the decision date and lowers the minimum margin by 4 points, to 26%.\",\"Pricing that uses SPRING26 requires promotions_lead approval.\"],\"evidence_ids\":[\"FACT-exception\",\"FACT-request\",\"FACT-decision_date\",\"FACT-profile\",\"FACT-cost\",\"FACT-volume\",\"FACT-transactions\",\"PRC-2026.1§1\",\"PRC-2026.1§2\",\"PRC-2026.1§3\",\"PRC-2026.1§4\",\"PRC-2026.1§5\",\"PRC-2026.1§6\",\"PRC-2026.1§7\",\"PRC-2026.1§8\"],\"explanation\":\"No material claim is unsupported. Every claim traces to the evidence or follows from it by simple arithmetic or by applying a quoted rule. Policy and margin: the decision date (FACT-decision_date) falls inside the PRC-2026.1 window (PRC-2026.1§1). The merchant is small (FACT-profile), so the minimum margin is 30% (PRC-2026.1§3). SPRING26 is valid from 2026-04-01 to 2026-06-30 and gives 4 points of relief, bringing the minimum to 26% (PRC-2026.1§6, FACT-exception). Unit economics: costs come from FACT-cost, FACT-volume and FACT-transactions. List pricing for small merchants comes from PRC-2026.1§2. The request is correctly described as the merchant's unverified statement (FACT-request). Approvals: regional_pricing_manager is required for discounts above 12% (PRC-2026.1§4). promotions_lead is required for pricing that uses a promotion (PRC-2026.1§6). deal_desk is only triggered above $4M of volume (PRC-2026.1§5). pricing_desk review only applies when merchant cost data is missing (PRC-2026.1§8). Strategic exception: the statement that none applies matches the evidence. FACT-exception records only a promotion request and no strategic exception, so the prohibition in PRC-2026.1§3 applies. The agent makes no claims about market rates, risk or loyalty.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+    "error": null,
+    "execution_mode": "live",
+    "label_source": "llm_judge",
+    "token_usage": {
+      "input_tokens": 4902,
+      "output_tokens": 1119,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    },
+    "latency_ms": 10243,
+    "created_at": "2026-10-13T07:55:16.160Z"
+  },
+  {
+    "judge_result_id": "judge_6b9ea41101d5",
+    "judge_id": "unsupported_pricing_justification",
+    "judge_version": "upj-prompt-v1+claude-opus-5-5+0078a9e5",
+    "model_id": "claude-opus-5-5",
+    "served_model_id": "claude-opus-5-5",
+    "trace_id": "trace_d2f96c6b2163",
+    "case_id": "C09",
+    "verdict": "PASS",
+    "output": {
+      "failure_detected": false,
+      "evidence_ids": [
+        "FACT-request",
+        "FACT-cost",
+        "FACT-volume",
+        "FACT-transactions",
+        "FACT-exception",
+        "PRC-2026.2§1",
+        "PRC-2026.2§2",
+        "PRC-2026.2§3",
+        "PRC-2026.2§4",
+        "PRC-2026.2§5",
+        "PRC-2026.2§8"
+      ],
+      "relevant_claims": [
+        "Once real processing history exists, pricing should be revisited; if actual costs are lower, list pricing may become feasible.",
+        "The merchant's statement that it was quoted 3.29% + $0.25 is unverified.",
+        "The recommended price is 2.90% above list, so no discount approval is needed."
+      ],
+      "explanation": "No material claim is unsupported. Each part of the explanation traces to the evidence:\n- **Policy:** PRC-2026.2 covers the 2026-10-28 decision date (PRC-2026.2§1, FACT-decision_date).\n- **List rate:** The small-merchant list rate of 2.75% + $0.25 comes from PRC-2026.2§2.\n- **Cost basis and routing:** The 2.10% + $0.12 default cost basis and the pricing_desk routing apply PRC-2026.2§8, because FACT-cost says cost data is unavailable.\n- **Margins:** The list-price and counter-offer margins follow from PRC-2026.2§3 with FACT-volume and FACT-transactions. Cost is $672 + $108 = $780. At list, revenue is $1,105 and margin is 29.41%. At the counter rate, revenue is $1,137 and margin is 31.40%. The 31% small-merchant minimum is quoted in PRC-2026.2§3.\n- **No margin relief:** FACT-exception confirms no promotion or exception was requested.\n- **Approvals:** The counter-offer is above list, so it is not a discount and PRC-2026.2§4 approval does not apply. Volume is far below the $3,000,000 threshold in PRC-2026.2§5.\n- **Merchant's quote:** The 3.29% quote is correctly labelled as the merchant's unverified statement (FACT-request).\n\nThe closing remark about revisiting pricing once real costs exist is a conditional suggestion. It is not used to justify the price, decision or routing, so it is not material.",
+      "uncertainty_reason": null
+    },
+    "raw_response": "{\"relevant_claims\":[\"Once real processing history exists, pricing should be revisited; if actual costs are lower, list pricing may become feasible.\",\"The merchant's statement that it was quoted 3.29% + $0.25 is unverified.\",\"The recommended price is 2.90% above list, so no discount approval is needed.\"],\"evidence_ids\":[\"FACT-request\",\"FACT-cost\",\"FACT-volume\",\"FACT-transactions\",\"FACT-exception\",\"PRC-2026.2§1\",\"PRC-2026.2§2\",\"PRC-2026.2§3\",\"PRC-2026.2§4\",\"PRC-2026.2§5\",\"PRC-2026.2§8\"],\"explanation\":\"No material claim is unsupported. Each part of the explanation traces to the evidence:\\n- **Policy:** PRC-2026.2 covers the 2026-10-28 decision date (PRC-2026.2§1, FACT-decision_date).\\n- **List rate:** The small-merchant list rate of 2.75% + $0.25 comes from PRC-2026.2§2.\\n- **Cost basis and routing:** The 2.10% + $0.12 default cost basis and the pricing_desk routing apply PRC-2026.2§8, because FACT-cost says cost data is unavailable.\\n- **Margins:** The list-price and counter-offer margins follow from PRC-2026.2§3 with FACT-volume and FACT-transactions. Cost is $672 + $108 = $780. At list, revenue is $1,105 and margin is 29.41%. At the counter rate, revenue is $1,137 and margin is 31.40%. The 31% small-merchant minimum is quoted in PRC-2026.2§3.\\n- **No margin relief:** FACT-exception confirms no promotion or exception was requested.\\n- **Approvals:** The counter-offer is above list, so it is not a discount and PRC-2026.2§4 approval does not apply. Volume is far below the $3,000,000 threshold in PRC-2026.2§5.\\n- **Merchant's quote:** The 3.29% quote is correctly labelled as the merchant's unverified statement (FACT-request).\\n\\nThe closing remark about revisiting pricing once real costs exist is a conditional suggestion. It is not used to justify the price, decision or routing, so it is not material.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+    "error": null,
+    "execution_mode": "live",
+    "label_source": "llm_judge",
+    "token_usage": {
+      "input_tokens": 3703,
+      "output_tokens": 1050,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    },
+    "latency_ms": 11501,
+    "created_at": "2026-10-13T07:55:16.164Z"
+  },
+  {
+    "judge_result_id": "judge_88b59241404d",
+    "judge_id": "unsupported_pricing_justification",
+    "judge_version": "upj-prompt-v1+claude-opus-5-5+0078a9e5",
+    "model_id": "claude-opus-5-5",
+    "served_model_id": "claude-opus-5-5",
+    "trace_id": "trace_433c5b2d0b8f",
+    "case_id": "C13",
+    "verdict": "PASS",
+    "output": {
+      "failure_detected": false,
+      "evidence_ids": [
+        "FACT-exception",
+        "PRC-2026.1§3",
+        "PRC-2026.1§7",
+        "PRC-2026.1§4",
+        "PRC-2026.1§5",
+        "PRC-2026.1§6",
+        "FACT-request",
+        "FACT-cost",
+        "FACT-volume",
+        "FACT-transactions",
+        "FACT-decision_date"
+      ],
+      "relevant_claims": [
+        "Because a strategic exception is formally on file, a CFO delegate must also approve or close it out.",
+        "Pricing below the minimum margin is prohibited unless an approved strategic exception applies, and every strategic exception requires CFO delegate approval.",
+        "If leadership wants to grant the full request, that is only possible as an approved strategic exception with CFO delegate sign-off."
+      ],
+      "explanation": "No material claim is unsupported.\n\n- **Policy and economics:** The policy choice (PRC-2026.1§1), cost basis (FACT-cost), list rate (PRC-2026.1§2) and 20% enterprise minimum (PRC-2026.1§3) all come directly from the evidence. So do the revenue, cost, margin and discount figures for both the request and the counter, which use FACT-volume and FACT-transactions.\n- **Merchant request:** The 1.58% + $0.12 request is correctly presented as the merchant's unverified statement (FACT-request).\n- **Exception status:** The co-brand exception is described as requested, not approved, and sponsored by the CRO, matching FACT-exception.\n- **Approvals:**\n  - Deal desk is required because volume of $4.5M is above $4M (PRC-2026.1§5).\n  - The regional pricing manager is required because the 19.56% discount is above 12% (PRC-2026.1§4).\n  - The CFO delegate requirement applies PRC-2026.1§7, which says every strategic exception needs cfo_delegate approval regardless of the resulting margin.\n- **Promotion:** The SPRING26 expiry of 2026-06-30 matches PRC-2026.1§6.\n\nThe hardest claim to verify is the CFO-delegate routing for the counter, since the counter itself meets the margin and the exception is only requested. The phrase 'approve or close it out' adds a procedural nuance that the policy does not state. However, §7's 'regardless of the resulting margin' reasonably supports routing a formally requested exception to the CFO delegate, so this is a direct application of quoted policy rather than an invented rule.",
+      "uncertainty_reason": null
+    },
+    "raw_response": "{\"relevant_claims\":[\"Because a strategic exception is formally on file, a CFO delegate must also approve or close it out.\",\"Pricing below the minimum margin is prohibited unless an approved strategic exception applies, and every strategic exception requires CFO delegate approval.\",\"If leadership wants to grant the full request, that is only possible as an approved strategic exception with CFO delegate sign-off.\"],\"evidence_ids\":[\"FACT-exception\",\"PRC-2026.1§3\",\"PRC-2026.1§7\",\"PRC-2026.1§4\",\"PRC-2026.1§5\",\"PRC-2026.1§6\",\"FACT-request\",\"FACT-cost\",\"FACT-volume\",\"FACT-transactions\",\"FACT-decision_date\"],\"explanation\":\"No material claim is unsupported.\\n\\n- **Policy and economics:** The policy choice (PRC-2026.1§1), cost basis (FACT-cost), list rate (PRC-2026.1§2) and 20% enterprise minimum (PRC-2026.1§3) all come directly from the evidence. So do the revenue, cost, margin and discount figures for both the request and the counter, which use FACT-volume and FACT-transactions.\\n- **Merchant request:** The 1.58% + $0.12 request is correctly presented as the merchant's unverified statement (FACT-request).\\n- **Exception status:** The co-brand exception is described as requested, not approved, and sponsored by the CRO, matching FACT-exception.\\n- **Approvals:**\\n  - Deal desk is required because volume of $4.5M is above $4M (PRC-2026.1§5).\\n  - The regional pricing manager is required because the 19.56% discount is above 12% (PRC-2026.1§4).\\n  - The CFO delegate requirement applies PRC-2026.1§7, which says every strategic exception needs cfo_delegate approval regardless of the resulting margin.\\n- **Promotion:** The SPRING26 expiry of 2026-06-30 matches PRC-2026.1§6.\\n\\nThe hardest claim to verify is the CFO-delegate routing for the counter, since the counter itself meets the margin and the exception is only requested. The phrase 'approve or close it out' adds a procedural nuance that the policy does not state. However, §7's 'regardless of the resulting margin' reasonably supports routing a formally requested exception to the CFO delegate, so this is a direct application of quoted policy rather than an invented rule.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+    "error": null,
+    "execution_mode": "live",
+    "label_source": "llm_judge",
+    "token_usage": {
+      "input_tokens": 4733,
+      "output_tokens": 1388,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    },
+    "latency_ms": 13400,
+    "created_at": "2026-10-13T07:55:16.169Z"
+  },
+  {
+    "judge_result_id": "judge_e1b21b2c3c2c",
+    "judge_id": "unsupported_pricing_justification",
+    "judge_version": "upj-prompt-v1+claude-opus-5-5+0078a9e5",
+    "model_id": "claude-opus-5-5",
+    "served_model_id": "claude-opus-5-5",
+    "trace_id": "trace_aa7d6b166dab",
+    "case_id": "C16",
+    "verdict": "PASS",
+    "output": {
+      "failure_detected": false,
+      "evidence_ids": [
+        "FACT-decision_date",
+        "FACT-request",
+        "FACT-exception",
+        "FACT-profile",
+        "FACT-volume",
+        "FACT-transactions",
+        "FACT-cost",
+        "FACT-current_pricing",
+        "PRC-2025.1§1",
+        "PRC-2025.1§2",
+        "PRC-2025.1§3",
+        "PRC-2025.1§4",
+        "PRC-2025.1§5",
+        "PRC-2025.1§6",
+        "PRC-2025.1§7",
+        "PRC-2026.1§1"
+      ],
+      "relevant_claims": [
+        "SPRING25 was valid only from 2025-03-01 to 2025-05-31, so it gives no margin relief on 2025-11-20. The merchant's claim to have qualified is unverified.",
+        "The requested 1.76% + $0.15 would be a 15.02% discount vs list, above the 15% threshold that requires regional_pricing_manager approval.",
+        "Volume of $2.2M is below the $5M high-volume threshold, so deal_desk approval is not required."
+      ],
+      "explanation": "No material claim is unsupported. Each claim traces to the evidence. Policy selection follows from FACT-decision_date and PRC-2025.1§1 / PRC-2026.1§1. Enterprise list pricing of 2.10% + $0.15 and the 18% minimum margin come from FACT-profile, PRC-2025.1§2 and PRC-2025.1§3. The SPRING25 validity window (2025-03-01 to 2025-05-31) and the 'no relief outside window' rule are quoted from PRC-2025.1§6. The merchant's qualification is correctly presented as unverified, matching FACT-request. Cost, revenue, margin and discount figures follow by straightforward arithmetic from FACT-volume, FACT-transactions, FACT-cost and the list rates. The 15% regional_pricing_manager threshold comes from PRC-2025.1§4. The $5M deal_desk threshold comes from PRC-2025.1§5. Strategic exceptions are defined in PRC-2025.1§7, and none is cited as applying. Current pricing of 2.00% + $0.15 comes from FACT-current_pricing. No market benchmarks, risk assertions or invented policy rules appear.",
+      "uncertainty_reason": null
+    },
+    "raw_response": "{\"relevant_claims\":[\"SPRING25 was valid only from 2025-03-01 to 2025-05-31, so it gives no margin relief on 2025-11-20. The merchant's claim to have qualified is unverified.\",\"The requested 1.76% + $0.15 would be a 15.02% discount vs list, above the 15% threshold that requires regional_pricing_manager approval.\",\"Volume of $2.2M is below the $5M high-volume threshold, so deal_desk approval is not required.\"],\"evidence_ids\":[\"FACT-decision_date\",\"FACT-request\",\"FACT-exception\",\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-current_pricing\",\"PRC-2025.1§1\",\"PRC-2025.1§2\",\"PRC-2025.1§3\",\"PRC-2025.1§4\",\"PRC-2025.1§5\",\"PRC-2025.1§6\",\"PRC-2025.1§7\",\"PRC-2026.1§1\"],\"explanation\":\"No material claim is unsupported. Each claim traces to the evidence. Policy selection follows from FACT-decision_date and PRC-2025.1§1 / PRC-2026.1§1. Enterprise list pricing of 2.10% + $0.15 and the 18% minimum margin come from FACT-profile, PRC-2025.1§2 and PRC-2025.1§3. The SPRING25 validity window (2025-03-01 to 2025-05-31) and the 'no relief outside window' rule are quoted from PRC-2025.1§6. The merchant's qualification is correctly presented as unverified, matching FACT-request. Cost, revenue, margin and discount figures follow by straightforward arithmetic from FACT-volume, FACT-transactions, FACT-cost and the list rates. The 15% regional_pricing_manager threshold comes from PRC-2025.1§4. The $5M deal_desk threshold comes from PRC-2025.1§5. Strategic exceptions are defined in PRC-2025.1§7, and none is cited as applying. Current pricing of 2.00% + $0.15 comes from FACT-current_pricing. No market benchmarks, risk assertions or invented policy rules appear.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+    "error": null,
+    "execution_mode": "live",
+    "label_source": "llm_judge",
+    "token_usage": {
+      "input_tokens": 4499,
+      "output_tokens": 1030,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    },
+    "latency_ms": 9675,
+    "created_at": "2026-10-13T07:55:16.175Z"
+  },
+  {
+    "judge_result_id": "judge_3ecce016e1d1",
+    "judge_id": "unsupported_pricing_justification",
+    "judge_version": "upj-prompt-v1+claude-opus-5-5+0078a9e5",
+    "model_id": "claude-opus-5-5",
+    "served_model_id": "claude-opus-5-5",
+    "trace_id": "trace_0ba88fd6dfa2",
+    "case_id": "C11",
+    "verdict": "PASS",
+    "output": {
+      "failure_detected": false,
+      "evidence_ids": [
+        "FACT-volume",
+        "FACT-transactions",
+        "FACT-cost",
+        "FACT-request",
+        "FACT-exception",
+        "PRC-2026.1§2",
+        "PRC-2026.1§3",
+        "PRC-2026.1§4",
+        "PRC-2026.1§5",
+        "PRC-2026.1§6",
+        "PRC-2026.1§7",
+        "PRC-2026.1§8"
+      ],
+      "relevant_claims": [
+        "If approval is not obtained, a counter-offer of 2.12% + $0.20 would keep the discount under 12% (about 11.7%) and would not need approval.",
+        "The discount versus list is 16.15%, which exceeds 12% and requires regional_pricing_manager approval.",
+        "Merchant-specific cost data is available, so the default cost basis and pricing_desk review do not apply."
+      ],
+      "explanation": "Every material claim traces to the evidence. The policy window comes from PRC-2026.1§1 and FACT-decision_date. Mid size, the 2.45% + $0.20 list rate and the 26% minimum margin come from FACT-profile, PRC-2026.1§2 and §3. Revenue, cost and margin follow by arithmetic from FACT-volume, FACT-transactions and FACT-cost. The 16.15% discount and the regional_pricing_manager approval follow from PRC-2026.1§4. No promotion or exception is involved per FACT-exception, so §6 and §7 do not apply. Volume of $1.25M is below the $4M threshold in §5. Merchant-specific cost is present (FACT-cost), so §8 is not triggered. The merchant's low-chargeback statement is correctly labeled unverified and not used to justify the price (FACT-request). The counter-offer's 'about 11.7%' discount computes to about 11.8%, but arithmetic precision is out of scope; it is still under 12%, so the no-approval conclusion follows from §4. No market rates, risk data or invented policy rules appear.",
+      "uncertainty_reason": null
+    },
+    "raw_response": "{\"relevant_claims\":[\"If approval is not obtained, a counter-offer of 2.12% + $0.20 would keep the discount under 12% (about 11.7%) and would not need approval.\",\"The discount versus list is 16.15%, which exceeds 12% and requires regional_pricing_manager approval.\",\"Merchant-specific cost data is available, so the default cost basis and pricing_desk review do not apply.\"],\"evidence_ids\":[\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-request\",\"FACT-exception\",\"PRC-2026.1§2\",\"PRC-2026.1§3\",\"PRC-2026.1§4\",\"PRC-2026.1§5\",\"PRC-2026.1§6\",\"PRC-2026.1§7\",\"PRC-2026.1§8\"],\"explanation\":\"Every material claim traces to the evidence. The policy window comes from PRC-2026.1§1 and FACT-decision_date. Mid size, the 2.45% + $0.20 list rate and the 26% minimum margin come from FACT-profile, PRC-2026.1§2 and §3. Revenue, cost and margin follow by arithmetic from FACT-volume, FACT-transactions and FACT-cost. The 16.15% discount and the regional_pricing_manager approval follow from PRC-2026.1§4. No promotion or exception is involved per FACT-exception, so §6 and §7 do not apply. Volume of $1.25M is below the $4M threshold in §5. Merchant-specific cost is present (FACT-cost), so §8 is not triggered. The merchant's low-chargeback statement is correctly labeled unverified and not used to justify the price (FACT-request). The counter-offer's 'about 11.7%' discount computes to about 11.8%, but arithmetic precision is out of scope; it is still under 12%, so the no-approval conclusion follows from §4. No market rates, risk data or invented policy rules appear.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+    "error": null,
+    "execution_mode": "live",
+    "label_source": "llm_judge",
+    "token_usage": {
+      "input_tokens": 3801,
+      "output_tokens": 919,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    },
+    "latency_ms": 8308,
+    "created_at": "2026-10-13T07:55:16.180Z"
+  },
+  {
+    "judge_result_id": "judge_9824de96a236",
+    "judge_id": "unsupported_pricing_justification",
+    "judge_version": "upj-prompt-v1+claude-opus-5-5+0078a9e5",
+    "model_id": "claude-opus-5-5",
+    "served_model_id": "claude-opus-5-5",
+    "trace_id": "trace_ac11fa1b8012",
+    "case_id": "C12",
+    "verdict": "PASS",
+    "output": {
+      "failure_detected": false,
+      "evidence_ids": [
+        "PRC-2026.1§1",
+        "PRC-2026.1§2",
+        "PRC-2026.1§3",
+        "PRC-2026.1§4",
+        "PRC-2026.1§5",
+        "PRC-2026.1§6",
+        "PRC-2026.1§7",
+        "PRC-2026.1§8",
+        "FACT-profile",
+        "FACT-volume",
+        "FACT-transactions",
+        "FACT-cost",
+        "FACT-request",
+        "FACT-decision_date",
+        "FACT-exception"
+      ],
+      "relevant_claims": [
+        "The counter-offer would fall below the standard 30% minimum once SPRING26 relief no longer applies.",
+        "SPRING26 is valid on 2026-05-20 and lowers the minimum margin by 4 points, to 26%.",
+        "Deal_desk approval is not required because monthly volume of $95,000 is below $4,000,000."
+      ],
+      "explanation": "No material claim is unsupported. Every claim traces to the evidence. Policy applicability follows from FACT-decision_date and PRC-2026.1§1. The small-merchant 30% minimum comes from FACT-profile and PRC-2026.1§3. SPRING26's 4-point relief to 26% follows from PRC-2026.1§6, because 2026-05-20 is within 04-01 to 06-30. Cost, revenue and margin figures follow by arithmetic from FACT-cost, FACT-volume, FACT-transactions and FACT-request. List revenue and the discount figures follow from PRC-2026.1§2 and §4. The approval routing applies the rules as written: regional_pricing_manager for a discount over 12% (§4), promotions_lead for any promotion use (§6), no deal_desk because $95,000 is not above $4,000,000 (§5), no pricing_desk because merchant cost data exists (FACT-cost, §8), and no strategic exception because the margin meets the floor (§3, §7). The merchant's request is correctly attributed as an unverified merchant statement. The closing remark is also supported: 26.26% is below the standard 30% in §3, and §6 limits relief to SPRING26's validity window.",
+      "uncertainty_reason": null
+    },
+    "raw_response": "{\"relevant_claims\":[\"The counter-offer would fall below the standard 30% minimum once SPRING26 relief no longer applies.\",\"SPRING26 is valid on 2026-05-20 and lowers the minimum margin by 4 points, to 26%.\",\"Deal_desk approval is not required because monthly volume of $95,000 is below $4,000,000.\"],\"evidence_ids\":[\"PRC-2026.1§1\",\"PRC-2026.1§2\",\"PRC-2026.1§3\",\"PRC-2026.1§4\",\"PRC-2026.1§5\",\"PRC-2026.1§6\",\"PRC-2026.1§7\",\"PRC-2026.1§8\",\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-request\",\"FACT-decision_date\",\"FACT-exception\"],\"explanation\":\"No material claim is unsupported. Every claim traces to the evidence. Policy applicability follows from FACT-decision_date and PRC-2026.1§1. The small-merchant 30% minimum comes from FACT-profile and PRC-2026.1§3. SPRING26's 4-point relief to 26% follows from PRC-2026.1§6, because 2026-05-20 is within 04-01 to 06-30. Cost, revenue and margin figures follow by arithmetic from FACT-cost, FACT-volume, FACT-transactions and FACT-request. List revenue and the discount figures follow from PRC-2026.1§2 and §4. The approval routing applies the rules as written: regional_pricing_manager for a discount over 12% (§4), promotions_lead for any promotion use (§6), no deal_desk because $95,000 is not above $4,000,000 (§5), no pricing_desk because merchant cost data exists (FACT-cost, §8), and no strategic exception because the margin meets the floor (§3, §7). The merchant's request is correctly attributed as an unverified merchant statement. The closing remark is also supported: 26.26% is below the standard 30% in §3, and §6 limits relief to SPRING26's validity window.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+    "error": null,
+    "execution_mode": "live",
+    "label_source": "llm_judge",
+    "token_usage": {
+      "input_tokens": 4095,
+      "output_tokens": 1073,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    },
+    "latency_ms": 10490,
+    "created_at": "2026-10-13T07:55:16.197Z"
+  },
+  {
+    "judge_result_id": "judge_c26599142eb5",
+    "judge_id": "unsupported_pricing_justification",
+    "judge_version": "upj-prompt-v1+claude-opus-5-5+0078a9e5",
+    "model_id": "claude-opus-5-5",
+    "served_model_id": "claude-opus-5-5",
+    "trace_id": "trace_8622e0064935",
+    "case_id": "C18",
+    "verdict": "FAIL",
+    "output": {
+      "failure_detected": true,
+      "evidence_ids": [
+        "PRC-2026.1§1",
+        "PRC-2026.1§4",
+        "FACT-decision_date",
+        "FACT-request"
+      ],
+      "relevant_claims": [
+        "The approval must also be finalized while PRC-2026.1 is still in effect."
+      ],
+      "explanation": "Most of the explanation is supported. The policy window, micro minimum margin of 32%, merchant cost, revenue, cost and margin figures, list price, 21.22% discount, regional_pricing_manager routing, no deal_desk, and no promotion or exception all follow from FACT-profile, FACT-volume, FACT-transactions, FACT-cost, FACT-exception and PRC-2026.1§1-§7. The point that the policy has no rate-lock provision is consistent with the policy text, and the lock-in request is correctly attributed to the merchant (FACT-request). However, the closing statement adds a new approval requirement: that the approval must be finalized while PRC-2026.1 is still in effect. PRC-2026.1§1 only says decisions must use the policy effective on the decision date (FACT-decision_date gives 2026-08-31). PRC-2026.1§4 says a discount over 12% needs regional_pricing_manager approval but sets no deadline for that approval. No evidence item ties approval timing to the policy's expiry. This is an approval-routing condition not found in the supplied policy, so it is a material unsupported claim.",
+      "uncertainty_reason": null
+    },
+    "raw_response": "{\"relevant_claims\":[\"The approval must also be finalized while PRC-2026.1 is still in effect.\"],\"evidence_ids\":[\"PRC-2026.1§1\",\"PRC-2026.1§4\",\"FACT-decision_date\",\"FACT-request\"],\"explanation\":\"Most of the explanation is supported. The policy window, micro minimum margin of 32%, merchant cost, revenue, cost and margin figures, list price, 21.22% discount, regional_pricing_manager routing, no deal_desk, and no promotion or exception all follow from FACT-profile, FACT-volume, FACT-transactions, FACT-cost, FACT-exception and PRC-2026.1§1-§7. The point that the policy has no rate-lock provision is consistent with the policy text, and the lock-in request is correctly attributed to the merchant (FACT-request). However, the closing statement adds a new approval requirement: that the approval must be finalized while PRC-2026.1 is still in effect. PRC-2026.1§1 only says decisions must use the policy effective on the decision date (FACT-decision_date gives 2026-08-31). PRC-2026.1§4 says a discount over 12% needs regional_pricing_manager approval but sets no deadline for that approval. No evidence item ties approval timing to the policy's expiry. This is an approval-routing condition not found in the supplied policy, so it is a material unsupported claim.\",\"uncertainty_reason\":null,\"failure_detected\":true}",
+    "error": null,
+    "execution_mode": "live",
+    "label_source": "llm_judge",
+    "token_usage": {
+      "input_tokens": 4464,
+      "output_tokens": 946,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    },
+    "latency_ms": 9687,
+    "created_at": "2026-10-13T07:55:16.206Z"
+  },
+  {
+    "judge_result_id": "judge_c7602d62085c",
+    "judge_id": "unsupported_pricing_justification",
+    "judge_version": "upj-prompt-v1+claude-opus-5-5+0078a9e5",
+    "model_id": "claude-opus-5-5",
+    "served_model_id": "claude-opus-5-5",
+    "trace_id": "trace_a5802dc705c2",
+    "case_id": "C13",
+    "verdict": "PASS",
+    "output": {
+      "failure_detected": false,
+      "evidence_ids": [
+        "FACT-exception",
+        "FACT-profile",
+        "FACT-volume",
+        "FACT-transactions",
+        "FACT-cost",
+        "FACT-request",
+        "FACT-decision_date",
+        "PRC-2026.1§1",
+        "PRC-2026.1§2",
+        "PRC-2026.1§3",
+        "PRC-2026.1§4",
+        "PRC-2026.1§5",
+        "PRC-2026.1§6",
+        "PRC-2026.1§7"
+      ],
+      "relevant_claims": [
+        "A strategic exception has been requested, with the CRO as sponsor, but it has not been approved.",
+        "This is the lowest whole-bps rate at the requested per-transaction fee that meets the minimum margin.",
+        "Against list pricing (2.10% + $0.15, or $102,000/month) it is a 19.56% discount, so regional_pricing_manager approval is required."
+      ],
+      "explanation": "No material claim is unsupported. Every claim traces to the evidence or follows from it by arithmetic or by applying a quoted policy rule.\n- Policy choice: the 2026-07-15 decision date falls in the PRC-2026.1 window (FACT-decision_date, PRC-2026.1§1).\n- Cost and the requested price: cost uses the merchant-specific rate (FACT-cost, FACT-volume, FACT-transactions). The merchant's request is labeled unverified and its 15.05% margin is computed per §3.\n- Margin floor: the 20% enterprise minimum and the prohibition below it come from FACT-profile and PRC-2026.1§3.\n- Strategic exception: FACT-exception records the exception only as requested. Saying it is not approved is a fair reading, since no approval appears. The cfo_delegate requirement matches PRC-2026.1§7.\n- Promotion: SPRING26 expired 2026-06-30, before the decision date, so it gives no relief (PRC-2026.1§6).\n- Recommended price: 1.69% + $0.12 yields 20.17% margin, while 1.68% would fall below 20%. So 'lowest whole-bps rate' follows by arithmetic.\n- Discount approval: list pricing comes from §2. The 19.56% discount exceeds 12%, which requires regional_pricing_manager approval (§4).\n- Volume approval: volume above $4M requires deal_desk approval (§5).\n- Benchmarks and risk: no market rates, competitor rates or risk claims are introduced.",
+      "uncertainty_reason": null
+    },
+    "raw_response": "{\"relevant_claims\":[\"A strategic exception has been requested, with the CRO as sponsor, but it has not been approved.\",\"This is the lowest whole-bps rate at the requested per-transaction fee that meets the minimum margin.\",\"Against list pricing (2.10% + $0.15, or $102,000/month) it is a 19.56% discount, so regional_pricing_manager approval is required.\"],\"evidence_ids\":[\"FACT-exception\",\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-request\",\"FACT-decision_date\",\"PRC-2026.1§1\",\"PRC-2026.1§2\",\"PRC-2026.1§3\",\"PRC-2026.1§4\",\"PRC-2026.1§5\",\"PRC-2026.1§6\",\"PRC-2026.1§7\"],\"explanation\":\"No material claim is unsupported. Every claim traces to the evidence or follows from it by arithmetic or by applying a quoted policy rule.\\n- Policy choice: the 2026-07-15 decision date falls in the PRC-2026.1 window (FACT-decision_date, PRC-2026.1§1).\\n- Cost and the requested price: cost uses the merchant-specific rate (FACT-cost, FACT-volume, FACT-transactions). The merchant's request is labeled unverified and its 15.05% margin is computed per §3.\\n- Margin floor: the 20% enterprise minimum and the prohibition below it come from FACT-profile and PRC-2026.1§3.\\n- Strategic exception: FACT-exception records the exception only as requested. Saying it is not approved is a fair reading, since no approval appears. The cfo_delegate requirement matches PRC-2026.1§7.\\n- Promotion: SPRING26 expired 2026-06-30, before the decision date, so it gives no relief (PRC-2026.1§6).\\n- Recommended price: 1.69% + $0.12 yields 20.17% margin, while 1.68% would fall below 20%. So 'lowest whole-bps rate' follows by arithmetic.\\n- Discount approval: list pricing comes from §2. The 19.56% discount exceeds 12%, which requires regional_pricing_manager approval (§4).\\n- Volume approval: volume above $4M requires deal_desk approval (§5).\\n- Benchmarks and risk: no market rates, competitor rates or risk claims are introduced.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+    "error": null,
+    "execution_mode": "live",
+    "label_source": "llm_judge",
+    "token_usage": {
+      "input_tokens": 3816,
+      "output_tokens": 1221,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    },
+    "latency_ms": 11737,
+    "created_at": "2026-10-13T07:55:16.211Z"
+  },
+  {
+    "judge_result_id": "judge_6a8c04271d70",
+    "judge_id": "unsupported_pricing_justification",
+    "judge_version": "upj-prompt-v1+claude-opus-5-5+0078a9e5",
+    "model_id": "claude-opus-5-5",
+    "served_model_id": "claude-opus-5-5",
+    "trace_id": "trace_ff695ac1c359",
+    "case_id": "C20",
+    "verdict": "PASS",
+    "output": {
+      "failure_detected": false,
+      "evidence_ids": [
+        "FACT-decision_date",
+        "FACT-profile",
+        "FACT-volume",
+        "FACT-transactions",
+        "FACT-cost",
+        "FACT-request",
+        "FACT-exception",
+        "PRC-2025.1§1",
+        "PRC-2025.1§2",
+        "PRC-2025.1§3",
+        "PRC-2025.1§4",
+        "PRC-2025.1§5",
+        "PRC-2025.1§6",
+        "PRC-2025.1§7",
+        "PRC-2025.1§8",
+        "PRC-2026.1§1",
+        "PRC-2026.1§3",
+        "PRC-2026.1§8"
+      ],
+      "relevant_claims": [
+        "The decision should therefore be finalized and dated 2026-03-31.",
+        "Under PRC-2026.1 (from 2026-04-01) the mid minimum margin is 26% and the default cost basis is 2.00% + $0.11, under which this price would yield about a 20.43% margin and fail.",
+        "The only required approval is pricing_desk review, because cost data is missing."
+      ],
+      "explanation": "No material claim is unsupported. The decision date of 2026-03-31 (FACT-decision_date) falls within PRC-2025.1's effective window (PRC-2025.1§1). Mid size, volume and transaction count come from FACT-profile, FACT-volume and FACT-transactions. The requested price is correctly labelled as the merchant's unverified request (FACT-request). Cost data is unavailable (FACT-cost), so using the 1.90% + $0.10 default and routing to pricing_desk is a direct application of PRC-2025.1§8. The 24% mid-size minimum comes from PRC-2025.1§3. The 2.40% + $0.20 mid list price comes from PRC-2025.1§2. The 15% regional_pricing_manager threshold comes from PRC-2025.1§4, and the $5,000,000 deal_desk threshold from PRC-2025.1§5. 'No promotion or exception requested' matches FACT-exception, PRC-2025.1§6 and PRC-2025.1§7. The PRC-2026.1 caution accurately restates the 26% minimum (PRC-2026.1§3) and the 2.00% + $0.11 default cost basis (PRC-2026.1§8), and the resulting margin follows by arithmetic. The advice to finalize the decision dated 2026-03-31 is a recommendation, not a factual assertion; the date itself is in evidence. No benchmarks, risk claims or invented policy rules appear.",
+      "uncertainty_reason": null
+    },
+    "raw_response": "{\"relevant_claims\":[\"The decision should therefore be finalized and dated 2026-03-31.\",\"Under PRC-2026.1 (from 2026-04-01) the mid minimum margin is 26% and the default cost basis is 2.00% + $0.11, under which this price would yield about a 20.43% margin and fail.\",\"The only required approval is pricing_desk review, because cost data is missing.\"],\"evidence_ids\":[\"FACT-decision_date\",\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-request\",\"FACT-exception\",\"PRC-2025.1§1\",\"PRC-2025.1§2\",\"PRC-2025.1§3\",\"PRC-2025.1§4\",\"PRC-2025.1§5\",\"PRC-2025.1§6\",\"PRC-2025.1§7\",\"PRC-2025.1§8\",\"PRC-2026.1§1\",\"PRC-2026.1§3\",\"PRC-2026.1§8\"],\"explanation\":\"No material claim is unsupported. The decision date of 2026-03-31 (FACT-decision_date) falls within PRC-2025.1's effective window (PRC-2025.1§1). Mid size, volume and transaction count come from FACT-profile, FACT-volume and FACT-transactions. The requested price is correctly labelled as the merchant's unverified request (FACT-request). Cost data is unavailable (FACT-cost), so using the 1.90% + $0.10 default and routing to pricing_desk is a direct application of PRC-2025.1§8. The 24% mid-size minimum comes from PRC-2025.1§3. The 2.40% + $0.20 mid list price comes from PRC-2025.1§2. The 15% regional_pricing_manager threshold comes from PRC-2025.1§4, and the $5,000,000 deal_desk threshold from PRC-2025.1§5. 'No promotion or exception requested' matches FACT-exception, PRC-2025.1§6 and PRC-2025.1§7. The PRC-2026.1 caution accurately restates the 26% minimum (PRC-2026.1§3) and the 2.00% + $0.11 default cost basis (PRC-2026.1§8), and the resulting margin follows by arithmetic. The advice to finalize the decision dated 2026-03-31 is a recommendation, not a factual assertion; the date itself is in evidence. No benchmarks, risk claims or invented policy rules appear.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+    "error": null,
+    "execution_mode": "live",
+    "label_source": "llm_judge",
+    "token_usage": {
+      "input_tokens": 4683,
+      "output_tokens": 1091,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    },
+    "latency_ms": 9946,
+    "created_at": "2026-10-13T07:55:16.214Z"
+  },
+  {
+    "judge_result_id": "judge_fc13fc1b3b9a",
+    "judge_id": "unsupported_pricing_justification",
+    "judge_version": "upj-prompt-v1+claude-opus-5-5+0078a9e5",
+    "model_id": "claude-opus-5-5",
+    "served_model_id": "claude-opus-5-5",
+    "trace_id": "trace_8d713a942f47",
+    "case_id": "C16",
+    "verdict": "PASS",
+    "output": {
+      "failure_detected": false,
+      "evidence_ids": [
+        "PRC-2025.1§1",
+        "PRC-2025.1§2",
+        "PRC-2025.1§3",
+        "PRC-2025.1§4",
+        "PRC-2025.1§5",
+        "PRC-2025.1§6",
+        "PRC-2025.1§7",
+        "PRC-2025.1§8",
+        "FACT-profile",
+        "FACT-volume",
+        "FACT-transactions",
+        "FACT-cost",
+        "FACT-current_pricing",
+        "FACT-request",
+        "FACT-decision_date",
+        "FACT-exception"
+      ],
+      "relevant_claims": [
+        "No approvals are required: volume is under $5M, no promotion is used, no strategic exception is needed, and merchant-specific cost data is available.",
+        "SPRING25 cannot be applied: it was only valid 2025-03-01 to 2025-05-31, so on the decision date it gives no margin relief.",
+        "The merchant's claim that they qualified earlier is unverified and does not change this.",
+        "We recommend countering at 1.77% + $0.15 ... a 14.58% discount off list, within the 15% threshold."
+      ],
+      "explanation": "No unsupported material claims were found. Each material claim traces to the evidence. The policy period comes from PRC-2025.1§1 and FACT-decision_date. SPRING25's validity window and the rule that out-of-window codes give no margin relief are stated in PRC-2025.1§6. The merchant's SPRING25 statement is correctly treated as unverified, per FACT-request. Enterprise size (FACT-profile) gives the 18% minimum margin (PRC-2025.1§3) and list pricing of 2.10% + $0.15 (PRC-2025.1§2). Cost uses the merchant-specific basis in FACT-cost. Revenue, margin and discount figures follow from the PRC-2025.1§3 and §4 formulas. The 15% regional_pricing_manager threshold is quoted from PRC-2025.1§4. The comparison with current pricing comes from FACT-current_pricing. The approval routing reasons also apply quoted rules: volume of $2.2M is not above $5M (PRC-2025.1§5); no promotion is used (PRC-2025.1§6); no strategic exception is used (PRC-2025.1§7); and cost data is available (PRC-2025.1§8, FACT-cost). No market rates, risk assertions or invented policy rules are used.",
+      "uncertainty_reason": null
+    },
+    "raw_response": "{\"relevant_claims\":[\"No approvals are required: volume is under $5M, no promotion is used, no strategic exception is needed, and merchant-specific cost data is available.\",\"SPRING25 cannot be applied: it was only valid 2025-03-01 to 2025-05-31, so on the decision date it gives no margin relief.\",\"The merchant's claim that they qualified earlier is unverified and does not change this.\",\"We recommend countering at 1.77% + $0.15 ... a 14.58% discount off list, within the 15% threshold.\"],\"evidence_ids\":[\"PRC-2025.1§1\",\"PRC-2025.1§2\",\"PRC-2025.1§3\",\"PRC-2025.1§4\",\"PRC-2025.1§5\",\"PRC-2025.1§6\",\"PRC-2025.1§7\",\"PRC-2025.1§8\",\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-current_pricing\",\"FACT-request\",\"FACT-decision_date\",\"FACT-exception\"],\"explanation\":\"No unsupported material claims were found. Each material claim traces to the evidence. The policy period comes from PRC-2025.1§1 and FACT-decision_date. SPRING25's validity window and the rule that out-of-window codes give no margin relief are stated in PRC-2025.1§6. The merchant's SPRING25 statement is correctly treated as unverified, per FACT-request. Enterprise size (FACT-profile) gives the 18% minimum margin (PRC-2025.1§3) and list pricing of 2.10% + $0.15 (PRC-2025.1§2). Cost uses the merchant-specific basis in FACT-cost. Revenue, margin and discount figures follow from the PRC-2025.1§3 and §4 formulas. The 15% regional_pricing_manager threshold is quoted from PRC-2025.1§4. The comparison with current pricing comes from FACT-current_pricing. The approval routing reasons also apply quoted rules: volume of $2.2M is not above $5M (PRC-2025.1§5); no promotion is used (PRC-2025.1§6); no strategic exception is used (PRC-2025.1§7); and cost data is available (PRC-2025.1§8, FACT-cost). No market rates, risk assertions or invented policy rules are used.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+    "error": null,
+    "execution_mode": "live",
+    "label_source": "llm_judge",
+    "token_usage": {
+      "input_tokens": 3906,
+      "output_tokens": 1007,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    },
+    "latency_ms": 9573,
+    "created_at": "2026-10-13T07:55:16.221Z"
+  },
+  {
+    "judge_result_id": "judge_f58f13325da8",
+    "judge_id": "unsupported_pricing_justification",
+    "judge_version": "upj-prompt-v1+claude-opus-5-5+0078a9e5",
+    "model_id": "claude-opus-5-5",
+    "served_model_id": "claude-opus-5-5",
+    "trace_id": "trace_ae1e4fa8559b",
+    "case_id": "C18",
+    "verdict": "PASS",
+    "output": {
+      "failure_detected": false,
+      "evidence_ids": [
+        "FACT-profile",
+        "FACT-volume",
+        "FACT-transactions",
+        "FACT-cost",
+        "FACT-request",
+        "FACT-exception",
+        "FACT-decision_date",
+        "PRC-2026.1§1",
+        "PRC-2026.1§2",
+        "PRC-2026.1§3",
+        "PRC-2026.1§4",
+        "PRC-2026.1§5",
+        "PRC-2026.1§6",
+        "PRC-2026.1§8"
+      ],
+      "relevant_claims": [
+        "At the requested price ... gross margin of 32.51%. That clears the 32% minimum for micro merchants, but only narrowly.",
+        "No promotion or exception is requested, so no margin relief applies (SPRING26 has also expired as of the decision date).",
+        "Pricing desk review is not required because merchant-specific cost data is available.",
+        "Deal desk approval is not required because volume is below $4,000,000."
+      ],
+      "explanation": "Every material claim traces to the evidence. Policy window and selection: PRC-2026.1§1 with FACT-decision_date. Merchant size, volume, transactions and cost: FACT-profile, FACT-volume, FACT-transactions, FACT-cost. Margin formula and the 32% micro minimum: PRC-2026.1§3. Micro list rate: PRC-2026.1§2. Discount formula and the >12% regional_pricing_manager rule: PRC-2026.1§4. The $4,000,000 deal-desk threshold: PRC-2026.1§5. SPRING26 validity ending 2026-06-30: PRC-2026.1§6. Pricing-desk routing only when cost data is missing: PRC-2026.1§8. The merchant's 'new pricing rules' and lock-in remark is explicitly labeled as the merchant's unverified statement (FACT-request), not presented as fact. The agent also declines to speculate about a successor policy. No market rates, risk claims or invented policy rules are introduced.",
+      "uncertainty_reason": null
+    },
+    "raw_response": "{\"relevant_claims\":[\"At the requested price ... gross margin of 32.51%. That clears the 32% minimum for micro merchants, but only narrowly.\",\"No promotion or exception is requested, so no margin relief applies (SPRING26 has also expired as of the decision date).\",\"Pricing desk review is not required because merchant-specific cost data is available.\",\"Deal desk approval is not required because volume is below $4,000,000.\"],\"evidence_ids\":[\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\",\"FACT-cost\",\"FACT-request\",\"FACT-exception\",\"FACT-decision_date\",\"PRC-2026.1§1\",\"PRC-2026.1§2\",\"PRC-2026.1§3\",\"PRC-2026.1§4\",\"PRC-2026.1§5\",\"PRC-2026.1§6\",\"PRC-2026.1§8\"],\"explanation\":\"Every material claim traces to the evidence. Policy window and selection: PRC-2026.1§1 with FACT-decision_date. Merchant size, volume, transactions and cost: FACT-profile, FACT-volume, FACT-transactions, FACT-cost. Margin formula and the 32% micro minimum: PRC-2026.1§3. Micro list rate: PRC-2026.1§2. Discount formula and the >12% regional_pricing_manager rule: PRC-2026.1§4. The $4,000,000 deal-desk threshold: PRC-2026.1§5. SPRING26 validity ending 2026-06-30: PRC-2026.1§6. Pricing-desk routing only when cost data is missing: PRC-2026.1§8. The merchant's 'new pricing rules' and lock-in remark is explicitly labeled as the merchant's unverified statement (FACT-request), not presented as fact. The agent also declines to speculate about a successor policy. No market rates, risk claims or invented policy rules are introduced.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+    "error": null,
+    "execution_mode": "live",
+    "label_source": "llm_judge",
+    "token_usage": {
+      "input_tokens": 3796,
+      "output_tokens": 810,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    },
+    "latency_ms": 12521,
+    "created_at": "2026-10-13T07:55:16.223Z"
+  },
+  {
+    "judge_result_id": "judge_36f34e348a2e",
+    "judge_id": "unsupported_pricing_justification",
+    "judge_version": "upj-prompt-v1+claude-opus-5-5+0078a9e5",
+    "trace_id": "trace_0277b0c0dc0c",
+    "case_id": "C20",
+    "label_source": "llm_judge",
+    "created_at": "2026-10-13T07:55:16.228Z",
+    "model_id": "claude-opus-5-5",
+    "served_model_id": "claude-opus-5-5",
+    "verdict": "PASS",
+    "output": {
+      "relevant_claims": [
+        "Because PRC-2025.1 expires on 2026-04-01, the decision should be finalized on 2026-03-31.",
+        "The margin headroom is thin, at about 0.73 percentage points above the minimum.",
+        "Merchant-specific cost data is unavailable, so the default cost basis of 1.90% + $0.10 per transaction is used and the decision is routed to pricing_desk."
+      ],
+      "evidence_ids": [
+        "PRC-2025.1§1",
+        "FACT-decision_date",
+        "PRC-2025.1§3",
+        "PRC-2025.1§8",
+        "FACT-cost",
+        "FACT-request",
+        "PRC-2025.1§2",
+        "PRC-2025.1§4",
+        "PRC-2025.1§5",
+        "PRC-2025.1§6",
+        "PRC-2025.1§7",
+        "FACT-exception",
+        "FACT-profile",
+        "FACT-volume",
+        "FACT-transactions"
+      ],
+      "explanation": "No material claim is unsupported.\n- **Policy and date:** The policy window and decision date match PRC-2025.1§1 and FACT-decision_date.\n- **Merchant request:** The requested price is correctly labeled as the merchant's unverified statement (FACT-request).\n- **List rate:** Mid-size list pricing of 2.40% + $0.20 is quoted from PRC-2025.1§2.\n- **Cost basis and routing:** FACT-cost confirms no merchant-specific cost data. PRC-2025.1§8 supplies the default 1.90% + $0.10 cost basis and the pricing_desk routing.\n- **Margin:** Revenue, cost, profit and margin follow by straightforward arithmetic from FACT-volume, FACT-transactions and FACT-request using the PRC-2025.1§3 formula. The 24% mid-size minimum is stated in §3.\n- **Discount:** The discount is computed per §4 against list revenue of $20,160 and checked against the §4 15% threshold.\n- **Other approvals:** The deal_desk volume threshold is from §5. No promotion or exception is requested (FACT-exception), so the §6 and §7 approvals do not apply.\n- **Headroom remark:** The 'thin headroom' comment is simply 24.73 − 24.\n- **Finalize-date remark:** The closing advice to finalize on 2026-03-31 follows from the §1 expiry and the given decision date. It is not used to justify the price, the decision or the routing.",
+      "uncertainty_reason": null,
+      "failure_detected": false
+    },
+    "raw_response": "{\"relevant_claims\":[\"Because PRC-2025.1 expires on 2026-04-01, the decision should be finalized on 2026-03-31.\",\"The margin headroom is thin, at about 0.73 percentage points above the minimum.\",\"Merchant-specific cost data is unavailable, so the default cost basis of 1.90% + $0.10 per transaction is used and the decision is routed to pricing_desk.\"],\"evidence_ids\":[\"PRC-2025.1§1\",\"FACT-decision_date\",\"PRC-2025.1§3\",\"PRC-2025.1§8\",\"FACT-cost\",\"FACT-request\",\"PRC-2025.1§2\",\"PRC-2025.1§4\",\"PRC-2025.1§5\",\"PRC-2025.1§6\",\"PRC-2025.1§7\",\"FACT-exception\",\"FACT-profile\",\"FACT-volume\",\"FACT-transactions\"],\"explanation\":\"No material claim is unsupported.\\n- **Policy and date:** The policy window and decision date match PRC-2025.1§1 and FACT-decision_date.\\n- **Merchant request:** The requested price is correctly labeled as the merchant's unverified statement (FACT-request).\\n- **List rate:** Mid-size list pricing of 2.40% + $0.20 is quoted from PRC-2025.1§2.\\n- **Cost basis and routing:** FACT-cost confirms no merchant-specific cost data. PRC-2025.1§8 supplies the default 1.90% + $0.10 cost basis and the pricing_desk routing.\\n- **Margin:** Revenue, cost, profit and margin follow by straightforward arithmetic from FACT-volume, FACT-transactions and FACT-request using the PRC-2025.1§3 formula. The 24% mid-size minimum is stated in §3.\\n- **Discount:** The discount is computed per §4 against list revenue of $20,160 and checked against the §4 15% threshold.\\n- **Other approvals:** The deal_desk volume threshold is from §5. No promotion or exception is requested (FACT-exception), so the §6 and §7 approvals do not apply.\\n- **Headroom remark:** The 'thin headroom' comment is simply 24.73 − 24.\\n- **Finalize-date remark:** The closing advice to finalize on 2026-03-31 follows from the §1 expiry and the given decision date. It is not used to justify the price, the decision or the routing.\",\"uncertainty_reason\":null,\"failure_detected\":false}",
+    "error": null,
+    "execution_mode": "live",
+    "token_usage": {
+      "input_tokens": 3760,
+      "output_tokens": 1225,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    },
+    "latency_ms": 11671
   }
 ]

@@ -16,17 +16,25 @@ The agent under test has two configurations:
 
 # The tabs (link to them with markdown links exactly like these)
 - [Overview](/) — progress through the 9-step demo path, release status, headline numbers.
-- [Trace Review](/review) — run a case, read the trace (merchant request, recommendation, cited evidence, raw prompts), label it pass/fail with notes, first failure, severity. Automated results stay hidden until you save your own label, so you aren't anchored.
+- [Trace Review](/review) — run a case, read the trace (merchant request, recommendation, cited evidence, raw prompts), then review it with a quick form: a 5-question checklist (✓ fine / ✗ problem / ? unsure), overall Pass/Fail, and on Fail one line on the first thing that went wrong plus a severity. Automated results stay hidden until you save your own review, so you aren't anchored; afterwards a "you vs automated checks" view compares them.
+  - [Rubric](/review/rubric) — the versioned review checklist and the editable AI-judge criterion (the judge prompt is built from it).
   - [Failure taxonomy](/review/taxonomy) — axial coding: group your notes into failure categories. Seed categories are only hypotheses until a human annotation is linked.
   - [Gold dataset](/review/gold) — promote human-reviewed traces into gold labels (dev or held-out).
 - [Evaluators](/evaluators) — 4 deterministic binary checks (margin_calculation_error, stale_policy_used, missing_mandatory_approval, margin_guardrail_violation) + 1 experimental LLM judge (unsupported_pricing_justification). Judge calibration shows the confusion matrix and TPR/TNR vs human labels. Held-out data is locked until an audited reveal.
 - [Experiments](/experiments) — run Baseline and Corrected on the same content-hashed frozen set (FROZEN-DEV-v1, FROZEN-FULL-v1) and compare case by case: fixes, regressions, remaining failures, cost, latency.
 - [Release Gate](/release) — NO SHIP / INSUFFICIENT EVIDENCE / ELIGIBLE FOR DEMO APPROVAL / APPROVED FOR DEMO, with blocking reasons, and a separate named human approval bound to the evidence snapshot.
 
+# Rules the app enforces (explain them when they block the user)
+- Review target: 5–10 human-reviewed traces for error analysis (a demo minimum; real error analysis needs far more).
+- Every case in the candidate run needs a human review before the release gate can say ELIGIBLE — the AI judge is unvalidated, so even its PASS verdicts don't exempt a case.
+- Held-out cases can't be run at all (single runs, batches or copies) until the audited, irreversible held-out reveal. Don't tune prompts or the judge after revealing.
+- Frozen sets pin both the test cases and the pricing policies; if either changes, runs on that set are refused and older runs stop being comparable.
+- The spend cap is enforced per live call against its worst-case cost, so a batch can stop early when little cap is left. Batch costs shown before running are rough estimates, not guarantees.
+
 # The 9-step demo path (about 5 minutes)
 1. Execute a pricing case — Trace Review → run C04 with Baseline.
 2. Inspect the trace — request, recommendation, claims with cited evidence.
-3. Record a human annotation — notes, Fail, first failure (e.g. "used policy 2026.1 although 2026.2 is effective"), severity, judge-criterion label. Enter a reviewer name first.
+3. Record a human review — enter a reviewer name first, answer the 5-question checklist, mark Fail, write the first failure in one line (e.g. "used policy 2026.1 although 2026.2 is effective") and pick a severity.
 4. Classify the failure — Failure taxonomy → assign the note to "Wrong policy version".
 5. Run a targeted evaluator — the saved trace shows stale_policy_used: FAIL.
 6. Judge–human agreement — Evaluators → calibration.

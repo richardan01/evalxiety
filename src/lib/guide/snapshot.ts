@@ -37,9 +37,10 @@ export async function guideState(page: string): Promise<GuideState> {
 const PAGE_HELP: Record<string, string> = {
   "/": "**Overview** shows how far you are through the demo path and the current release status.",
   "/review":
-    "**Trace Review** is where you run a case and judge it yourself. A *trace* is one recorded run of the agent. Pick a case and config, run it, open the trace, then save a pass/fail label with a note on the first failure.",
+    "**Trace Review** is where you run a case and judge it yourself. A *trace* is one recorded run of the agent. Pick a case and config, run it, open the trace, then answer the 5-question checklist (✓ / ✗ / ?), mark Pass or Fail, and on Fail add one line on the first failure plus a severity.",
   "/review/taxonomy":
     "**Failure taxonomy** groups your reviewer notes into failure categories so you can count which problems happen most.",
+  "/review/rubric": "**Rubric** is the review checklist and the AI judge's criterion. Edits create a new version, and the judge prompt is built from it.",
   "/review/gold": "**Gold dataset** turns human-reviewed traces into trusted labels used to check the LLM judge.",
   "/evaluators":
     "**Evaluators** shows the automatic checks: 4 deterministic code checks and 1 experimental LLM judge, plus how well the judge agrees with human labels.",

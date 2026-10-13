@@ -165,7 +165,7 @@ export function PaidBatchDialog({
             <dd className="tabular-nums">{estimate.agent_calls}</dd>
             <dt className="text-slate-500">Judge calls</dt>
             <dd className="tabular-nums">{estimate.judge_calls}</dd>
-            <dt className="text-slate-500">Estimated maximum</dt>
+            <dt className="text-slate-500">Rough estimate</dt>
             <dd className="text-lg font-semibold tabular-nums text-slate-900">{fmtUsd(estimate.estimated_max_usd)}</dd>
           </dl>
           <p className="text-xs text-slate-600">{estimate.note}</p>
@@ -176,7 +176,7 @@ export function PaidBatchDialog({
             Cancel — don&apos;t spend
           </Button>
           <Button variant="danger" onClick={onConfirm} disabled={busy}>
-            {busy ? "Starting…" : `Confirm and spend up to ${fmtUsd(estimate.estimated_max_usd)}`}
+            {busy ? "Starting…" : `Confirm — roughly ${fmtUsd(estimate.estimated_max_usd)}`}
           </Button>
         </div>
       </div>

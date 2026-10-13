@@ -210,3 +210,58 @@ export function Ratio({ value, undefinedReason }: { value: number | null; undefi
   }
   return <span className="tabular-nums">{(value * 100).toFixed(1)}%</span>;
 }
+
+// ---------------------------------------------------------------------------
+// Low-text layout helpers (shared by every tab)
+// ---------------------------------------------------------------------------
+
+/** Small ⓘ that reveals an explanation on click/hover. Use instead of paragraphs of helper text. */
+export function InfoTip({ children, label = "What is this?" }: { children: ReactNode; label?: string }) {
+  return (
+    <details className="group relative inline-block align-middle">
+      <summary
+        aria-label={label}
+        title={label}
+        className="flex h-4 w-4 cursor-pointer list-none items-center justify-center rounded-full border border-slate-300 text-[10px] font-semibold text-slate-500 hover:border-slate-500 hover:text-slate-800 [&::-webkit-details-marker]:hidden"
+      >
+        i
+      </summary>
+      <div className="absolute left-0 z-20 mt-1 w-72 rounded-md border border-slate-200 bg-white p-3 text-xs font-normal leading-relaxed text-slate-700 shadow-lg">
+        {children}
+      </div>
+    </details>
+  );
+}
+
+/** One-line page header: what you're looking at + the single primary action. */
+export function PageHeader({ title, question, info, action }: { title: string; question: ReactNode; info?: ReactNode; action?: ReactNode }) {
+  return (
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <h1 className="text-xl font-semibold tracking-tight text-slate-900">{title}</h1>
+        <p className="mt-0.5 flex items-center gap-2 text-sm text-slate-500">
+          {question}
+          {info && <InfoTip>{info}</InfoTip>}
+        </p>
+      </div>
+      {action}
+    </div>
+  );
+}
+
+/** Big status pill with an icon so status is never colour-only. */
+export function StatusPill({ status }: { status: string }) {
+  const map: Record<string, { label: string; icon: string; cls: string }> = {
+    NO_SHIP: { label: "No ship", icon: "✕", cls: "bg-rose-600 text-white" },
+    INSUFFICIENT_EVIDENCE: { label: "Not enough evidence", icon: "…", cls: "bg-amber-400 text-amber-950" },
+    ELIGIBLE_FOR_DEMO_APPROVAL: { label: "Ready for approval", icon: "✓", cls: "bg-sky-600 text-white" },
+    APPROVED_FOR_DEMO: { label: "Approved for demo", icon: "✓", cls: "bg-emerald-600 text-white" },
+  };
+  const m = map[status] ?? { label: status, icon: "•", cls: "bg-slate-700 text-white" };
+  return (
+    <span className={cx("inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold", m.cls)}>
+      <span aria-hidden>{m.icon}</span>
+      {m.label}
+    </span>
+  );
+}

@@ -180,7 +180,7 @@ export function AutomatedChecks({
                     <p className="mt-1 text-[11px] leading-snug text-slate-500">
                       {evals.judge_call.mode === "live" ? (
                         <>
-                          <b className="text-slate-700">Spends Claude API credits:</b> one live call, estimated up to{" "}
+                          <b className="text-slate-700">Spends Claude API credits:</b> one live call, roughly{" "}
                           {fmtUsd(evals.judge_call.estimated_usd, 3)} ($0 if an identical request is cached). One trace only.
                         </>
                       ) : (
