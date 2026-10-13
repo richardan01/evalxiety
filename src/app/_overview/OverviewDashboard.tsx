@@ -2,14 +2,13 @@
 
 /**
  * Dashboard: tracks every eval run and the release verdict. Numbers come from
- * stored runs, traces and human labels (/api/overview). The "agent in focus"
- * (sidebar) picks which configuration the KPIs and check bars describe.
+ * stored runs, traces and human labels (/api/overview). KPIs and check bars always
+ * compare Baseline and Corrected side by side.
  */
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getJSON } from "@/lib/client/api";
 import { InfoTip, MockBadge, StatusPill, cx } from "@/components/ui";
-import { useFocusConfig } from "@/components/Sidebar";
 import { topReason } from "@/app/release/status";
 import { CheckBars, CountBars, TrendsChart } from "./DashboardCharts";
 import type { OverviewData } from "./types";
@@ -70,7 +69,6 @@ function Panel({ title, info, right, children, className }: { title: string; inf
 export function OverviewDashboard() {
   const [o, setO] = useState<OverviewData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [focus] = useFocusConfig();
 
   useEffect(() => {
     getJSON<OverviewData>("/api/overview")
@@ -82,8 +80,10 @@ export function OverviewDashboard() {
   if (!o) return <p className="text-sm text-slate-500">Loading…</p>;
 
   const t = o.trend;
-  const fp = t.points.find((p) => p.config_id === focus) ?? t.points[t.points.length - 1] ?? null;
-  const other = t.points.find((p) => p !== fp) ?? null;
+  const baseline = t.points.find((p) => p.role === "baseline") ?? null;
+  const corrected = t.points.find((p) => p.role === "corrected") ?? null;
+  const both = baseline && corrected ? { b: baseline, c: corrected } : null;
+  const modes = [...new Set(t.points.map((p) => p.execution_mode))];
   const reviewed = o.review.reviewed_traces;
   const minReviews = o.review.target_min;
   const fullRunDone = o.candidate_run !== null;
@@ -105,8 +105,16 @@ export function OverviewDashboard() {
         ? { href: "/experiments", label: "Run the final check" }
         : { href: "/release", label: "Open the release gate" };
 
-  const passDelta = fp && other && fp.pass_all_rate !== null && other.pass_all_rate !== null ? Math.round((fp.pass_all_rate - other.pass_all_rate) * 100) : null;
-  const critDelta = fp && other ? fp.critical_failures - other.critical_failures : null;
+  const passDelta =
+    both && both.b.pass_all_rate !== null && both.c.pass_all_rate !== null ? Math.round((both.c.pass_all_rate - both.b.pass_all_rate) * 100) : null;
+  const critDelta = both ? both.c.critical_failures - both.b.critical_failures : null;
+  const arrow = (from: React.ReactNode, to: React.ReactNode) => (
+    <span className="whitespace-nowrap text-2xl">
+      <span className="text-slate-400">{from}</span>
+      <span className="mx-1.5 text-slate-300">→</span>
+      {to}
+    </span>
+  );
   const nCases = (ids: string[]) => ids.length;
 
   return (
@@ -123,8 +131,10 @@ export function OverviewDashboard() {
           </div>
         </div>
         <span className="flex items-center gap-2 text-xs text-slate-500">
-          Focus: <b className="text-slate-800">{fp?.label ?? "—"}</b>
-          {fp && <MockBadge mode={fp.execution_mode} />}
+          <b className="text-slate-800">Baseline vs Corrected</b>
+          {modes.map((m) => (
+            <MockBadge key={m} mode={m} />
+          ))}
         </span>
       </div>
 
@@ -143,16 +153,16 @@ export function OverviewDashboard() {
         <Kpi
           icon="✅"
           label="Pass-all rate"
-          value={fp ? `${fp.pass_all_count}/${fp.n_cases}` : "—"}
-          delta={passDelta !== null ? `${passDelta >= 0 ? "▲ +" : "▼ "}${passDelta} pts vs ${other?.label}` : undefined}
+          value={both ? arrow(`${both.b.pass_all_count}/${both.b.n_cases}`, `${both.c.pass_all_count}/${both.c.n_cases}`) : "—"}
+          delta={passDelta !== null ? `${passDelta >= 0 ? "▲ +" : "▼ "}${passDelta} pts` : undefined}
           deltaTone={passDelta === null ? "flat" : passDelta > 0 ? "up" : passDelta < 0 ? "down" : "flat"}
           info="Cases where every code check passes (policy, margin math, margin floor, approvals). The AI judge is not included."
         />
         <Kpi
           icon="⚠️"
           label="Critical failures"
-          value={fp ? fp.critical_failures : "—"}
-          delta={critDelta !== null ? (critDelta === 0 ? `same as ${other?.label}` : critDelta < 0 ? `▼ ${-critDelta} fewer than ${other?.label}` : `▲ ${critDelta} more than ${other?.label}`) : undefined}
+          value={both ? arrow(both.b.critical_failures, both.c.critical_failures) : "—"}
+          delta={critDelta !== null ? (critDelta === 0 ? "no change" : critDelta < 0 ? `▼ ${-critDelta} fewer` : `▲ ${critDelta} more`) : undefined}
           deltaTone={critDelta === null ? "flat" : critDelta < 0 ? "up" : critDelta > 0 ? "down" : "flat"}
           sub={critical.length ? `new: ${critical.map((c) => c.case_id).join(", ")}` : undefined}
           info="Cases breaking a policy rule: wrong policy, margin below floor, or a missing required approval."
@@ -185,8 +195,12 @@ export function OverviewDashboard() {
         >
           <TrendsChart history={o.history} />
         </Panel>
-        <Panel title="Check performance" info="Pass vs fail per code check in the latest run of the agent in focus." right={fp ? `${fp.label} · ${fp.n_cases} cases` : undefined}>
-          <CheckBars point={fp} />
+        <Panel
+          title="Check performance"
+          info="Cases passing each code check: latest Baseline run vs latest Corrected run on the same frozen cases."
+          right={corrected ? `${corrected.n_cases} cases` : undefined}
+        >
+          <CheckBars baseline={baseline} corrected={corrected} />
         </Panel>
       </div>
 
@@ -195,11 +209,11 @@ export function OverviewDashboard() {
           <CountBars
             rows={[
               { label: "✓ Fixed", count: nCases(t.fixed), color: "#0ca30c" },
-              { label: "= Still passing", count: Math.max(0, (fp?.n_cases ?? 0) - t.fixed.length - t.regressed.length - t.still_failing.length), color: "#94a3b8" },
+              { label: "= Still passing", count: Math.max(0, (corrected?.n_cases ?? 0) - t.fixed.length - t.regressed.length - t.still_failing.length), color: "#94a3b8" },
               { label: "✕ Still failing", count: nCases(t.still_failing), color: "#eda100" },
               { label: "↓ Broke", count: nCases(t.regressed), color: "#d03b3b" },
             ]}
-            max={fp?.n_cases}
+            max={corrected?.n_cases}
           />
         </Panel>
         <Panel title="Pipeline progress" info="How far the evaluation has come: runs → human labels → failure types → gold set → AI judge.">

@@ -35,7 +35,7 @@ export async function guideState(page: string): Promise<GuideState> {
 }
 
 const PAGE_HELP: Record<string, string> = {
-  "/": "**Dashboard** shows your KPIs, eval trends across runs, pass/fail per check, what changed, and how far you are through the pipeline. The sidebar's *Agent in focus* picks which configuration it describes.",
+  "/": "**Dashboard** compares Baseline and Corrected side by side: headline numbers as *baseline → corrected*, eval trends across runs, two bars per check (Baseline grey, Corrected blue), what changed, and how far you are through the pipeline.",
   "/review":
     "**Review traces** is where you run a case and judge it yourself. A *trace* is one recorded run of the agent. Pick a case and config, run it, open the trace, then answer the 5-question checklist (✓ / ✗ / ?), mark Pass or Fail, and on Fail add one line on the first failure plus a severity.",
   "/review/taxonomy": "**Axial coding** groups your review notes into failure types so you can count which problems happen most.",

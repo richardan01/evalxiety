@@ -19,8 +19,6 @@ const SERIES = [
   { key: "margin_guardrail_violation", label: "Margin floor", color: "#eda100" },
   { key: "missing_mandatory_approval", label: "Approvals", color: "#e87ba4" },
 ];
-const GOOD = "#0ca30c";
-const CRITICAL = "#d03b3b";
 const GRID = "#e5e7eb";
 
 const pct = (r: number | null | undefined) => (r === null || r === undefined ? "—" : `${Math.round(r * 100)}%`);
@@ -158,44 +156,73 @@ export function TrendsChart({ history }: { history: History }) {
   );
 }
 
-/** Pass vs fail per check for the run in focus (status colours + labels, never colour alone). */
-export function CheckBars({ point }: { point: OverviewData["trend"]["points"][number] | null }) {
-  if (!point) return <Empty>No run for this configuration yet.</Empty>;
-  const names: Record<string, string> = {
-    stale_policy_used: "Right policy",
-    margin_calculation_error: "Margin math",
-    margin_guardrail_violation: "Margin floor",
-    missing_mandatory_approval: "Approvals",
-  };
+type TrendPoint = OverviewData["trend"]["points"][number];
+
+const CHECK_NAMES: Record<string, string> = {
+  stale_policy_used: "Right policy",
+  margin_calculation_error: "Margin math",
+  margin_guardrail_violation: "Margin floor",
+  missing_mandatory_approval: "Approvals",
+};
+const BASELINE_FILL = "#94a3b8"; // neutral: the "before" series
+const CORRECTED_FILL = "#2a78d6"; // categorical slot 1: the "after" series
+
+/**
+ * Cases passing each check: Baseline vs Corrected, two bars per check.
+ * Series identity = fill + legend; status colour is used only on the x/n text (green = all pass, red = failures).
+ */
+export function CheckBars({ baseline, corrected }: { baseline: TrendPoint | null; corrected: TrendPoint | null }) {
+  if (!baseline && !corrected) return <Empty>Run Baseline and Corrected in Experiments to compare checks.</Empty>;
+  const series = [
+    { key: "baseline", label: "Baseline", fill: BASELINE_FILL, point: baseline },
+    { key: "corrected", label: "Corrected", fill: CORRECTED_FILL, point: corrected },
+  ];
+  const ids = (corrected ?? baseline)!.checks.map((c) => c.evaluator_id);
   const H = 170;
   return (
     <div>
       <div className="mb-2 flex gap-4 text-xs text-slate-600">
-        <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: GOOD }} />✓ Pass rate</span>
-        <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: CRITICAL }} />✕ Fail rate</span>
+        {series.map((s) => (
+          <span key={s.key} className="flex items-center gap-1.5">
+            <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: s.fill }} />
+            {s.label}
+          </span>
+        ))}
+        <span className="ml-auto text-slate-400">
+          <span className="text-emerald-700">x/n</span> all pass · <span className="text-rose-700">x/n</span> has failures
+        </span>
       </div>
       <div className="flex items-end justify-around gap-4 border-b border-slate-200" style={{ height: H }}>
-        {point.checks.map((c) => {
-          const pass = c.total ? c.pass / c.total : 0;
-          const fail = c.total ? (c.total - c.pass) / c.total : 0;
-          return (
-            <div key={c.evaluator_id} className="flex items-end gap-1" title={`${names[c.evaluator_id]}: ${c.pass}/${c.total} pass`}>
-              {[
-                { v: pass, color: GOOD, label: `${c.pass}` },
-                { v: fail, color: CRITICAL, label: `${c.total - c.pass}` },
-              ].map((b, k) => (
-                <div key={k} className="flex flex-col items-center justify-end" style={{ height: H }}>
-                  <span className="mb-0.5 text-[10px] tabular-nums text-slate-600">{b.label}</span>
-                  <div className="w-6 rounded-t" style={{ height: Math.max(2, b.v * (H - 18)), background: b.color }} />
+        {ids.map((id) => (
+          <div key={id} className="flex items-end gap-1.5">
+            {series.map((s) => {
+              const c = s.point?.checks.find((x) => x.evaluator_id === id);
+              const rate = c && c.total ? c.pass / c.total : 0;
+              return (
+                <div
+                  key={s.key}
+                  className="flex flex-col items-center justify-end"
+                  style={{ height: H }}
+                  title={c ? `${CHECK_NAMES[id]} · ${s.label}: ${c.pass} of ${c.total} cases pass` : `${s.label}: no run`}
+                >
+                  <span
+                    className={cx(
+                      "mb-0.5 text-[10px] font-medium tabular-nums",
+                      !c ? "text-slate-400" : c.pass === c.total ? "text-emerald-700" : "text-rose-700",
+                    )}
+                  >
+                    {c ? `${c.pass}/${c.total}` : "—"}
+                  </span>
+                  <div className="w-6 rounded-t" style={{ height: c ? Math.max(2, rate * (H - 18)) : 0, background: s.fill }} />
                 </div>
-              ))}
-            </div>
-          );
-        })}
+              );
+            })}
+          </div>
+        ))}
       </div>
       <div className="mt-1 flex justify-around text-xs text-slate-600">
-        {point.checks.map((c) => (
-          <span key={c.evaluator_id}>{names[c.evaluator_id]}</span>
+        {ids.map((id) => (
+          <span key={id}>{CHECK_NAMES[id]}</span>
         ))}
       </div>
     </div>

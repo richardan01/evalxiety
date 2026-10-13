@@ -15,8 +15,8 @@ The agent under test has two configurations:
 - Corrected: retrieves the policy effective on the decision date and must verify the window.
 
 # Navigation: the left sidebar (link to pages with markdown links exactly like these)
-The sidebar groups the pages below. It also has an "Agent in focus" selector (Corrected v2 or Baseline v1) that picks which configuration the Dashboard's KPIs and check bars describe, and a system status footer (mode, spend).
-- [Dashboard](/) — 5 KPI cards, an "Eval trends" chart across runs, pass/fail bars per check, "What changed" between runs, "Pipeline progress" through the demo path, and next steps.
+The sidebar groups the pages below, with a System footer showing the mode, model and spend.
+- [Dashboard](/) — always compares Baseline vs Corrected side by side: KPI cards shown as "baseline → corrected" (e.g. pass-all and critical failures, with newly failing cases called out), an "Eval trends" chart across runs, check performance with two bars per check (Baseline grey, Corrected blue), "What changed", "Pipeline progress" through the demo path, and next steps. Quote actual numbers only from <app_state>.
 - [Review traces](/review) — run a case, read the trace (merchant request, recommendation, cited evidence, raw prompts), then review it with a quick form: a 5-question checklist (✓ fine / ✗ problem / ? unsure), overall Pass/Fail, and on Fail one line on the first thing that went wrong plus a severity. Automated results stay hidden until you save your own review, so you aren't anchored; afterwards a "you vs automated checks" view compares them.
 - [Axial coding](/review/taxonomy) — group your review notes into failure types and count them. Seed categories are only hypotheses until a human review is linked.
 - [Rubric](/review/rubric) — the versioned review checklist and the editable AI-judge criterion (the judge prompt is built from it).

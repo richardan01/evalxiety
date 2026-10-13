@@ -1,12 +1,12 @@
 "use client";
 
 /**
- * App sidebar: navigation grouped by workflow stage, the agent configuration in
- * focus (drives the dashboard), and live system status (mode + spend).
+ * App sidebar: navigation grouped by workflow stage and live system status
+ * (mode, model, spend).
  */
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import { cx } from "./ui";
 
 const NAV: Array<{ section: string; items: Array<{ href: string; label: string; icon: string; hint: string }> }> = [
@@ -31,37 +31,6 @@ const NAV: Array<{ section: string; items: Array<{ href: string; label: string; 
   { section: "Integrate", items: [{ href: "/connect", label: "Connect (MCP)", icon: "⌁", hint: "Claude Desktop / Claude Code" }] },
 ];
 
-export const FOCUS_KEY = "agenttrust.focusConfig";
-const FOCUS_EVENT = "agenttrust:focus-changed";
-
-const CONFIGS = [
-  { id: "pricing-agent@corrected-v2", label: "Corrected v2", note: "effective-date policy lookup" },
-  { id: "pricing-agent@baseline-v1", label: "Baseline v1", note: "stale policy index" },
-];
-
-function subscribe(cb: () => void) {
-  window.addEventListener(FOCUS_EVENT, cb);
-  window.addEventListener("storage", cb);
-  return () => {
-    window.removeEventListener(FOCUS_EVENT, cb);
-    window.removeEventListener("storage", cb);
-  };
-}
-
-/** Agent configuration in focus (shared with the dashboard). */
-export function useFocusConfig(): [string, (id: string) => void] {
-  const value = useSyncExternalStore(
-    subscribe,
-    () => window.localStorage.getItem(FOCUS_KEY) ?? CONFIGS[0].id,
-    () => CONFIGS[0].id,
-  );
-  const set = (id: string) => {
-    window.localStorage.setItem(FOCUS_KEY, id);
-    window.dispatchEvent(new Event(FOCUS_EVENT));
-  };
-  return [value, set];
-}
-
 interface ModeResponse {
   mode: "live" | "mock";
   reason: string;
@@ -80,7 +49,6 @@ function isActive(pathname: string, href: string) {
 
 export function Sidebar() {
   const pathname = usePathname() ?? "/";
-  const [focus, setFocus] = useFocusConfig();
   const [mode, setMode] = useState<ModeResponse | null>(null);
 
   useEffect(() => {
@@ -138,29 +106,6 @@ export function Sidebar() {
           </div>
         ))}
 
-        <div className="mb-3">
-          <div className="px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Configuration</div>
-          <label className="block px-2">
-            <span className="text-[11px] text-slate-500">Agent in focus</span>
-            <select
-              value={focus}
-              onChange={(e) => setFocus(e.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100"
-            >
-              {CONFIGS.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
-            <span className="mt-1 block text-[11px] text-slate-500">{CONFIGS.find((c) => c.id === focus)?.note}</span>
-          </label>
-          {mode && (
-            <div className="mt-2 px-2 text-[11px] text-slate-500">
-              Model <span className="font-mono text-slate-300">{mode.model_id}</span>
-            </div>
-          )}
-        </div>
       </nav>
 
       <div className="border-t border-slate-800 px-5 py-4 text-xs">
@@ -169,6 +114,11 @@ export function Sidebar() {
           <span className={cx("h-2 w-2 rounded-full", mode?.mode === "live" ? "bg-emerald-400" : mode ? "bg-amber-400" : "bg-slate-600")} />
           <span className="text-slate-300">{mode ? (mode.mode === "live" ? "Live · Claude API connected" : "Mock mode · no spend") : "Checking…"}</span>
         </div>
+        {mode && (
+          <div className="mt-2 text-[11px] text-slate-500">
+            Model <span className="font-mono text-slate-300">{mode.model_id}</span>
+          </div>
+        )}
         {mode && (
           <div className="mt-3">
             <div className="flex justify-between text-slate-400">
