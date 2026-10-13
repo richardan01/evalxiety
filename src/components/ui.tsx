@@ -239,10 +239,10 @@ export function PageHeader({ title, question, info, action }: { title: string; q
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
         <h1 className="text-xl font-semibold tracking-tight text-slate-900">{title}</h1>
-        <p className="mt-0.5 flex items-center gap-2 text-sm text-slate-500">
+        <div className="mt-0.5 flex items-center gap-2 text-sm text-slate-500">
           {question}
           {info && <InfoTip>{info}</InfoTip>}
-        </p>
+        </div>
       </div>
       {action}
     </div>

@@ -35,18 +35,18 @@ export async function guideState(page: string): Promise<GuideState> {
 }
 
 const PAGE_HELP: Record<string, string> = {
-  "/": "**Overview** shows how far you are through the demo path and the current release status.",
+  "/": "**Dashboard** shows your KPIs, eval trends across runs, pass/fail per check, what changed, and how far you are through the pipeline. The sidebar's *Agent in focus* picks which configuration it describes.",
   "/review":
-    "**Trace Review** is where you run a case and judge it yourself. A *trace* is one recorded run of the agent. Pick a case and config, run it, open the trace, then answer the 5-question checklist (✓ / ✗ / ?), mark Pass or Fail, and on Fail add one line on the first failure plus a severity.",
-  "/review/taxonomy":
-    "**Failure taxonomy** groups your reviewer notes into failure categories so you can count which problems happen most.",
+    "**Review traces** is where you run a case and judge it yourself. A *trace* is one recorded run of the agent. Pick a case and config, run it, open the trace, then answer the 5-question checklist (✓ / ✗ / ?), mark Pass or Fail, and on Fail add one line on the first failure plus a severity.",
+  "/review/taxonomy": "**Axial coding** groups your review notes into failure types so you can count which problems happen most.",
   "/review/rubric": "**Rubric** is the review checklist and the AI judge's criterion. Edits create a new version, and the judge prompt is built from it.",
-  "/review/gold": "**Gold dataset** turns human-reviewed traces into trusted labels used to check the LLM judge.",
+  "/review/gold": "**Gold set** turns human-reviewed traces into trusted reference labels used to check the AI judge.",
   "/evaluators":
-    "**Evaluators** shows the automatic checks: 4 deterministic code checks and 1 experimental LLM judge, plus how well the judge agrees with human labels.",
-  "/experiments":
-    "**Experiments** runs Baseline and Corrected on the same frozen set of cases and compares them case by case.",
-  "/release": "**Release Gate** turns all the evidence into a ship / no-ship decision that a named human must approve.",
+    "**Checks** shows the automatic checks: 4 deterministic code checks and 1 experimental AI judge, plus how well the judge agrees with human labels.",
+  "/experiments": "**Experiments** runs Baseline and Corrected on the same frozen set of cases and compares them case by case.",
+  "/release": "**Release gate** turns all the evidence into a ship / no-ship decision that a named human must approve.",
+  "/connect":
+    "**Connect (MCP)** lets Claude Desktop or Claude Code read AgentTrust (release status, runs, traces, rubric) through a read-only MCP server. Copy the setup snippet for your client; the app must be running.",
 };
 
 function pageHelp(page: string): string {

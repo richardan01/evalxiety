@@ -159,7 +159,7 @@ export function RunsTable({
                         </span>
                       )}
                     </td>
-                    <td className="py-1.5 pr-3">
+                    <td className="py-1.5 pr-3 whitespace-nowrap">
                       <StatusCell row={row} stalled={isStalled(row)} />
                     </td>
                     <td className="py-1.5 pr-3 whitespace-nowrap">
@@ -188,7 +188,7 @@ export function RunsTable({
                     </td>
                     <td className="py-1.5 pr-3 text-xs whitespace-nowrap tabular-nums">{agentCost(summary, run.execution_mode)}</td>
                     <td className="py-1.5">
-                      <div className="flex items-start gap-1">
+                      <div className="flex items-start gap-1 whitespace-nowrap">
                         <Button variant="ghost" onClick={() => setExpanded(expanded === run.run_id ? null : run.run_id)}>
                           {expanded === run.run_id ? "Hide" : "Cases"}
                         </Button>

@@ -15,7 +15,7 @@ import {
   fmtDateTime,
 } from "@/components/ui";
 import { ALL, DEFAULT_FILTERS, NO_RUN, filterRows, modeMix, orderChecks, plainName, type MatrixFilters } from "./matrix";
-import { ExperimentalBadge, FilterSelect } from "./parts";
+import { ExperimentalBadge, FilterSelect, ModeMix } from "./parts";
 import type { EvaluatorCell, EvaluatorDefinition, EvaluatorResultRow, EvaluatorsResponse, JudgeCell } from "./types";
 
 const JUDGE_COL = "__judge__";
@@ -102,18 +102,8 @@ function MatrixBody({ data, initialRunId }: { data: EvaluatorsResponse; initialR
             Clear filters
           </Button>
         )}
-        <span className="ml-auto flex items-center gap-1.5 text-xs text-slate-500">
-          <b className="text-slate-800">{rows.length}</b> of {data.results.length} traces
-          {mix.live > 0 && (
-            <>
-              · <MockBadge mode="live" /> {mix.live}
-            </>
-          )}
-          {mix.mock > 0 && (
-            <>
-              · <MockBadge mode="mock" /> {mix.mock}
-            </>
-          )}
+        <span className="ml-auto">
+          <ModeMix shown={rows.length} total={data.results.length} live={mix.live} mock={mix.mock} />
         </span>
       </div>
 

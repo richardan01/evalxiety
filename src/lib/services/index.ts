@@ -80,13 +80,26 @@ export interface QueueItem {
   reviewed: boolean;
 }
 
-export async function reviewQueue(): Promise<{ items: QueueItem[]; reviewed_count: number; total: number }> {
-  const [traces, annotations] = await Promise.all([listTraces(), listAnnotations()]);
+export async function reviewQueue(): Promise<{ items: QueueItem[]; reviewed_count: number; total: number; hidden_superseded: number }> {
+  const [allTraces, annotations, runs] = await Promise.all([listTraces(), listAnnotations(), listExperimentRuns()]);
+  // Hide unlabelled traces from superseded runs (an older run of the same version on the same set, or a run on
+  // case/policy content that has since changed). Labels only count toward the gate on the current runs.
+  const current = new Set<string>();
+  for (const r of runs) {
+    if (r.status !== "completed" || !runMatchesFrozenContent(r)) continue;
+    const key = `${r.agent_config_id}|${r.frozen_set_id}|${r.execution_mode}`;
+    if (![...current].some((k) => k.startsWith(key + "|"))) current.add(`${key}|${r.run_id}`); // runs are newest-first
+  }
+  const currentRunIds = new Set([...current].map((k) => k.split("|")[3]));
+  const labelled = new Set(annotations.map((a) => a.trace_id));
+  const traces = allTraces.filter(
+    (t) => !t.experiment_run_id || currentRunIds.has(t.experiment_run_id) || labelled.has(t.trace_id) || runs.find((r) => r.run_id === t.experiment_run_id)?.status === "running",
+  );
   const items = traces.map((t) => {
     const anns = annotations.filter((a) => a.trace_id === t.trace_id);
     return { trace: t, split: splitOf(t.case_id), annotations: anns, reviewed: anns.length > 0 };
   });
-  return { items, reviewed_count: items.filter((i) => i.reviewed).length, total: items.length };
+  return { items, reviewed_count: items.filter((i) => i.reviewed).length, total: items.length, hidden_superseded: allTraces.length - traces.length };
 }
 
 /** Deterministic results + judge results for one trace (shown only after a human has reviewed it in the UI). */
@@ -483,6 +496,52 @@ export async function trendView() {
 }
 
 // ---------------------------------------------------------------------------
+// Run history (dashboard trends) and pipeline progress
+// ---------------------------------------------------------------------------
+
+export interface HistoryPoint {
+  run_id: string;
+  created_at: string;
+  config_id: string;
+  label: string;
+  frozen_set_id: string;
+  execution_mode: "live" | "mock";
+  current_content: boolean;
+  n_cases: number;
+  pass_all_rate: number | null;
+  checks: Record<string, number | null>; // evaluator_id -> pass rate
+  critical_cases: number;
+  judge_flags: number;
+}
+
+/** Every completed run, oldest first (live only when any live run exists). */
+export async function runHistory(): Promise<HistoryPoint[]> {
+  const [runs, judgeResults] = await Promise.all([listExperimentRuns(), listJudgeResults()]);
+  const done = runs.filter((r) => r.status === "completed");
+  const pool = done.some((r) => r.execution_mode === "live") ? done.filter((r) => r.execution_mode === "live") : done;
+  const out: HistoryPoint[] = [];
+  for (const run of [...pool].reverse()) {
+    const evals = await caseEvaluationsForRun(run, judgeResults);
+    const sum = summarizeRun(evals);
+    out.push({
+      run_id: run.run_id,
+      created_at: run.created_at,
+      config_id: run.agent_config_id,
+      label: getAgentConfig(run.agent_config_id).label,
+      frozen_set_id: run.frozen_set_id,
+      execution_mode: run.execution_mode,
+      current_content: runMatchesFrozenContent(run),
+      n_cases: sum.n_cases,
+      pass_all_rate: sum.pass_all_rate,
+      checks: Object.fromEntries(Object.entries(sum.per_evaluator).map(([k, v]) => [k, v.pass_rate])),
+      critical_cases: sum.cases_with_critical_failure.length,
+      judge_flags: sum.judge.FAIL,
+    });
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
 // Overview
 // ---------------------------------------------------------------------------
 
@@ -495,6 +554,12 @@ export async function overviewView() {
     taxonomyView(),
     trendView(),
   ]);
+  const [history, judgeResults] = await Promise.all([runHistory(), listJudgeResults()]);
+  const judgedTraces = new Set(judgeResults.map((j) => j.trace_id)).size;
+  const cal = await calibrationView({ split: "dev", mode: traces.some((t) => t.execution_mode === "live") ? "live" : "mock" });
+  const judge = cal.locked
+    ? null
+    : { n: cal.report.matrix.n, tpr: cal.report.tpr, tnr: cal.report.tnr, status_label: cal.report.status_label, mode: cal.mode };
   const reviewed = new Set(annotations.map((a) => a.trace_id));
   return {
     executions: {
@@ -524,5 +589,14 @@ export async function overviewView() {
     taxonomy_version: tax.version,
     scenario_count: SCENARIOS.length,
     trend,
+    history,
+    judge,
+    pipeline: [
+      { step: "Traces run", count: traces.length },
+      { step: "Human-reviewed", count: reviewed.size },
+      { step: "Failure types seen", count: tax.frequencies.filter((f) => f.any_count > 0).length },
+      { step: "Gold examples", count: gold.length },
+      { step: "Judged by AI", count: judgedTraces },
+    ],
   };
 }

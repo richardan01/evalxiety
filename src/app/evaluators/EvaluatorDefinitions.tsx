@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import { MockBadge, cx } from "@/components/ui";
+import { cx } from "@/components/ui";
 import { modeMix, orderChecks, plainName, tallyEvaluator, tallyJudge } from "./matrix";
-import { CheckTag, InfoTipLeft, SectionTitle } from "./parts";
+import { CheckTag, InfoTipLeft, ModeMix, SectionTitle } from "./parts";
 import type { EvaluatorDefinition, EvaluatorResultRow, JudgeDefinition } from "./types";
 
 /** Section A — the five checks as compact cards, each with its live pass count across stored traces. */
@@ -24,21 +24,7 @@ export function EvaluatorDefinitions({ deterministic, judge, rows }: {
             answer. Each is a single yes/no question — no scores, no weights.
           </>
         }
-        right={
-          <span className="flex items-center gap-1.5 text-xs text-slate-500">
-            across <b className="text-slate-800">{rows.length}</b> trace{rows.length === 1 ? "" : "s"}
-            {mix.live > 0 && (
-              <>
-                · <MockBadge mode="live" /> {mix.live}
-              </>
-            )}
-            {mix.mock > 0 && (
-              <>
-                · <MockBadge mode="mock" /> {mix.mock}
-              </>
-            )}
-          </span>
-        }
+        right={<ModeMix shown={rows.length} live={mix.live} mock={mix.mock} />}
       />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">

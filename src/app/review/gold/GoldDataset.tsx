@@ -33,10 +33,11 @@ function SplitStat({ label, value, of, children, heldout }: { label: string; val
   );
 }
 
-function SectionHead({ children, right }: { children: ReactNode; right?: ReactNode }) {
+function SectionHead({ children, info, right }: { children: ReactNode; info?: ReactNode; right?: ReactNode }) {
   return (
     <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 px-4 py-2">
-      <h2 className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-slate-400">{children}</h2>
+      <h2 className="text-[11px] font-medium uppercase tracking-wide text-slate-400">{children}</h2>
+      {info && <InfoTip>{info}</InfoTip>}
       {right && <div className="ml-auto flex items-center gap-2">{right}</div>}
     </div>
   );
@@ -151,14 +152,17 @@ export function GoldDataset() {
       </section>
 
       <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
-        <SectionHead>
+        <SectionHead
+          info={
+            <>
+              Human labels on frozen dev/held-out cases that aren&apos;t gold yet, or changed since promotion. One label per trace can be
+              gold. Custom cases never qualify.
+              {data.superseded_by_other_annotation > 0 &&
+                ` ${data.superseded_by_other_annotation} other label(s) hidden: another reviewer's label of the same trace is already gold.`}
+            </>
+          }
+        >
           Ready to promote ({data.candidates.length})
-          <InfoTip>
-            Human labels on frozen dev/held-out cases that aren&apos;t gold yet, or changed since promotion. One label per trace can be
-            gold. Custom cases never qualify.
-            {data.superseded_by_other_annotation > 0 &&
-              ` ${data.superseded_by_other_annotation} other label(s) hidden: another reviewer's label of the same trace is already gold.`}
-          </InfoTip>
         </SectionHead>
         {data.candidates.length === 0 ? (
           <p className="px-4 py-3 text-sm text-slate-500">

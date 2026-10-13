@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
-import { Badge, InfoTip, Ratio, cx } from "@/components/ui";
+import { Badge, InfoTip, Ratio, cx, fmtUsd } from "@/components/ui";
 import type { CaseChange, EvaluatorTally, PairedCase, RunSummary } from "@/lib/metrics/experiments";
 import { apiRequest } from "./request";
 import { ChangeBadge, Dot, DotLegend, DotPair, agentCost, checkLabel, fmtInt, fmtMs, humanize } from "./shared";
@@ -147,11 +147,11 @@ export function ResultStrip({ d }: { d: CompareData }) {
             {cmp.new_regressions.slice(0, 3).map((r) => {
               const pair = cmp.pairs.find((p) => p.case_id === r.case_id);
               return (
-                <div key={`${r.case_id}-${r.evaluator_id}`} className="truncate">
-                  <b className="font-mono">{r.case_id}</b> · {checkLabel(r.evaluator_id)} check now fails
+                <div key={`${r.case_id}-${r.evaluator_id}`} title={`${r.case_id}: ${humanize(r.evaluator_id)} passed for Baseline, fails for Corrected`}>
+                  <b className="font-mono">{r.case_id}</b> · {checkLabel(r.evaluator_id)} now fails
                   {pair?.candidate.trace_id && (
                     <>
-                      {" "}
+                      {" · "}
                       <Link className="underline" href={`/review/${pair.candidate.trace_id}`}>
                         trace
                       </Link>
@@ -447,6 +447,13 @@ export function PerCheckTable({ d, evaluators }: { d: CompareData; evaluators: E
       </table>
     </div>
   );
+}
+
+/** One-line cost summary for the collapsed section header. */
+export function costSummary(d: CompareData): string {
+  const side = (s: RunSummary, mode: "live" | "mock") =>
+    mode === "mock" ? "$0 (mock)" : `${fmtUsd(s.total_cost_usd)}${s.n_with_trace > 0 && s.cache_hits === s.n_with_trace ? " (cached)" : ""}`;
+  return `agent cost ${side(d.comparison.baseline_summary, d.baseline.run.execution_mode)} → ${side(d.comparison.candidate_summary, d.candidate.run.execution_mode)}`;
 }
 
 export function CostTable({ d }: { d: CompareData }) {

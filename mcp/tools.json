@@ -1,0 +1,9 @@
+[
+  { "name": "get_release_status", "summary": "Is the agent ready to ship? Gate status, reasons, checklist, candidate and baseline runs." },
+  { "name": "get_dashboard", "summary": "Executions, human-review coverage, per-version trend, fixed and regressed cases." },
+  { "name": "list_runs", "summary": "Experiment runs: config, frozen set, mode, status, pass-all and critical failures." },
+  { "name": "compare_runs", "summary": "Paired case-level diff of two runs: fixed, regressed, new critical regressions." },
+  { "name": "get_trace", "summary": "One trace: request, decision, price, policy, margin, approvals, claims, check results, judge verdict." },
+  { "name": "get_review_queue", "summary": "What still needs a human label: counts and unreviewed trace ids with case and config." },
+  { "name": "get_rubric", "summary": "Review checklist questions and the judge's supported/unsupported criterion." }
+]

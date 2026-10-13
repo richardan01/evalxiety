@@ -139,9 +139,18 @@ export function TaxonomyWorkbench() {
 
       <section className="rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm">
         <div className="flex flex-wrap items-center gap-2">
-          <SectionLabel>
-            Out of {reviewed} human-reviewed trace{reviewed === 1 ? "" : "s"}
-          </SectionLabel>
+          {reviewed === 0 ? (
+            <>
+              <SectionLabel>No human-reviewed traces yet</SectionLabel>
+              <Link href="/review" className="text-xs text-sky-700 hover:underline">
+                Start reviewing →
+              </Link>
+            </>
+          ) : (
+            <SectionLabel>
+              Out of {reviewed} human-reviewed trace{reviewed === 1 ? "" : "s"}
+            </SectionLabel>
+          )}
           {derived.reviewedMix.live > 0 && (
             <span className="inline-flex items-center gap-0.5 text-xs text-slate-500">
               <MockBadge mode="live" /> {derived.reviewedMix.live}
@@ -150,14 +159,6 @@ export function TaxonomyWorkbench() {
           {derived.reviewedMix.mock > 0 && (
             <span className="inline-flex items-center gap-0.5 text-xs text-slate-500" title="Failures seen on mock traces describe the mock agent, not Claude">
               <MockBadge mode="mock" /> {derived.reviewedMix.mock}
-            </span>
-          )}
-          {reviewed === 0 && (
-            <span className="text-xs text-slate-500">
-              · nothing reviewed yet —{" "}
-              <Link href="/review" className="text-sky-700 hover:underline">
-                start reviewing
-              </Link>
             </span>
           )}
         </div>

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { AppHeader } from "@/components/AppHeader";
+import { MockBanner, Sidebar } from "@/components/Sidebar";
 import { GuideAgent } from "@/components/guide/GuideAgent";
 
 export const metadata: Metadata = {
@@ -11,13 +11,15 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col font-sans">
-        <AppHeader />
-        <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-6">{children}</main>
-        <footer className="border-t border-slate-200 bg-white px-6 py-3 text-xs text-slate-500">
-          AgentTrust evaluates a synthetic merchant-pricing scenario. Results describe a small prototype test set — they are
-          not production certification and cannot establish production reliability.
-        </footer>
+      <body className="flex min-h-full font-sans">
+        <Sidebar />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <MockBanner />
+          <main className="mx-auto w-full max-w-7xl flex-1 px-8 py-7">{children}</main>
+          <footer className="border-t border-slate-200 bg-white px-8 py-3 text-xs text-slate-500">
+            Synthetic merchant-pricing scenario · results describe a small prototype test set, not production certification.
+          </footer>
+        </div>
         <GuideAgent />
       </body>
     </html>

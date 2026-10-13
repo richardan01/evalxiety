@@ -9,10 +9,12 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit -p ."
+    "typecheck": "tsc --noEmit -p .",
+    "mcp": "node mcp/server.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",
+    "@modelcontextprotocol/sdk": "^1.32.1",
     "next": "16.4.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",

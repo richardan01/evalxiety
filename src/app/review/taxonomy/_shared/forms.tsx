@@ -37,7 +37,7 @@ export function useReviewer(): [string, (name: string) => void] {
 // Inputs
 // ---------------------------------------------------------------------------
 
-const inputCls = "w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm focus:border-slate-500 focus:outline-none";
+const inputCls = "rounded-md border border-slate-300 bg-white px-2 py-1 text-sm focus:border-slate-500 focus:outline-none";
 export const labelCls = "mb-0.5 block text-[11px] font-medium uppercase tracking-wide text-slate-400";
 
 export function Field({ label, hint, children }: { label: string; hint?: ReactNode; children: ReactNode }) {
@@ -57,7 +57,7 @@ export function TextInput(props: { value: string; onChange: (v: string) => void;
       aria-label={props.ariaLabel}
       onChange={(e) => props.onChange(e.target.value)}
       placeholder={props.placeholder}
-      className={cx(inputCls, props.className)}
+      className={cx(inputCls, props.className ?? "w-full")}
     />
   );
 }
@@ -69,7 +69,7 @@ export function TextArea(props: { value: string; onChange: (v: string) => void; 
       rows={props.rows ?? 3}
       placeholder={props.placeholder}
       onChange={(e) => props.onChange(e.target.value)}
-      className={cx(inputCls, props.mono && "font-mono text-xs leading-relaxed")}
+      className={cx(inputCls, "w-full", props.mono && "font-mono text-xs leading-relaxed")}
     />
   );
 }
@@ -86,7 +86,7 @@ export function Select<T extends string>(props: {
       value={props.value}
       aria-label={props.ariaLabel}
       onChange={(e) => props.onChange(e.target.value as T)}
-      className={cx(inputCls, props.className)}
+      className={cx(inputCls, props.className ?? "w-full")}
     >
       {props.options.map((o) => (
         <option key={o.value} value={o.value} disabled={o.disabled}>

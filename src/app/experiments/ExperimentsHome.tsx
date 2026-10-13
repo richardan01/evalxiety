@@ -2,14 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Button, EmptyState, MockBadge, PageHeader, fmtDateTime } from "@/components/ui";
-import { CaseTable, ComparisonNotices, CostTable, PerCheckTable, ResultStrip, useComparison } from "./ComparisonView";
+import { CaseTable, ComparisonNotices, CostTable, PerCheckTable, ResultStrip, costSummary, useComparison } from "./ComparisonView";
 import { ConfigsSection, configsSummary } from "./ConfigsSection";
 import { FrozenSetsSection } from "./FrozenSetsSection";
 import { latestComparablePair } from "./pairing";
 import { RunLauncher } from "./RunLauncher";
 import { RunsTable } from "./RunsTable";
 import { apiRequest, type ApiResult } from "./request";
-import { Disclosure, agentCost } from "./shared";
+import { Disclosure } from "./shared";
 import type { ExperimentsData, RunRow } from "./types";
 
 const STALL_MS = 60 * 60 * 1000;
@@ -182,10 +182,7 @@ export function ExperimentsHome() {
             <Disclosure title="Pass rate per check" meta={`${Object.keys(d.comparison.per_evaluator).length} code checks + AI judge`}>
               <PerCheckTable d={d} evaluators={data.evaluators} />
             </Disclosure>
-            <Disclosure
-              title="Cost & latency"
-              meta={`agent cost ${agentCost(d.comparison.baseline_summary, d.baseline.run.execution_mode)} → ${agentCost(d.comparison.candidate_summary, d.candidate.run.execution_mode)}`}
-            >
+            <Disclosure title="Cost & latency" meta={costSummary(d)}>
               <CostTable d={d} />
             </Disclosure>
           </>

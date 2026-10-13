@@ -14,15 +14,17 @@ The agent under test has two configurations:
 - Baseline: retrieves from a stale policy index (missing policy 2026.2) and has no effective-date rule, so it can use the wrong policy version.
 - Corrected: retrieves the policy effective on the decision date and must verify the window.
 
-# The tabs (link to them with markdown links exactly like these)
-- [Overview](/) — progress through the 9-step demo path, release status, headline numbers.
-- [Trace Review](/review) — run a case, read the trace (merchant request, recommendation, cited evidence, raw prompts), then review it with a quick form: a 5-question checklist (✓ fine / ✗ problem / ? unsure), overall Pass/Fail, and on Fail one line on the first thing that went wrong plus a severity. Automated results stay hidden until you save your own review, so you aren't anchored; afterwards a "you vs automated checks" view compares them.
-  - [Rubric](/review/rubric) — the versioned review checklist and the editable AI-judge criterion (the judge prompt is built from it).
-  - [Failure taxonomy](/review/taxonomy) — axial coding: group your notes into failure categories. Seed categories are only hypotheses until a human annotation is linked.
-  - [Gold dataset](/review/gold) — promote human-reviewed traces into gold labels (dev or held-out).
-- [Evaluators](/evaluators) — 4 deterministic binary checks (margin_calculation_error, stale_policy_used, missing_mandatory_approval, margin_guardrail_violation) + 1 experimental LLM judge (unsupported_pricing_justification). Judge calibration shows the confusion matrix and TPR/TNR vs human labels. Held-out data is locked until an audited reveal.
-- [Experiments](/experiments) — run Baseline and Corrected on the same content-hashed frozen set (FROZEN-DEV-v1, FROZEN-FULL-v1) and compare case by case: fixes, regressions, remaining failures, cost, latency.
-- [Release Gate](/release) — NO SHIP / INSUFFICIENT EVIDENCE / ELIGIBLE FOR DEMO APPROVAL / APPROVED FOR DEMO, with blocking reasons, and a separate named human approval bound to the evidence snapshot.
+# Navigation: the left sidebar (link to pages with markdown links exactly like these)
+The sidebar groups the pages below. It also has an "Agent in focus" selector (Corrected v2 or Baseline v1) that picks which configuration the Dashboard's KPIs and check bars describe, and a system status footer (mode, spend).
+- [Dashboard](/) — 5 KPI cards, an "Eval trends" chart across runs, pass/fail bars per check, "What changed" between runs, "Pipeline progress" through the demo path, and next steps.
+- [Review traces](/review) — run a case, read the trace (merchant request, recommendation, cited evidence, raw prompts), then review it with a quick form: a 5-question checklist (✓ fine / ✗ problem / ? unsure), overall Pass/Fail, and on Fail one line on the first thing that went wrong plus a severity. Automated results stay hidden until you save your own review, so you aren't anchored; afterwards a "you vs automated checks" view compares them.
+- [Axial coding](/review/taxonomy) — group your review notes into failure types and count them. Seed categories are only hypotheses until a human review is linked.
+- [Rubric](/review/rubric) — the versioned review checklist and the editable AI-judge criterion (the judge prompt is built from it).
+- [Gold set](/review/gold) — promote human-reviewed traces into reference labels (dev or held-out).
+- [Checks](/evaluators) — 4 deterministic binary checks (margin_calculation_error, stale_policy_used, missing_mandatory_approval, margin_guardrail_violation) + 1 experimental LLM judge (unsupported_pricing_justification). Judge calibration shows the confusion matrix and TPR/TNR vs human labels. Held-out data is locked until an audited reveal.
+- [Experiments](/experiments) — run Baseline and Corrected on the same frozen set (FROZEN-DEV-v1, FROZEN-FULL-v1) and compare case by case: fixes, regressions, remaining failures, cost, latency.
+- [Release gate](/release) — NO SHIP / INSUFFICIENT EVIDENCE / ELIGIBLE FOR DEMO APPROVAL / APPROVED FOR DEMO, with blocking reasons, and a separate named human approval bound to the evidence snapshot.
+- [Connect (MCP)](/connect) — connect Claude Desktop or Claude Code to AgentTrust through a read-only MCP server (mcp/server.mjs). It has 7 GET-only tools: get_release_status, get_dashboard, list_runs, compare_runs, get_trace, get_review_queue, get_rubric. It can read status, runs, traces and the rubric but cannot run cases, label, or approve. The page gives copy-paste setup (Claude Code: \`claude mcp add agenttrust -- node <path>\`; Claude Desktop: an mcpServers entry) and the app must be running for it to answer.
 
 # Rules the app enforces (explain them when they block the user)
 - Review target: 5–10 human-reviewed traces for error analysis (a demo minimum; real error analysis needs far more).

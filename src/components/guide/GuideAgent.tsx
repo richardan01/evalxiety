@@ -24,7 +24,8 @@ const PAGE_SUGGESTIONS: Array<[string, string[]]> = [
   ["/evaluators", ["What's the difference between the checks and the judge?", "How do I read TPR and TNR?"]],
   ["/experiments", ["How do I compare Baseline vs Corrected?", "What counts as a regression?"]],
   ["/release", ["Why is my release blocked?", "What do I need for demo approval?"]],
-  ["/", ["Give me the 5-minute tour", "What does each tab do?"]],
+  ["/connect", ["How do I connect Claude Code?", "What can the MCP tools do?"]],
+  ["/", ["Give me the 5-minute tour", "What does each page do?"]],
 ];
 
 function suggestionsFor(path: string): string[] {

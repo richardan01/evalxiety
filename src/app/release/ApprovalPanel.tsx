@@ -100,7 +100,7 @@ export function ApprovalPanel({
         <div className="flex flex-wrap items-center gap-2">
           <input
             aria-label="Your name"
-            className={cx("w-44 rounded-md border bg-white px-2 py-1.5 text-sm", name ? "border-slate-300" : "border-amber-400")}
+            className={cx("w-44 rounded-md border bg-white px-2 py-1.5 text-sm", name || !candidate ? "border-slate-300" : "border-amber-400")}
             placeholder="Your name *"
             value={approver.value}
             onChange={(e) => approver.setValue(e.target.value)}

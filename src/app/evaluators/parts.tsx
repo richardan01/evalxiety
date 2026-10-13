@@ -2,7 +2,7 @@
  * Small presentational helpers local to the Evaluators tab (built on src/components/ui.tsx).
  */
 import type { ReactNode } from "react";
-import { Badge, InfoTip, cx } from "@/components/ui";
+import { Badge, InfoTip, MockBadge, cx } from "@/components/ui";
 
 /** Section title with an optional ⓘ and a right-hand slot. InfoTip sits outside the heading (it renders a <details>). */
 export function SectionTitle({ id, title, info, infoLabel, right }: {
@@ -30,6 +30,28 @@ export function InfoTipLeft({ children, label }: { children: ReactNode; label?: 
   return (
     <span className="inline-flex [&>details>div]:right-0 [&>details>div]:left-auto">
       <InfoTip label={label}>{children}</InfoTip>
+    </span>
+  );
+}
+
+/** "52 traces · LIVE 51 · MOCK 1" — mock results are always labelled. */
+export function ModeMix({ shown, total, live, mock }: { shown: number; total?: number; live: number; mock: number }) {
+  return (
+    <span className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+      <span>
+        <b className="text-slate-800">{shown}</b>
+        {total !== undefined && total !== shown ? ` of ${total}` : ""} trace{(total ?? shown) === 1 ? "" : "s"}
+      </span>
+      {live > 0 && (
+        <span className="inline-flex items-center gap-1">
+          <MockBadge mode="live" /> {live}
+        </span>
+      )}
+      {mock > 0 && (
+        <span className="inline-flex items-center gap-1">
+          <MockBadge mode="mock" /> {mock}
+        </span>
+      )}
     </span>
   );
 }
