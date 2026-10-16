@@ -12,6 +12,7 @@ import { runPricingAgent } from "../agent/runner";
 import { judgeVersion, runJudge } from "../judge/judge";
 import { modeInfo } from "../llm/client";
 import { getFrozenSet, includesHeldout, verifyFrozenSet } from "./frozen";
+import { pool } from "./pool";
 import {
   audit,
   getExperimentRun,
@@ -84,17 +85,6 @@ async function patchRun(runId: string, patch: (r: ExperimentRun) => ExperimentRu
     const current = await getExperimentRun(runId);
     if (current) await saveExperimentRun(patch(current));
   });
-}
-
-async function pool<T>(items: T[], limit: number, fn: (item: T) => Promise<void>) {
-  const queue = [...items];
-  const workers = Array.from({ length: Math.min(limit, queue.length) }, async () => {
-    while (queue.length) {
-      const item = queue.shift()!;
-      await fn(item);
-    }
-  });
-  await Promise.all(workers);
 }
 
 export interface StartRunOptions {
