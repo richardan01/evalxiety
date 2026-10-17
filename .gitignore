@@ -58,3 +58,6 @@ next-env.d.ts
 !/agents/_template/
 !/agents/custom-checks.ts
 /data/agents/
+
+# A Claude API key connected from the UI (data/ is tracked, so keep secrets out of it).
+/data/private/

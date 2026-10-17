@@ -1,8 +1,7 @@
 "use client";
 
 /**
- * App sidebar: navigation grouped by workflow stage and live system status
- * (mode, model, spend).
+ * App sidebar: navigation grouped by workflow stage and a link to connect your AI.
  */
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -77,8 +76,6 @@ export function Sidebar() {
     };
   }, []);
 
-  const spendPct = mode ? Math.min(100, (mode.ledger.total_estimated_usd / Math.max(mode.spend_cap_usd, 0.01)) * 100) : 0;
-
   return (
     <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col bg-slate-950 text-slate-300">
       <Link href="/" className="flex items-center gap-2.5 px-5 pb-4 pt-5">
@@ -117,30 +114,16 @@ export function Sidebar() {
 
       </nav>
 
-      <div className="border-t border-slate-800 px-5 py-4 text-xs">
-        <div className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500">System</div>
-        <div className="flex items-center gap-2">
-          <span className={cx("h-2 w-2 rounded-full", mode?.mode === "live" ? "bg-emerald-400" : mode ? "bg-amber-400" : "bg-slate-600")} />
-          <span className="text-slate-300">{mode ? (mode.mode === "live" ? "Live · Claude API connected" : "Mock mode · no spend") : "Checking…"}</span>
-        </div>
-        {mode && (
-          <div className="mt-2 text-[11px] text-slate-500">
-            Model <span className="font-mono text-slate-300">{mode.model_id}</span>
-          </div>
-        )}
-        {mode && (
-          <div className="mt-3">
-            <div className="flex justify-between text-slate-400">
-              <span>API spend</span>
-              <span className="tabular-nums text-slate-200">
-                ${mode.ledger.total_estimated_usd.toFixed(2)} / ${mode.spend_cap_usd.toFixed(0)}
-              </span>
-            </div>
-            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-800">
-              <div className={cx("h-full rounded-full", spendPct > 80 ? "bg-rose-500" : "bg-sky-500")} style={{ width: `${spendPct}%` }} />
-            </div>
-          </div>
-        )}
+      <div className="border-t border-slate-800 px-3 py-3 text-xs">
+        <Link
+          href="/connect"
+          className="flex items-center gap-2 rounded-md px-2 py-2 text-slate-300 transition-colors hover:bg-slate-900 hover:text-white"
+          title="Connect your Claude API key and your agent"
+        >
+          <span className={cx("h-2 w-2 shrink-0 rounded-full", mode?.mode === "live" ? "bg-emerald-400" : mode ? "bg-amber-400" : "bg-slate-600")} />
+          <span className="flex-1">{!mode ? "Checking…" : mode.mode === "live" ? "AI connected" : "Connect your AI"}</span>
+          <span aria-hidden className="text-slate-500">→</span>
+        </Link>
       </div>
     </aside>
   );

@@ -13,6 +13,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { readJson, sha256, updateJson, writeJson } from "../storage/store";
 import type { TokenUsage } from "../domain/schemas";
+import { activeKey, readConnectedKey } from "./connection";
 
 export const MODEL_ID = "claude-opus-5-5";
 // List prices per million tokens (USD). Cache reads/writes as published for each model (writes = 1.25x input).
@@ -40,9 +41,11 @@ export function modeInfo(): ModeInfo {
   }
   const cap = rawCap;
   const mockFlag = (process.env.MOCK_MODE ?? "true").toLowerCase();
+  // Connecting a key in the UI is an explicit opt-in to live calls, so it overrides MOCK_MODE.
+  if (readConnectedKey()) return { mode: "live", reason: "Connected with your API key", spend_cap_usd: cap };
   const hasKey = Boolean(process.env.ANTHROPIC_API_KEY);
   if (mockFlag !== "false") return { mode: "mock", reason: "MOCK_MODE is not set to false", spend_cap_usd: cap };
-  if (!hasKey) return { mode: "mock", reason: "ANTHROPIC_API_KEY is not configured", spend_cap_usd: cap };
+  if (!hasKey) return { mode: "mock", reason: "No API key connected", spend_cap_usd: cap };
   return { mode: "live", reason: "MOCK_MODE=false and API key present", spend_cap_usd: cap };
 }
 
@@ -195,10 +198,12 @@ const CachedResponse = z.object({
 /** Output ceiling per structured call (thinking counts toward it). Also the basis of the spend reservation. */
 const MAX_TOKENS = 16000;
 
-let client: Anthropic | null = null;
+let client: { key: string; sdk: Anthropic } | null = null;
 function getClient(): Anthropic {
-  client ??= new Anthropic();
-  return client;
+  const key = activeKey()?.key;
+  if (!key) throw new Error("No API key connected");
+  if (client?.key !== key) client = { key, sdk: new Anthropic({ apiKey: key }) };
+  return client.sdk;
 }
 
 export async function callStructured(req: StructuredCallRequest): Promise<StructuredCallResult> {
@@ -295,7 +300,7 @@ export async function callStructured(req: StructuredCallRequest): Promise<Struct
     await settle(err instanceof Anthropic.APIError && err.status ? null : reservedUsd, null);
     const latency = Date.now() - started;
     let message: string;
-    if (err instanceof Anthropic.AuthenticationError) message = "Authentication failed — check ANTHROPIC_API_KEY";
+    if (err instanceof Anthropic.AuthenticationError) message = "Authentication failed — check your connected API key";
     else if (err instanceof Anthropic.RateLimitError) message = "Rate limited — retry later";
     else if (err instanceof Anthropic.BadRequestError) message = `Bad request: ${err.message}`;
     else if (err instanceof Anthropic.APIError) message = `API error ${err.status}: ${err.message}`;

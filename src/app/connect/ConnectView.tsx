@@ -6,7 +6,7 @@
  */
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
-import { getJSON } from "@/lib/client/api";
+import { getJSON, postJSON } from "@/lib/client/api";
 import { Badge, Button, Callout, Card, InfoTip, MockBadge, PageHeader, cx } from "@/components/ui";
 
 interface ConnectData {
@@ -153,6 +153,119 @@ function Diagram({ mode }: { mode: ConnectData["mode"] | null }) {
 }
 
 // ---------------------------------------------------------------------------
+// AI connection (your API credit)
+// ---------------------------------------------------------------------------
+
+interface AiConnection {
+  connected: boolean;
+  source: "connected" | "env" | null;
+  key_hint: string | null;
+  model_id: string;
+  mode: "live" | "mock";
+}
+
+function AiConnectionCard({ onChange }: { onChange: () => void }) {
+  const [status, setStatus] = useState<AiConnection | null>(null);
+  const [key, setKey] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = () => getJSON<AiConnection>("/api/ai-connection").then(setStatus, (e: unknown) => setError(e instanceof Error ? e.message : String(e)));
+  useEffect(() => {
+    void load();
+  }, []);
+
+  const apply = (next: AiConnection) => {
+    setStatus(next);
+    setKey("");
+    onChange();
+  };
+  const connect = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      apply(await postJSON<AiConnection>("/api/ai-connection", { api_key: key }));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const disconnect = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/ai-connection", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: "{}" });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error ?? `Disconnect failed (${res.status})`);
+      apply(body as AiConnection);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card
+      title={
+        <span className="flex items-center gap-2">
+          Your AI
+          <InfoTip>
+            Evalxiety runs the agent under test and the AI judge with <em>your</em> Claude API key, so usage is billed to
+            your own API credit. The key is stored on this machine only (data/private, git-ignored) and is never shown
+            again or sent anywhere except Anthropic.
+          </InfoTip>
+        </span>
+      }
+      subtitle="Bring your own Claude API credit"
+      actions={status && <Badge tone={status.connected ? "green" : "amber"}>{status.connected ? "CONNECTED" : "NOT CONNECTED"}</Badge>}
+    >
+      {status?.connected ? (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="text-sm text-slate-700">
+            Using key <span className="font-mono text-xs">{status.key_hint}</span>
+            {status.source === "env" ? " from the ANTHROPIC_API_KEY environment variable" : ""} · model{" "}
+            <span className="font-mono text-xs">{status.model_id}</span>
+          </div>
+          {status.source === "connected" && (
+            <Button variant="secondary" onClick={disconnect} disabled={busy}>
+              Disconnect
+            </Button>
+          )}
+        </div>
+      ) : (
+        <form
+          className="flex flex-wrap items-center gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (key.trim()) void connect();
+          }}
+        >
+          <input
+            type="password"
+            autoComplete="off"
+            spellCheck={false}
+            value={key}
+            onChange={(e) => setKey(e.target.value)}
+            placeholder="sk-ant-… (from console.anthropic.com)"
+            className="min-w-64 flex-1 rounded-md border border-slate-300 px-3 py-1.5 font-mono text-sm"
+          />
+          <Button type="submit" disabled={busy || !key.trim()}>
+            {busy ? "Checking…" : "Connect"}
+          </Button>
+        </form>
+      )}
+      {error && <div className="mt-2 text-sm text-rose-700">{error}</div>}
+      <p className="mt-3 text-xs text-slate-500">
+        Have a Claude Pro/Max <em>subscription</em> instead? Anthropic doesn&apos;t allow subscriptions to power other apps, so
+        connect Claude Desktop or Claude Code below — they use your subscription and read results from here over MCP.
+      </p>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
@@ -160,8 +273,9 @@ export function ConnectView() {
   const [data, setData] = useState<ConnectData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const loadConnect = () => getJSON<ConnectData>("/api/connect").then(setData, (e: unknown) => setError(e instanceof Error ? e.message : String(e)));
   useEffect(() => {
-    getJSON<ConnectData>("/api/connect").then(setData, (e: unknown) => setError(e instanceof Error ? e.message : String(e)));
+    void loadConnect();
   }, []);
 
   const readOnly = (
@@ -191,6 +305,8 @@ export function ConnectView() {
       {data && data.server_exists && !data.sdk_installed && (
         <Callout tone="amber" title="MCP SDK missing">Run npm install in the Evalxiety folder.</Callout>
       )}
+
+      <AiConnectionCard onChange={() => void loadConnect()} />
 
       <Diagram mode={data?.mode ?? null} />
 
@@ -282,7 +398,7 @@ export function ConnectView() {
         <div className="space-y-5">
           <Card title="Bring your own agent">
             <p className="text-sm text-slate-700">
-              Evaluate any agent from <Link href="/agents" className="text-sky-700 hover:underline">Your agents</Link>. MCP tools <code className="font-mono text-xs">list_my_agents</code>,{" "}
+              Connect your agent from <Link href="/agents" className="text-sky-700 hover:underline">Your agents</Link>: add its endpoint in <code className="font-mono text-xs">agents/&lt;id&gt;/agent.json</code> (kept in a file you control, not in the browser, so a web page can never point Evalxiety at an arbitrary URL), or import its traces. MCP tools <code className="font-mono text-xs">list_my_agents</code>,{" "}
               <code className="font-mono text-xs">get_agent_status</code> and <code className="font-mono text-xs">get_agent_trace</code> read them from Claude.
             </p>
             <ul className="mt-2 space-y-1 text-sm text-slate-600">
