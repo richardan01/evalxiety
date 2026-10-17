@@ -5,7 +5,8 @@
  *   node agents/my-agent/run-my-agent.mjs > agents/my-agent/v1.jsonl                        # dev cases only
  *   node agents/my-agent/run-my-agent.mjs --include-heldout > agents/my-agent/final.jsonl   # after the held-out reveal
  *
- * (Writing the file inside agents/my-agent/ keeps it git-ignored.) Edit callMyAgent() below. Then check the file with
+ * (In the Evalxiety repo, writing the file inside agents/my-agent/ keeps it git-ignored; if you set
+ * EVALXIETY_AGENTS_DIR, ignore trace files in that repo yourself.) Edit callMyAgent() below. Then check the file with
  * `npm run validate -- my-agent agents/my-agent/v1.jsonl` and import it on the agent's page with a version label
  * (e.g. the git SHA of the version you ran). Your agent isn't in Node? Call it over HTTP or as a subprocess from
  * callMyAgent(), or write the same JSON lines from any language.

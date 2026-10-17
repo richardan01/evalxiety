@@ -67,7 +67,10 @@ Evalxiety follows the eval method from Hamel Husain and Shreya Shankar:
 
 ## Run it
 
+You need Node.js 22.12+ or 24.
+
 ```bash
+git clone https://github.com/richardan01/evalxiety.git && cd evalxiety
 npm install
 cp .env.example .env.local    # MOCK_MODE=true: no API key or spend needed
 npm run dev -- -p 3123        # http://localhost:3123
@@ -99,7 +102,7 @@ handing self-serve cancellations to a human. Evalxiety flags that regression. Th
 so by design the verdict reads "Not enough evidence".
 
 Then point it at your own agent. You'll need traces from two versions (the one you ship today, and your change).
-Getting the first traces in takes about 15 minutes; reading them is the real cost. For a 10–30-case set, plan on
+Getting the first traces in is mostly wiring one function or one URL; reading them is the real cost. For a 10–30-case set, plan on
 reading every trace of your first run and every trace of the final run, so 20–60 in all. If you hold out cases, you
 also run both versions a second time after revealing them.
 

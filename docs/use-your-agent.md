@@ -5,13 +5,16 @@ Evalxiety runs your old and new versions on the same test cases and shows, case 
 got worse. Then it gives a verdict: **No ship**, **Not enough evidence** or **Ready for approval**. It works with any
 agent, built with any stack, because it only needs your agent's outputs.
 
-**What leaves your machine.** Evalxiety runs locally and stores everything as JSON files under `data/`. Data leaves
-only when you choose:
+**What leaves your machine.** Evalxiety runs locally and stores everything as JSON files under `data/`. Your cases,
+traces and labels leave your machine only when you choose:
 - **HTTP mode** sends each test input to your agent's URL.
 - **The optional LLM judge** sends each trace (input, evidence, output) to the Anthropic API.
 - **The optional MCP server** hands traces to the Claude client you connect it to.
 - **The in-app guide chat** (bottom right) sends your question and a summary of the app's state to the Anthropic API,
   in live mode only.
+
+Separately, Next.js (the framework Evalxiety runs on) sends its own anonymous usage telemetry, with no cases or
+traces. Turn it off with `npx next telemetry disable`.
 
 You don't need an Anthropic API key unless you turn on the judge.
 
@@ -45,8 +48,9 @@ expected.
    - the **EVIDENCE** lines list what a real release would still need: reviews, the judge, the held-out check.
 5. Read the **Baseline vs candidate** card: 7 fixed, 1 regressed (c09), 1 still passing (c08).
 
-To try HTTP mode instead, start the toy agent in a second terminal (`npm run example-agent -- --version=v1`) and use
-**Call my agent (HTTP)**. Then restart it with `--version=v2` and run again.
+To try HTTP mode instead, start the toy agent in a second terminal (`npm run example-agent -- --version=v1`), use
+**Call my agent (HTTP)** and label that run `v1`. Then restart the agent with `--version=v2` and run again, labelled
+`v2`.
 
 **Next:** [set up your own agent](#set-up-your-agent). [The loop](#the-loop) covers the review and final-check steps
 this tour skipped.
@@ -62,7 +66,9 @@ Words used here:
 
 The steps:
 
-1. **Baseline.** Import or run the version you ship today. Label it with something you'll recognise, such as
+1. **Baseline.** Get your cases right first: **the first run freezes them.** If you later change a case's `input`,
+   `expected` or `split`, you must click **Freeze v2** and re-run the baseline too. Then import or run the version you
+   ship today. Label it with something you'll recognise, such as
    `prompt-v3` or a git SHA. Tag it in git (or keep it runnable): you'll run it again at the final check. While it is
    your only version, it is shown as the baseline. Until you approve a release, the first version you import stays the
    default baseline.
@@ -77,7 +83,8 @@ The steps:
 3. **Name what matters.** The failure-type counts on the agent page show what to fix first. Turn the objective
    failures into [code checks](#code-checks-checks-in-agentjson). Give at most one subjective failure to the judge.
 4. **Candidate.** Change your agent, then import or run it under a new label. Review enough of it to see whether
-   the change worked. The final run in step 5 replaces it, so this isn't the review the gate counts.
+   the change worked. If you have held-out cases, the final run in step 5 replaces this one, so this review isn't the
+   one the gate counts. If you don't, this is your final run: review every trace of it.
 5. **Final check.** When you've stopped tuning:
    - on the agent page, in the **Cases** card, enter your name and a reason (at least 10 characters), then click
      **Reveal N held-out case(s)** (this can't be undone);
@@ -88,7 +95,8 @@ The steps:
 
    No held-out cases? Then the candidate from step 4 is already your final run.
 
-   **Budget:** for a 20-case set, roughly 15 reviews of your first run, plus 20 on the final run.
+   **Budget:** for a 20-case set, plan on up to 20 reviews of your first run (at least 10; fewer once new failure
+   types stop appearing), plus 20 on the final run: about 40.
 6. **Decide.** Read the gate. Only a named person's approval of that exact evidence turns "Ready for approval" into
    **Approved**. If the evidence changes later, the approval goes stale.
 
@@ -187,8 +195,9 @@ node agents/my-agent/run-my-agent.mjs > agents/my-agent/v1.jsonl
 npm run validate -- my-agent agents/my-agent/v1.jsonl
 ```
 
-Upload the file on the agent page under **Add a run → Import a file**. Writing it inside `agents/my-agent/` keeps it
-git-ignored. The script skips held-out cases: add `--include-heldout` after you've revealed them.
+Upload the file on the agent page under **Add a run → Import a file**. In this repo, writing it inside
+`agents/my-agent/` keeps it git-ignored. If you set `EVALXIETY_AGENTS_DIR`, add your trace files to that repo's
+`.gitignore`, or write them somewhere else. The script skips held-out cases: add `--include-heldout` after you've revealed them.
 
 Each line looks like this:
 
@@ -240,6 +249,10 @@ Add a connection to `agent.json`:
 }
 ```
 
+Leave out `headers` if your endpoint needs no auth; if you keep it, set the variable in `.env.local` first. Your
+endpoint must accept the body `{"case_id": ..., "input": {...}}`. If it has its own request format, use **Import** and
+call it from `callMyAgent()` instead.
+
 Evalxiety sends one `POST` per case with `{"case_id": "q01", "input": {...}}`. It calls dev cases, plus held-out
 cases once you've revealed them. It asks you to confirm first whenever a run makes more than one call or sends any
 secret. The confirmation shows the number of calls, the estimated cost, the host and which secrets it will send.
@@ -267,8 +280,9 @@ Each of these is recorded on its case as an error, and the run carries on:
   - An `agent.json` can't read `ANTHROPIC_API_KEY`, your cloud credentials, or another agent's token.
 - **Value rules:** values must be one line, at least 8 characters, with no leading or trailing spaces.
 - **Plain http:** secrets are never sent over plain `http://` to a host other than localhost.
-- **What's stored:** before anything from an HTTP run is stored, secret values (including JSON- or HTML-escaped
-  copies) are replaced with `[REDACTED:NAME]`, even if your agent echoes them back. The URL is recorded in the audit
+- **What's stored:** before anything from an HTTP run is stored, secret values are replaced with `[REDACTED:NAME]`,
+  even if your agent echoes them back: raw, JSON-escaped, HTML-escaped, URL-encoded or base64. Other encodings aren't
+  recognised, so don't have your agent echo request headers. The URL is recorded in the audit
   log, so keep tokens out of it. These rules cover HTTP mode; an imported file is stored as you wrote it.
 
 ## Code checks: `checks` in `agent.json`

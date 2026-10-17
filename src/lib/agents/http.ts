@@ -103,14 +103,22 @@ export function resolveHeaders(headers: Record<string, string>, env: Record<stri
 /** Shorter secret values are refused: they would match ordinary text, and redacting them would mangle stored output. */
 export const MIN_SECRET_LENGTH = 8;
 
-/** The ways a server may echo a secret back inside JSON or HTML text: JSON-escaped, "/" escaped, \u-escaped, HTML-escaped. */
+/**
+ * The ways a server may echo a secret back: raw, JSON-escaped (including "\/" and \u forms), HTML-escaped (named and
+ * numeric entities), URL-encoded, or base64. Other encodings aren't recognised.
+ */
 function escapedForms(v: string): string[] {
   const json = JSON.stringify(v).slice(1, -1);
   const unicode = [...v].map((ch) => `\\u${ch.charCodeAt(0).toString(16).padStart(4, "0")}`).join("");
   const unicodeUpper = unicode.replace(/\\u([0-9a-f]{4})/g, (_m, h: string) => `\\u${h.toUpperCase()}`);
   const html = v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   const goJson = json.replace(/&/g, "\\u0026").replace(/</g, "\\u003c").replace(/>/g, "\\u003e");
-  return [...new Set([v, json, json.replace(/\//g, "\\/"), unicode, unicodeUpper, html, goJson, goJson.replace(/\//g, "\\/")])];
+  // Numeric HTML entities for the characters templates commonly escape (Go's html/template turns "+" into "&#43;").
+  const numericDec = v.replace(/[&<>"'+/=]/g, (ch) => `&#${ch.charCodeAt(0)};`);
+  const numericHex = v.replace(/[&<>"'+/=]/g, (ch) => `&#x${ch.charCodeAt(0).toString(16)};`);
+  const url = encodeURIComponent(v);
+  const base64 = Buffer.from(v, "utf8").toString("base64");
+  return [...new Set([v, json, json.replace(/\//g, "\\/"), unicode, unicodeUpper, html, goJson, goJson.replace(/\//g, "\\/"), numericDec, numericHex, url, base64])];
 }
 
 /**

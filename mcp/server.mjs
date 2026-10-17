@@ -502,7 +502,7 @@ server.registerTool(
     title: "Your agent: release gate and comparison",
     description: describe(
       "get_agent_status",
-      "Defaults: with one version label, its newest run is the baseline (no candidate yet); otherwise the candidate is the newest completed run of the most recently introduced label and the baseline is the newest completed run on the same cases under a different label. scratch-… labels are never defaults.",
+      "Defaults (completed, non-scratch runs; labels match ignoring case and surrounding spaces): the baseline is the version you ship, meaning the label of the most recently approved candidate, otherwise the first label imported. The candidate is the newest run of the most recently introduced other label. With one label there is no candidate yet.",
     ),
     inputSchema: {
       agent_id: z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/).describe("Folder name under agents/, e.g. example-support-bot"),

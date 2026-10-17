@@ -654,6 +654,12 @@ describe("final-gate fixes", () => {
       expect(out).not.toContain("\\u0061\\u0062\\u0063");
     }
     expect(redactSecrets({ account: 12345678901 }, { EVALXIETY_AGENT_X_ID: "12345678901" })).toEqual({ account: "[REDACTED:EVALXIETY_AGENT_X_ID]" });
+    // HTML numeric entities (Go html/template), URL-encoding and base64 echoes.
+    const tok = "ab+cd/ef=gh";
+    const sec = { EVALXIETY_AGENT_X_T: tok };
+    for (const echoed of ["ab&#43;cd&#47;ef&#61;gh", encodeURIComponent(tok), Buffer.from(tok).toString("base64")]) {
+      expect(redactText(`token was ${echoed}`, sec)).toBe("token was [REDACTED:EVALXIETY_AGENT_X_T]");
+    }
   });
 
   it("with allow_empty_output and a judge, an empty answer gets judged so the gate can finish", async () => {
