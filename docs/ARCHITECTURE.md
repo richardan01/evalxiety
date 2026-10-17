@@ -41,6 +41,52 @@ src/components      shared UI primitives (ui.tsx), TraceView, AppHeader
 | Comparisons require identical frozen-set hashes | experiments.ts, services `compareRunIds` |
 | Approval is separate from evaluation and is invalidated when the evidence snapshot changes | release/gate.ts |
 
+## Your agents (any agent, not just pricing)
+
+`src/lib/agents/` runs the same method on any agent, next to the pricing demo and without touching its files. User
+guide: [use-your-agent.md](use-your-agent.md).
+
+```
+agents/<id>/agent.json     name, code checks, optional judge question, optional HTTP connection (files the owner edits)
+agents/<id>/cases.jsonl    test cases (dev / heldout split, optional expected value)
+agents/custom-checks.ts    custom TypeScript checks, registered per agent id
+agents/_template/          blank agent to copy (one universal check; run-my-agent.mjs writes an import file)
+src/lib/agents/schemas.ts  Zod contract: config, cases, trace, import line, run, annotation, judge result
+src/lib/agents/config.ts   load + validate agent folders (problems by file and line, never a crash)
+src/lib/agents/checks.ts   built-in check types + custom-check runner (ERROR is never a pass)
+src/lib/agents/ingest.ts   JSONL import parsing (shared by the import route and `npm run validate`)
+src/lib/agents/http.ts     HTTP adapter: ${env:NAME} secrets, no redirects, size + time caps
+src/lib/agents/runs.ts     import / HTTP runs, frozen case versions, batch confirmation, secret redaction
+src/lib/agents/repo.ts     storage under data/agents/<id>/ (runs, traces, labels, judge results, approvals, reveals, audit)
+src/lib/agents/judge.ts    experimental judge from agent.json (mock heuristic only for example data)
+src/lib/agents/gate.ts     release gate with the agent's own checks and thresholds
+src/lib/agents/services.ts read models for /api/agents/** (results recomputed from traces on every read)
+src/lib/agents/api.ts      maps agent errors to HTTP responses (422/423 with line numbers, 409 confirmations)
+src/lib/agents/registry.ts re-exports agents/custom-checks.ts
+data/agents/<id>/          runs, traces, human labels, judge results, approvals, frozen versions, held-out state, audit log
+```
+
+Shared with the pricing demo: `summarizeRun` / `compareRuns` (now take the check list as a parameter),
+calibration metrics, the storage primitives and the UI components.
+
+| Rule | Where |
+|---|---|
+| Starter-kit traces are `data_origin: "example"`; like mock output they can't decide NO SHIP or make a candidate eligible | agents/gate.ts (`example_data`) |
+| Real traces are judged only by the live judge; the mock heuristic is refused on them | agents/judge.ts |
+| Runs pin a frozen case version (content hash); editing cases blocks runs until an audited new freeze | agents/runs.ts `currentFrozen` |
+| One lock rule (`computeLockState`): a held-out case is locked until its content (input hash) is revealed; a dev case is locked too if its id or content was held out and never revealed, so moving, renaming or editing a held-out case can't unlock it. Locked cases can't be imported or run. A held-out case whose content was already traced before its reveal blocks the gate until it gets fresh input; deleting one is a warning | agents/ingest.ts, agents/runs.ts, agents/services.ts `heldoutIntegrity`, agents/gate.ts, `/api/agents/[agentId]/heldout` |
+| An import is all-or-nothing, with every problem reported by line number | agents/ingest.ts, agents/runs.ts `importRun` |
+| HTTP batches and live judge batches need explicit confirmation (with a cost estimate when known) | agents/runs.ts, agents/services.ts |
+| The HTTP URL and headers come only from agent.json on disk; an agent can only read env vars named `EVALXIETY_AGENT_<AGENT_ID>_<SUFFIX>` (suffix letters and digits only, so no agent can read another's), secret values one line, ≥ 8 chars, no surrounding spaces; escaped echoes redacted too, never sent over plain http off-host; header values must be one line; secret values are redacted from everything stored; any run that sends a secret needs confirmation; redirects are refused | agents/http.ts, agents/runs.ts |
+| An errored trace or an empty answer is ERROR on every check, never a pass (unless `allow_empty_output`); a present-but-empty field is ERROR; "must not" and length checks read the whole output when their field is missing; `cites_evidence` fails on a missing field; regex checks report ERROR on text over 100k chars and on a pattern over 250 ms (which then isn't re-run) | agents/checks.ts, agents/http.ts, agents/runs.ts |
+| Check results are cached per (trace, check behaviour, case expectation) with LRU eviction, since traces never change after they are saved | agents/checks.ts `runChecks` |
+| Default runs: the baseline is the version you ship (last approved label, else the first label); the candidate is the newest run of the most recently introduced other label; a lone label has no candidate; labels compared ignoring case and surrounding spaces; `scratch-…` labels and failed runs skipped | agents/services.ts `pickDefaults` |
+| agent.json and cases.jsonl are strict: a misspelled key, a limitless `max_length`, or an unregistered custom check is a load error | agents/schemas.ts, agents/config.ts |
+| Judge responses for your agents are cached under data/agents/<id>/llm_cache (git-ignored) and the shared ledger gets no trace ids; MCP returns agent output under `untrusted_agent_data` | agents/judge.ts, llm/client.ts `cacheDir`, mcp/server.mjs |
+| Every candidate case needs a human review; the judge never exempts one, however many labels it has | agents/gate.ts |
+| The API answers only to local Host names (DNS rebinding; `EVALXIETY_ALLOWED_HOSTS` adds more) and refuses cross-site writes, including `Origin: null` | src/proxy.ts |
+| A baseline counts only if it completed with every compared case traced and error-free | agents/gate.ts |
+
 ## Rubric (where "good" is defined)
 
 Three layers, one place to look (Trace Review → Rubric):
@@ -84,6 +130,18 @@ approval on the current evidence snapshot). Never "production certified".
 | GET `/api/overview` | overview stats | services.overviewView |
 | GET/POST `/api/rubric` | current rubric, history, judge prompt + version / save a new rubric version | repos.appendRubricVersion |
 | GET `/api/audit` | audit log | repos.listAudit |
+| GET `/api/agents` | your agents + config problems | agents/services.agentsList |
+| GET `/api/agents/[agentId]?candidate=&baseline=` | overview, runs, checks, gate (`baseline=none` for no baseline) | agents/services.agentOverview |
+| POST `/api/agents/[agentId]/import` | import a JSONL run (`dry_run: true` = Check file) | agents/runs.importRun |
+| POST `/api/agents/[agentId]/run` | HTTP run, finished in the background (`confirm_batch`) | agents/runs.prepareHttpRun / executeHttpRun |
+| GET `/api/agents/[agentId]/runs/[runId]` | run detail | agents/services.agentRunDetail |
+| GET `/api/agents/[agentId]/traces/[traceId]` | trace, checks, judge, labels, review queue | agents/services.agentTraceDetail |
+| POST `/api/agents/[agentId]/annotations` | human label | agents/repo.upsertAgentAnnotation |
+| POST `/api/agents/[agentId]/judge` | judge a run (`confirm` for a live batch) | agents/services.judgeRunMissing |
+| POST `/api/agents/[agentId]/freeze` | freeze the current cases as a new version | agents/runs.freezeNewVersion |
+| POST `/api/agents/[agentId]/heldout` | audited reveal of exactly the listed locked cases | agents/repo.revealAgentHeldout |
+| POST `/api/agents/[agentId]/approve` | named approval of this evidence | agents/services.recordAgentApproval |
+| GET `/api/agents/[agentId]/audit` | per-agent audit log | agents/repo.listAgentAudit |
 
 ## UI conventions
 

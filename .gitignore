@@ -50,3 +50,11 @@ next-env.d.ts
 # Local pre-publish review stamps (not part of the project)
 *.riddler-passed
 *.vicki-passed
+
+# Your agents: definitions and traces can contain private data, so they stay out of git (and out of a public
+# fork) by default. Delete these lines, or point EVALXIETY_AGENTS_DIR at your own repo, to version them.
+/agents/*
+!/agents/example-support-bot/
+!/agents/_template/
+!/agents/custom-checks.ts
+/data/agents/

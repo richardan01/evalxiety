@@ -6,7 +6,7 @@ gets built next.
 
 ## Run the tests
 
-You need Node.js 20.9 or newer (CI uses Node 24).
+You need Node.js 22.12+ or 24 (the test runner requires one of these; CI uses Node 24).
 
 ```bash
 npm ci                         # install exactly what package-lock.json pins
@@ -36,7 +36,8 @@ be merged, however useful it is otherwise.
    as human labels or as gold. Failure-mode frequencies, gold examples and judge calibration are all built from human
    labels, so one fake label corrupts all three.
 3. **Ask before paid API batches.** Any change that runs more than one live call (a multi-case experiment, a judge
-   batch, a calibration run) must show a cost estimate and require explicit confirmation (`confirm_paid_batch`). If
+   batch, a calibration run, an HTTP run against someone's agent) must show a cost estimate and require explicit
+   confirmation (`confirm_paid_batch` in the pricing demo; `confirm_batch` / `confirm` for your agents). If
    your PR needs live results, say so in the PR and the maintainer will decide whether to spend on them. Keep the spend
    cap (`LIVE_SPEND_CAP_USD`) in force.
 4. **Undefined is not zero.** A metric with a zero denominator is `null` and renders as "undefined", never 0 % or 100 %.
@@ -47,20 +48,36 @@ The full list of rules, and where each one is enforced, is in
 
 ## Propose a new code check
 
-A code check (a "deterministic evaluator") answers one narrow, objective question about a trace with PASS or FAIL. If a
-failure needs judgement to spot, it belongs in the AI judge's rubric, not in a code check.
+A code check answers one narrow, objective question about a trace with PASS or FAIL. If a failure needs judgement to
+spot, it belongs in an LLM judge question, not in a code check. There are three kinds of check, and they live in
+different places.
 
-**Start with an issue, not a PR.** Describe:
+**A check for your own agent** needs no PR. Add it to `checks` in `agents/<your-agent>/agent.json` using a built-in
+type, or write a TypeScript function in `agents/custom-checks.ts`. See
+[docs/use-your-agent.md](docs/use-your-agent.md#code-checks-checks-in-agentjson).
 
-- the failure you saw, with at least one real trace or case ID that shows it;
-- the yes/no question the check would answer;
-- the exact pass and fail rules, including any tolerance;
-- whether it should block a release on its own, and why.
+**A new built-in check type** (something many agents would use, like `cites_evidence`) is a PR. Start with an issue
+that describes:
+
+- the failure you saw, with at least one real trace that shows it (anonymised is fine);
+- the yes/no question the check type would answer, and its settings;
+- the exact pass and fail rules, including any tolerance, and when it is NOT_APPLICABLE.
 
 Checks should come from failures someone actually saw while reviewing traces (error analysis), not from a list of
-things that might go wrong.
+things that might go wrong. Once the idea is agreed, a built-in type touches these files:
 
-Once the idea is agreed, a check touches these files:
+| What | Where |
+|---|---|
+| The settings schema (one entry in the `type` union) | `CheckConfig` in `src/lib/agents/schemas.ts` |
+| The implementation and its plain-words rule | `runBuiltIn` and `describeRule` in `src/lib/agents/checks.ts` |
+| Tests: at least one PASS, one FAIL, and NOT_APPLICABLE or ERROR where they can happen | `src/lib/agents/checks.test.ts` |
+| The reference table | `docs/use-your-agent.md` |
+| The in-app guide's list of check types | `src/lib/guide/knowledge.ts` |
+
+A check that can't run must return ERROR, never PASS. Run `npm test` and say in the PR which outcome each new test
+forces.
+
+**A check for the built-in pricing demo** is a PR to `src/lib/evaluators/deterministic.ts`:
 
 | What | Where |
 |---|---|
@@ -71,21 +88,16 @@ Once the idea is agreed, a check touches these files:
 | "How to fix this" guidance in the fix panel | `GUIDE` in `src/app/evaluators/FixPanel.tsx` |
 | Short display label | `src/app/evaluators/matrix.ts`, `src/app/experiments/shared.tsx`, `src/app/_overview/DashboardCharts.tsx` |
 
-Two things to know:
-
-- Every check in `DETERMINISTIC_EVALUATORS` counts toward "cases passing every check" as soon as it is added. So a
-  check must arrive with tests that cover both outcomes, and only then is it marked `validated_unit_tests`.
-- Adding a check changes the pass counts of every existing run. Say so in the PR, and include the before and after
-  numbers from the Experiments tab.
-
-The check system is planned to become pluggable per agent (see [docs/plan-any-agent.md](docs/plan-any-agent.md)), so
-these steps may change. Proposals made as issues will carry over.
+Every check in `DETERMINISTIC_EVALUATORS` counts toward "cases passing every check" as soon as it is added, so it must
+arrive with tests that cover both outcomes. Adding one changes the pass counts of every existing run: say so in the
+PR, with the before and after numbers from the Experiments tab.
 
 ## Pull requests
 
 - Keep each PR to one change, and explain why in the description.
 - Add or update tests for any logic you change.
-- Don't commit `.env.local`, API keys or anything under `data/` that came from a live run you didn't intend to share.
+- Don't commit `.env.local`, API keys, your own agents' folders or anything under `data/` that came from a live run you
+  didn't intend to share. (`agents/*` and `data/agents/` are git-ignored by default for this reason.)
 - Changes to `data/` (traces, labels, experiment runs) need a note on where the data came from.
 
 By contributing, you agree that your contributions are licensed under the [MIT License](LICENSE).

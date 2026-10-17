@@ -255,16 +255,18 @@ export function StartHere() {
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
             Onboard your own agent
-            <Badge tone="amber">today: built-in pricing agent</Badge>
+            <Link href="/agents" className="text-xs font-medium text-sky-700 hover:underline">
+              Evaluate your agent →
+            </Link>
           </h2>
-          <p className="mt-1 text-sm text-slate-600">The method is agent-agnostic. To run it on yours you need five things:</p>
+          <p className="mt-1 text-sm text-slate-600">The method is agent-agnostic. To run it on yours you need traces, test cases and objective rules; a judge question and an HTTP endpoint are optional:</p>
           <ol className="mt-3 space-y-2 text-sm">
             {[
-              ["Traces", "Input, the evidence your agent saw, its answer. One JSON record per run.", "Trace import (JSONL)", false],
-              ["Test cases", "20–100 realistic inputs that vary on the dimensions that matter, frozen so comparisons are fair.", "Case file", false],
-              ["Objective rules", "Policies or thresholds you can check in code — the source of your deterministic checks.", "Check plugins", false],
-              ["A rubric", "The review checklist and one narrow judge criterion, written after you've seen real failures.", "Rubric page", true],
-              ["A way to re-run", "An endpoint or command so Evalxiety can execute a new version on the frozen cases.", "HTTP adapter", false],
+              ["Traces", "Input, the evidence your agent saw, its answer. One JSON record per case.", "trace import (JSONL)", true],
+              ["Test cases", "10–30 real inputs to start (grow toward 100) that vary on the dimensions that matter, frozen so comparisons are fair.", "agents/<id>/cases.jsonl", true],
+              ["Objective rules", "Policies or thresholds you can check in code — the source of your deterministic checks.", "checks in agent.json, or custom TypeScript", true],
+              ["A judge question", "One narrow yes/no question for a subjective failure, written after you've seen real failures.", "judge in agent.json", true],
+              ["A way to re-run", "An endpoint so Evalxiety can run a new version on the frozen cases (or import a file each time).", "HTTP adapter", true],
             ].map(([what, why, where, exists]) => (
               <li key={String(what)} className="flex gap-3">
                 <span className={cx("mt-0.5 h-5 w-5 shrink-0 rounded-full text-center text-xs leading-5", exists ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500")}>{exists ? "✓" : "○"}</span>
@@ -276,11 +278,12 @@ export function StartHere() {
             ))}
           </ol>
           <p className="mt-3 text-xs text-slate-500">
-            Today only the rubric is generic; traces, cases, checks and the runner are wired to the pricing agent. You can already read everything from Claude via{" "}
-            <Link href="/connect" className="text-sky-700 hover:underline">
-              Connect (MCP)
-            </Link>
-            .
+            Try the starter kit in{" "}
+            <Link href="/agents" className="text-sky-700 hover:underline">
+              Your agents
+            </Link>{" "}
+            (<code>agents/example-support-bot</code>), then copy the blank template <code>agents/_template</code> for your own agent. Guide:{" "}
+            <code>docs/use-your-agent.md</code>. Not built yet: a CI command that fails a build on No ship.
           </p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">

@@ -8,10 +8,16 @@
 import type { DeterministicResult, EvalOutcome, JudgeVerdict, Trace } from "../domain/schemas";
 import { DETERMINISTIC_EVALUATORS, evaluateTrace } from "../evaluators/deterministic";
 
+/** The checks a summary or comparison is computed over. Defaults to the pricing demo's checks. */
+export type CheckDefs = ReadonlyArray<{ evaluator_id: string; severity: string }>;
+
+/** imported / http come from "your agents" (src/lib/agents); live / mock from the pricing demo. */
+export type CaseExecutionMode = "live" | "mock" | "imported" | "http";
+
 export interface CaseEvaluation {
   case_id: string;
   trace_id: string | null;
-  execution_mode: "live" | "mock" | null;
+  execution_mode: CaseExecutionMode | null;
   execution_error: string | null;
   results: DeterministicResult[];
   /** null = cannot be determined (no trace). Errors count as not passing. */
@@ -101,7 +107,7 @@ export interface RunSummary {
   mean_latency_ms: number | null;
   p50_latency_ms: number | null;
   max_latency_ms: number | null;
-  execution_modes: Array<"live" | "mock">;
+  execution_modes: CaseExecutionMode[];
   cache_hits: number;
 }
 
@@ -112,9 +118,9 @@ function median(xs: number[]): number | null {
   return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
 }
 
-export function summarizeRun(evals: CaseEvaluation[]): RunSummary {
+export function summarizeRun(evals: CaseEvaluation[], defs: CheckDefs = DETERMINISTIC_EVALUATORS): RunSummary {
   const per: Record<string, EvaluatorTally> = {};
-  for (const d of DETERMINISTIC_EVALUATORS) per[d.evaluator_id] = { pass: 0, fail: 0, not_applicable: 0, error: 0, pass_rate: null };
+  for (const d of defs) per[d.evaluator_id] = { pass: 0, fail: 0, not_applicable: 0, error: 0, pass_rate: null };
   for (const e of evals) {
     for (const r of e.results) {
       const t = per[r.evaluator_id];
@@ -149,7 +155,7 @@ export function summarizeRun(evals: CaseEvaluation[]): RunSummary {
     mean_latency_ms: latencies.length ? latencies.reduce((a, b) => a + b, 0) / latencies.length : null,
     p50_latency_ms: median(latencies),
     max_latency_ms: latencies.length ? Math.max(...latencies) : null,
-    execution_modes: [...new Set(evals.map((e) => e.execution_mode).filter((m): m is "live" | "mock" => m !== null))],
+    execution_modes: [...new Set(evals.map((e) => e.execution_mode).filter((m): m is CaseExecutionMode => m !== null))],
     cache_hits: evals.filter((e) => e.cache_hit).length,
   };
 }
@@ -188,7 +194,7 @@ export interface RunComparison {
 }
 
 /** Paired, case-level comparison. Both runs must cover exactly the same cases. */
-export function compareRuns(baseline: CaseEvaluation[], candidate: CaseEvaluation[]): RunComparison {
+export function compareRuns(baseline: CaseEvaluation[], candidate: CaseEvaluation[], defs: CheckDefs = DETERMINISTIC_EVALUATORS): RunComparison {
   const bIds = baseline.map((e) => e.case_id).sort();
   const cIds = candidate.map((e) => e.case_id).sort();
   if (bIds.join("|") !== cIds.join("|")) {
@@ -197,7 +203,7 @@ export function compareRuns(baseline: CaseEvaluation[], candidate: CaseEvaluatio
   const byCase = new Map(candidate.map((e) => [e.case_id, e]));
   const pairs: PairedCase[] = baseline.map((b) => {
     const c = byCase.get(b.case_id)!;
-    const evaluator_changes: EvaluatorChange[] = DETERMINISTIC_EVALUATORS.map((d) => {
+    const evaluator_changes: EvaluatorChange[] = defs.map((d) => {
       const from = b.results.find((r) => r.evaluator_id === d.evaluator_id)?.outcome ?? null;
       const to = c.results.find((r) => r.evaluator_id === d.evaluator_id)?.outcome ?? null;
       // ERROR means "no evidence", so PASS→ERROR is incomplete, not a regression (and ERROR→PASS is not a fix).
@@ -222,10 +228,10 @@ export function compareRuns(baseline: CaseEvaluation[], candidate: CaseEvaluatio
         .map((x) => x.evaluator_id),
     };
   });
-  const bSum = summarizeRun(baseline);
-  const cSum = summarizeRun(candidate);
+  const bSum = summarizeRun(baseline, defs);
+  const cSum = summarizeRun(candidate, defs);
   const per: RunComparison["per_evaluator"] = {};
-  for (const d of DETERMINISTIC_EVALUATORS) {
+  for (const d of defs) {
     per[d.evaluator_id] = { baseline: bSum.per_evaluator[d.evaluator_id], candidate: cSum.per_evaluator[d.evaluator_id] };
   }
   const ids = (k: CaseChange) => pairs.filter((p) => p.change === k).map((p) => p.case_id);

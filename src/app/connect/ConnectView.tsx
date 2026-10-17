@@ -4,6 +4,7 @@
  * Connect: how to use Evalxiety from Claude Desktop, Claude Code or (later) your own agent.
  * Everything shown comes from GET /api/connect, so the snippets carry this machine's real paths.
  */
+import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { getJSON } from "@/lib/client/api";
 import { Badge, Button, Callout, Card, InfoTip, MockBadge, PageHeader, cx } from "@/components/ui";
@@ -279,29 +280,26 @@ export function ConnectView() {
         </Card>
 
         <div className="space-y-5">
-          <Card
-            title={
-              <span className="flex items-center gap-2">
-                Bring your own agent <Badge tone="amber">coming next</Badge>
-              </span>
-            }
-          >
-            <p className="text-sm text-slate-700">Today the agent under test is the built-in pricing agent.</p>
+          <Card title="Bring your own agent">
+            <p className="text-sm text-slate-700">
+              Evaluate any agent from <Link href="/agents" className="text-sky-700 hover:underline">Your agents</Link>. MCP tools <code className="font-mono text-xs">list_my_agents</code>,{" "}
+              <code className="font-mono text-xs">get_agent_status</code> and <code className="font-mono text-xs">get_agent_trace</code> read them from Claude.
+            </p>
             <ul className="mt-2 space-y-1 text-sm text-slate-600">
               <li className="flex items-center gap-1.5">
-                <span className="text-slate-400">○</span> Trace import (JSONL)
+                <span className="text-emerald-600">✓</span> Trace import (JSONL)
                 <InfoTip>Upload your agent&apos;s logged traces and review, check and gate them here.</InfoTip>
               </li>
               <li className="flex items-center gap-1.5">
-                <span className="text-slate-400">○</span> HTTP adapter
+                <span className="text-emerald-600">✓</span> HTTP adapter
                 <InfoTip>Point Evalxiety at your agent&apos;s endpoint so frozen cases run against it.</InfoTip>
               </li>
               <li className="flex items-center gap-1.5">
                 <span className="text-slate-400">○</span> <code className="font-mono text-xs">evalxiety gate --ci</code>
                 <InfoTip>Fail a CI build when the release gate is not met.</InfoTip>
+                <Badge tone="amber">not built yet</Badge>
               </li>
             </ul>
-            <p className="mt-2 text-xs text-slate-500">Not built yet.</p>
           </Card>
         </div>
       </div>

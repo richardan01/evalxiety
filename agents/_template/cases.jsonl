@@ -1,0 +1,3 @@
+// One test case per line: replace these comment lines with 10-30 real inputs your agent gets.
+// {"case_id": "q01", "input": {"question": "Can I get a refund?"}, "expected": {"escalate": false}, "notes": "inside the 30-day window"}
+// {"case_id": "q02", "split": "heldout", "input": {"question": "My lawyer will be in touch."}, "expected": {"escalate": true}}

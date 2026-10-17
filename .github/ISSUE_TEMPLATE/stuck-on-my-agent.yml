@@ -9,8 +9,8 @@ body:
         This is the most useful feedback the project gets, so thank you. There is no wrong answer here: "I didn't
         know where to start" is a valid report.
 
-        Today Evalxiety only evaluates its built-in pricing agent. Trace import and support for your own agent are
-        planned (see `docs/plan-any-agent.md`). Telling us where you got stuck decides what gets built first.
+        Evaluating your own agent is new (see `docs/use-your-agent.md`), so expect rough edges. Telling us where you
+        got stuck decides what gets fixed first.
         Don't paste API keys or private data. A made-up example with the same shape is fine.
   - type: textarea
     id: agent

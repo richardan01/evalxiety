@@ -19,7 +19,11 @@ const NAV: Array<{ section: string; items: Array<{ href: string; label: string; 
     ],
   },
   {
-    section: "Human review",
+    section: "Your agents",
+    items: [{ href: "/agents", label: "Evaluate your agent", icon: "◎", hint: "Import runs or call your agent over HTTP, then review, compare and gate" }],
+  },
+  {
+    section: "Pricing demo · review",
     items: [
       { href: "/review", label: "Review traces", icon: "✎", hint: "Label agent answers (open coding)" },
       { href: "/review/taxonomy", label: "Axial coding", icon: "⧉", hint: "Group your notes into failure types" },
@@ -28,7 +32,7 @@ const NAV: Array<{ section: string; items: Array<{ href: string; label: string; 
     ],
   },
   {
-    section: "Evaluate",
+    section: "Pricing demo · evaluate",
     items: [
       { href: "/evaluators", label: "Checks", icon: "✓", hint: "Code checks and AI judge calibration" },
       { href: "/experiments", label: "Experiments", icon: "⇄", hint: "Baseline vs corrected on frozen cases" },
@@ -144,6 +148,7 @@ export function Sidebar() {
 
 /** Thin banner at the top of the content area when running in mock mode. */
 export function MockBanner() {
+  const pathname = usePathname() ?? "/";
   const [mode, setMode] = useState<ModeResponse | null>(null);
   useEffect(() => {
     fetch("/api/mode", { cache: "no-store" })
@@ -154,7 +159,9 @@ export function MockBanner() {
   if (mode?.mode !== "mock") return null;
   return (
     <div className="bg-amber-100 px-6 py-1.5 text-center text-xs font-medium text-amber-950">
-      MOCK MODE — new runs use a mock agent and judge ({mode.reason}). Mock results are labelled and are not evidence.
+      {pathname.startsWith("/agents")
+        ? `MOCK MODE — the LLM judge only runs on starter-kit data, using a labelled mock (${mode.reason}). Imported and HTTP runs come from the agent itself.`
+        : `MOCK MODE — new runs use a mock agent and judge (${mode.reason}). Mock results are labelled and are not evidence.`}
     </div>
   );
 }
