@@ -6,7 +6,8 @@
  *           evidence [{id, text}], tool_calls [{name, input, output, error}], model_id, cost_usd, metadata.
  *           Otherwise the whole body is the output.
  *
- * Safety: the URL and headers come only from agent.json on disk (never from a request body); secrets come from the
+ * Safety: the URL and headers come from agent.json on disk — or, for the onboarding wizard's one test call, from a
+ * same-origin local request whose headers can only be ${env:} references (onboard.ts); secrets come from the
  * environment via ${env:NAME}, scoped to the agent, and are redacted from anything stored; redirects are refused so a
  * token can't be forwarded to another host; responses are capped in size.
  */

@@ -4,12 +4,15 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getJSON } from "@/lib/client/api";
-import { Badge, Callout, Card, EmptyState, ExampleBadge, PageHeader, StatusPill } from "@/components/ui";
+import { Badge, Button, Callout, Card, EmptyState, ExampleBadge, PageHeader, StatusPill } from "@/components/ui";
+import { AgentWizard } from "./AgentWizard";
 import type { AgentsListView } from "./types";
 
 export function AgentsHome() {
   const [view, setView] = useState<AgentsListView | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [wizard, setWizard] = useState(false);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
     let alive = true;
@@ -19,7 +22,9 @@ export function AgentsHome() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [reload]);
+
+  const ownAgents = view?.agents.filter((a) => !a.example).length ?? 0;
 
   return (
     <div>
@@ -32,7 +37,19 @@ export function AgentsHome() {
             <code>cases.jsonl</code> (test cases). The built-in pricing agent lives in the other tabs.
           </>
         }
+        action={!wizard && <Button onClick={() => setWizard(true)}>+ Connect your agent</Button>}
       />
+      {wizard && (
+        <div className="mt-4">
+          <AgentWizard onCreated={() => setReload((n) => n + 1)} onCancel={() => setWizard(false)} />
+        </div>
+      )}
+      {!wizard && view && ownAgents === 0 && (
+        <Callout tone="blue" title="Bring your own agent">
+          Only the starter kit is here so far. <button type="button" onClick={() => setWizard(true)} className="font-medium text-sky-800 underline">Connect your agent</button> to
+          test its endpoint, pick starter checks and paste test cases. It takes about 3 minutes.
+        </Callout>
+      )}
       {error && <Callout tone="red" title="Couldn't load agents">{error}</Callout>}
       {view && view.problems.length > 0 && (
         <Callout tone="red" title="Some agent folders have problems">
@@ -76,10 +93,11 @@ export function AgentsHome() {
       </div>
       {view && view.agents.length === 0 && view.problems.length === 0 && (
         <EmptyState title="No agents yet">
-          No folders found in <code>{view.agents_dir}</code>. Copy the blank template there to begin: <code>cp -r agents/_template {view.agents_dir}/my-agent</code>.
+          No folders found in <code>{view.agents_dir}</code>. Use <b>Connect your agent</b> above, or copy the blank template:{" "}
+          <code>cp -r agents/_template {view.agents_dir}/my-agent</code>.
         </EmptyState>
       )}
-      <Card title="Add your own agent" subtitle="About 15 minutes for a first import" className="mt-6">
+      <Card title="Add your own agent by hand" subtitle="What the wizard does for you, if you'd rather edit the files yourself" className="mt-6">
         <ol className="list-decimal space-y-2 pl-5 text-sm text-slate-700">
           <li>
             Copy the blank template: <code>cp -r agents/_template agents/my-agent</code>, and name it in <code>agent.json</code>. (Don&apos;t copy the starter
