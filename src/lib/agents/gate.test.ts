@@ -213,10 +213,52 @@ describe("next step", () => {
     expect(evaluateAgentGate(input()).next_step).toMatch(/Evidence is complete/);
   });
 
-  it("a deleted, never-revealed held-out case is a warning for the approver, not a permanent block", () => {
-    const g = evaluateAgentGate(input({ heldout: { exists: false, revealed: true, moved_to_dev_without_reveal: [], removed_without_reveal: ["h9"] } }));
-    expect(g.reasons.find((r) => r.code === "heldout_removed")!.level).toBe("WARNING");
-    expect(g.status).toBe("ELIGIBLE_FOR_DEMO_APPROVAL");
+  it("deleting some never-revealed held-out cases is a warning for the approver; deleting all of them blocks", () => {
+    const some = evaluateAgentGate(input({ heldout: { exists: true, revealed: true, moved_to_dev_without_reveal: [], removed_without_reveal: ["h9"] } }));
+    expect(some.reasons.find((r) => r.code === "heldout_removed")!.level).toBe("WARNING");
+    expect(some.status).toBe("ELIGIBLE_FOR_DEMO_APPROVAL");
+    expect(some.checks.find((c) => c.id === "heldout")!.status).toBe("fail");
+    const all = evaluateAgentGate(input({ heldout: { exists: false, revealed: true, moved_to_dev_without_reveal: [], removed_without_reveal: ["h1", "h2"] } }));
+    expect(all.reasons.find((r) => r.code === "heldout_removed")!.level).toBe("INSUFFICIENT_EVIDENCE");
+  });
+
+  it("NO_SHIP comes before baseline housekeeping, and the fallback knows about approvals", () => {
+    const crit = evaluateAgentGate(
+      input({
+        candidate: { run: run("cand", "v2"), evals: CASES.map((c) => ev("cand", c, c === "c1" ? { safe: "FAIL" } : {})) },
+        baseline: { run: run("base", "v1", { frozen_hash: "OTHER" }), evals: CASES.map((c) => ev("base", c)) },
+      }),
+    );
+    expect(crit.next_step).toMatch(/Fix the failing cases/);
+    const approval = {
+      approval_id: "ap",
+      approver: "Rich",
+      decision: "rejected" as const,
+      notes: "",
+      candidate_run_id: "cand",
+      baseline_run_id: "base",
+      evidence_snapshot_hash: "S1",
+      status_at_approval: "ELIGIBLE_FOR_DEMO_APPROVAL" as const,
+      created_at: "2026-10-17T01:00:00Z",
+    };
+    expect(evaluateAgentGate(input({ approvals: [approval] })).next_step).toMatch(/rejected/);
+  });
+
+  it("a judge flag on a reviewed trace has its own reason and next step", () => {
+    const g = evaluateAgentGate(
+      input({
+        agent: { name: "Bot", example: false, pass_all_threshold: 0.9, min_reviewed_traces: 3, judge_configured: true },
+        candidate: { run: run("cand", "v2"), evals: CASES.map((c) => ev("cand", c, {}, { judge_verdict: c === "c2" ? "FAIL" : "PASS" })) },
+        candidate_annotations: CASES.map((c) => ann("cand", c, { judge_label: "not_assessed" })),
+      }),
+    );
+    expect(g.reasons.find((r) => r.code === "judge_flags_unanswered")!.case_ids).toEqual(["c2"]);
+    expect(g.next_step).toMatch(/answer the judge's question/i);
+  });
+
+  it("a matches_expected check that can't apply to some cases is a visible warning", () => {
+    const g = evaluateAgentGate(input({ check_gaps: [{ evaluator_id: "esc", field: "escalate", case_ids: ["c3"] }] }));
+    expect(g.reasons.find((r) => r.code === "expected_field_missing:esc")).toMatchObject({ level: "WARNING", case_ids: ["c3"] });
   });
 
   it("the starter kit's next step follows the tour", () => {

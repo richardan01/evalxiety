@@ -8,7 +8,7 @@ import { modeInfo } from "../llm/client";
 import { newId, sha256 } from "../storage/store";
 import type { DeterministicResult, ReleaseApproval } from "../domain/schemas";
 import { judgeCallEstimate } from "../experiments/runner";
-import { checkDefinitions, isEmptyOutput, runChecks, type AgentCheckDefinition } from "./checks";
+import { checkDefinitions, hasPath, isEmptyOutput, runChecks, type AgentCheckDefinition } from "./checks";
 import { getAgent, loadAgents } from "./config";
 import { evaluateAgentGate, type AgentGateResult } from "./gate";
 import { assertSafeConnection, referencedEnv } from "./http";
@@ -162,34 +162,52 @@ export const NO_BASELINE = "none";
 /** Labels are compared case- and space-insensitively: "v1", "V1" and "v1 " are the same version. */
 export const labelKey = (label: string) => label.trim().toLowerCase();
 /** Runs labelled scratch-… (e.g. a test that a check can fail) are never picked as defaults. */
-export const isScratch = (label: string) => labelKey(label).startsWith("scratch");
+export const isScratch = (label: string) => labelKey(label).startsWith("scratch-");
 
 /**
- * Defaults follow intent, not timestamps:
- * - with one version label so far, its newest run is the BASELINE (you imported what you ship today);
- * - otherwise the CANDIDATE is the newest run of the label introduced most recently (re-running the baseline label,
- *   as the gate asks after a reveal, never swaps the roles), and the BASELINE is the newest run on the same cases
- *   under a different label.
- * Only completed runs count, and scratch-… labels are skipped unless picked explicitly.
+ * Defaults follow intent, not timestamps. Only completed, non-scratch runs count, and labels match ignoring case and
+ * surrounding spaces.
+ * - BASELINE = the version you ship: the label of the most recently approved candidate, or else the first label you
+ *   imported. Its newest run on the candidate's cases is used.
+ * - CANDIDATE = the newest run of the most recently introduced label other than the baseline's. With only one label,
+ *   there is no candidate yet.
+ * An explicit pick overrides either side; "none" means no baseline.
  */
-export function pickDefaults(runs: AgentRun[], candidateId?: string | null, baselineId?: string | null) {
+export function pickDefaults(runs: AgentRun[], candidateId?: string | null, baselineId?: string | null, approvedRunIds: string[] = []) {
   const done = runs.filter((r) => r.status === "completed" && !isScratch(r.agent_version));
-  const newest = (xs: AgentRun[]) => [...xs].sort((a, b) => (a.created_at < b.created_at ? 1 : a.created_at > b.created_at ? -1 : a.run_id < b.run_id ? 1 : -1))[0];
+  const byNewest = (a: AgentRun, b: AgentRun) => (a.created_at < b.created_at ? 1 : a.created_at > b.created_at ? -1 : a.run_id < b.run_id ? 1 : -1);
+  const newest = (xs: AgentRun[]) => [...xs].sort(byNewest)[0] ?? null;
   const firstSeen = new Map<string, string>();
   for (const r of done) {
     const k = labelKey(r.agent_version);
     const prev = firstSeen.get(k);
     if (!prev || r.created_at < prev) firstSeen.set(k, r.created_at);
   }
-  const labels = [...firstSeen.keys()].sort((a, b) => (firstSeen.get(a)! < firstSeen.get(b)! ? 1 : firstSeen.get(a)! > firstSeen.get(b)! ? -1 : a < b ? 1 : -1));
+  const oldestFirst = [...firstSeen.keys()].sort((a, b) => (firstSeen.get(a)! < firstSeen.get(b)! ? -1 : firstSeen.get(a)! > firstSeen.get(b)! ? 1 : a < b ? -1 : 1));
   const ofLabel = (k: string) => done.filter((r) => labelKey(r.agent_version) === k);
+  const approvedLabel = [...approvedRunIds]
+    .reverse()
+    .map((id) => runs.find((r) => r.run_id === id))
+    .find((r): r is AgentRun => !!r && firstSeen.has(labelKey(r.agent_version)));
+  const explicitBaseline = baselineId && baselineId !== NO_BASELINE ? runs.find((r) => r.run_id === baselineId) ?? null : null;
+  const shipLabel = explicitBaseline ? labelKey(explicitBaseline.agent_version) : approvedLabel ? labelKey(approvedLabel.agent_version) : oldestFirst[0];
 
   let candidate: AgentRun | null = candidateId ? runs.find((r) => r.run_id === candidateId) ?? null : null;
-  let baseline: AgentRun | null = baselineId && baselineId !== NO_BASELINE ? runs.find((r) => r.run_id === baselineId) ?? null : null;
-  if (!candidateId && !baselineId && labels.length === 1) return { candidate: null, baseline: newest(ofLabel(labels[0])) ?? null };
-  if (!candidateId) candidate = labels.length ? newest(ofLabel(labels[0])) ?? null : null;
-  if (!baselineId && candidate) {
-    baseline = newest(done.filter((r) => r.frozen_hash === candidate!.frozen_hash && labelKey(r.agent_version) !== labelKey(candidate!.agent_version))) ?? null;
+  if (!candidateId) {
+    const latestOther = [...oldestFirst].reverse().find((k) => k !== shipLabel);
+    candidate = latestOther ? newest(ofLabel(latestOther)) : null;
+  }
+  let baseline: AgentRun | null = null;
+  if (baselineId === NO_BASELINE) baseline = null;
+  else if (explicitBaseline) baseline = explicitBaseline;
+  else if (shipLabel) {
+    const shipRuns = ofLabel(shipLabel).filter((r) => r.run_id !== candidate?.run_id);
+    if (candidate && labelKey(candidate.agent_version) === shipLabel) {
+      // You picked the shipping version itself as the candidate: compare with the newest other label instead.
+      baseline = newest(done.filter((r) => r.frozen_hash === candidate!.frozen_hash && labelKey(r.agent_version) !== shipLabel));
+    } else {
+      baseline = newest(shipRuns.filter((r) => !candidate || r.frozen_hash === candidate.frozen_hash)) ?? newest(shipRuns);
+    }
   }
   return { candidate, baseline };
 }
@@ -244,6 +262,7 @@ async function gateFor(l: Loaded, candidate: AgentRun | null, baseline: AgentRun
       used_before_reveal: integrity.used_before_reveal,
     },
     current_cases_hash: casesHash,
+    check_gaps: checkGaps(l.agent, lock),
     latest_frozen_hash: frozen[frozen.length - 1]?.content_hash ?? null,
     candidate: cand,
     baseline: base,
@@ -254,6 +273,17 @@ async function gateFor(l: Loaded, candidate: AgentRun | null, baseline: AgentRun
     evidence_snapshot_hash: snapshot,
   });
   return { gate, snapshot, defs, heldout, frozen, cal, lock };
+}
+
+/** matches_expected checks that can't apply to some (visible) cases because their `expected` lacks the field. */
+function checkGaps(agent: LoadedAgent, lock: ReturnType<typeof computeLockState>) {
+  return agent.config.checks.flatMap((c) => {
+    if (c.type !== "matches_expected" || !c.expected_field) return [];
+    const case_ids = agent.cases
+      .filter((x) => !lock.locked.has(x.case_id) && x.expected !== undefined && !hasPath(x.expected, c.expected_field))
+      .map((x) => x.case_id);
+    return case_ids.length ? [{ evaluator_id: c.id, field: c.expected_field, case_ids }] : [];
+  });
 }
 
 /** Input hash per stored trace (traces never change, so this is computed once per process). */
@@ -298,7 +328,8 @@ function heldoutIntegrity(l: Loaded, frozen: Awaited<ReturnType<typeof listFroze
 
 export async function agentOverview(agentId: string, opts: { candidate?: string | null; baseline?: string | null } = {}) {
   const l = await loadAll(agentId);
-  const { candidate, baseline } = pickDefaults(l.runs, opts.candidate, opts.baseline);
+  const approvedRunIds = (await listAgentApprovals(agentId)).filter((a) => a.decision === "approved").sort((a, b) => (a.created_at < b.created_at ? -1 : 1)).map((a) => a.candidate_run_id);
+  const { candidate, baseline } = pickDefaults(l.runs, opts.candidate, opts.baseline, approvedRunIds);
   const { gate, snapshot, defs, heldout, frozen, cal, lock } = await gateFor(l, candidate, baseline);
   const currentHash = hashAgentCases(l.agent.cases);
   const runs: RunRow[] = l.runs.map((r) => ({ ...r, summary: summarizeRun(evalRun(l, r), defs), stale: r.frozen_hash !== currentHash }));
@@ -404,7 +435,9 @@ export async function agentTraceDetail(agentId: string, traceId: string, reviewe
   const run = l.runs.find((r) => r.run_id === trace.run_id) ?? null;
   const evaluation = evaluateAgentCase(l.agent, trace.case_id, trace, l.judge.get(traceId)?.verdict ?? null);
   const judgeHistory = (await listAgentJudgeResults(agentId)).filter((j) => j.trace_id === traceId).sort((a, b) => b.created_at.localeCompare(a.created_at));
-  const testCase = l.agent.cases.find((c) => c.case_id === trace.case_id) ?? null;
+  const lock = computeLockState(l.agent, await listFrozenVersions(agentId), await getAgentHeldout(agentId));
+  // An old trace can share its case_id with a case that is now locked: don't reveal that case's expected value.
+  const testCase = lock.locked.has(trace.case_id) ? null : l.agent.cases.find((c) => c.case_id === trace.case_id) ?? null;
   return {
     agent: { agent_id: l.agent.agent_id, name: l.agent.config.name, example: l.agent.config.example, judge: l.agent.config.judge, judge_version: l.judgeVersion },
     trace,
@@ -424,12 +457,15 @@ export async function agentTraceDetail(agentId: string, traceId: string, reviewe
 function reviewQueueFrom(l: Loaded, runId: string | null) {
   const run = runId ? l.runs.find((r) => r.run_id === runId) : l.runs[0];
   if (!run) return { run_id: null, items: [] as Array<{ case_id: string; trace_id: string; reviewed: boolean }> };
-  const reviewed = new Set(l.annotations.map((a) => a.trace_id));
+  // "Reviewed" uses the gate's rule: labelled, and if the judge flagged it, the judge's question answered too.
+  const labelled = new Set(l.annotations.map((a) => a.trace_id));
+  const answered = new Set(l.annotations.filter((a) => a.judge_label !== "not_assessed").map((a) => a.trace_id));
+  const flagged = (tid: string) => ["FAIL", "REQUIRES_REVIEW", "ERROR"].includes(l.judge.get(tid)?.verdict ?? "");
   return {
     run_id: run.run_id,
     items: Object.entries(run.trace_ids)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([case_id, trace_id]) => ({ case_id, trace_id, reviewed: reviewed.has(trace_id) })),
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .map(([case_id, trace_id]) => ({ case_id, trace_id, reviewed: labelled.has(trace_id) && (!flagged(trace_id) || answered.has(trace_id)) })),
   };
 }
 
@@ -474,7 +510,8 @@ async function judgeRunMissingUnlocked(agentId: string, runId: string, actor: st
   const todo = Object.values(run.trace_ids)
     .map((tid) => l.traces.get(tid))
     .filter((t): t is AgentTrace => {
-      if (!t || t.execution_error || isEmptyOutput(t.output)) return false; // nothing to judge
+      // Nothing to judge: an errored trace, or an empty answer (unless the agent allows empty answers).
+      if (!t || t.execution_error || (!l.agent.config.allow_empty_output && isEmptyOutput(t.output))) return false;
       const current = l.judge.get(t.trace_id);
       return !current || current.verdict === "ERROR"; // no verdict yet, or retry an errored one (rate limit, timeout)
     });

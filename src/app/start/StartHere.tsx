@@ -259,7 +259,7 @@ export function StartHere() {
               Evaluate your agent →
             </Link>
           </h2>
-          <p className="mt-1 text-sm text-slate-600">The method is agent-agnostic. To run it on yours you need five things:</p>
+          <p className="mt-1 text-sm text-slate-600">The method is agent-agnostic. To run it on yours you need traces, test cases and objective rules; a judge question and an HTTP endpoint are optional:</p>
           <ol className="mt-3 space-y-2 text-sm">
             {[
               ["Traces", "Input, the evidence your agent saw, its answer. One JSON record per case.", "trace import (JSONL)", true],

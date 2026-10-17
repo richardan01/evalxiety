@@ -29,6 +29,8 @@ export interface AgentGateInput {
     /** Held-out content some run traced before it was revealed. */
     used_before_reveal?: string[];
   };
+  /** matches_expected checks that can't apply to some cases because their `expected` lacks the field (typo?). */
+  check_gaps?: Array<{ evaluator_id: string; field: string; case_ids: string[] }>;
   /** Hash of the current cases and of the latest frozen version (null = never frozen). */
   current_cases_hash: string;
   latest_frozen_hash: string | null;
@@ -86,11 +88,23 @@ export function evaluateAgentGate(input: AgentGateInput): AgentGateResult {
     );
   }
   if (input.heldout.removed_without_reveal?.length) {
+    // Deleting some held-out cases shrinks the final check (a warning for the approver); deleting all of them skips it.
+    const allGone = !input.heldout.exists;
     add(
       "heldout_removed",
-      "WARNING",
-      "Held-out case(s) were deleted from cases.jsonl without ever being revealed, so the final check covers fewer cases. Shown to the approver.",
+      allGone ? "INSUFFICIENT_EVIDENCE" : "WARNING",
+      allGone
+        ? "Every held-out case was deleted from cases.jsonl without being revealed, so there is no final check. Restore them, or reveal them before removing any."
+        : "Held-out case(s) were deleted from cases.jsonl without ever being revealed, so the final check covers fewer cases. Shown to the approver.",
       input.heldout.removed_without_reveal,
+    );
+  }
+  for (const gap of input.check_gaps ?? []) {
+    add(
+      `expected_field_missing:${gap.evaluator_id}`,
+      "WARNING",
+      `Check "${gap.evaluator_id}" can't apply to ${gap.case_ids.length} case(s) whose "expected" has no "${gap.field}" (typo in cases.jsonl?), so it reports NOT_APPLICABLE there.`,
+      gap.case_ids,
     );
   }
   if (input.heldout.used_before_reveal?.length) {
@@ -178,14 +192,25 @@ export function evaluateAgentGate(input: AgentGateInput): AgentGateResult {
       }
       return [];
     });
-  if (unresolved.length) {
+  const noReview = unresolved.filter((u) => u.reason === "No human review yet");
+  const judgeUnanswered = unresolved.filter((u) => u.reason !== "No human review yet");
+  if (noReview.length) {
     add(
       "unresolved_required_reviews",
       "INSUFFICIENT_EVIDENCE",
-      `${unresolved.length} candidate case(s) still need human review (every candidate case gets a human look).`,
-      unresolved.map((u) => u.case_id),
+      `${noReview.length} candidate case(s) still need human review (every candidate case gets a human look).`,
+      noReview.map((u) => u.case_id),
     );
   }
+  if (judgeUnanswered.length) {
+    add(
+      "judge_flags_unanswered",
+      "INSUFFICIENT_EVIDENCE",
+      `The judge flagged ${judgeUnanswered.length} reviewed case(s); open each one and answer the judge's question so the flag is resolved.`,
+      judgeUnanswered.map((u) => u.case_id),
+    );
+  }
+
 
   // ---- Blocking failures --------------------------------------------------------
   const critical = evals.filter((e) => e.critical_failures.length > 0);
@@ -245,12 +270,12 @@ export function evaluateAgentGate(input: AgentGateInput): AgentGateResult {
   const chk = (id: string, label: string, ok: boolean | null, detail: string) => checks.push({ id, label, status: ok === null ? "pending" : ok ? "pass" : "fail", detail });
   chk("candidate_complete", "Candidate has a trace for every case", candidate ? !has("required_tests_incomplete") && !has("candidate_run_incomplete") : null, candidate ? `${summary!.n_with_trace}/${input.all_case_ids.length} cases traced` : "no candidate run");
   chk("cases_frozen", "Cases unchanged since the run (hash verified)", candidate ? !has("candidate_stale_cases") && !has("cases_changed") : null, input.current_cases_hash.slice(0, 12));
-  const heldoutBroken = has("heldout_moved_to_dev") || has("heldout_used_before_reveal");
+  const heldoutBroken = has("heldout_moved_to_dev") || has("heldout_used_before_reveal") || has("heldout_removed");
   chk(
     "heldout",
     "Held-out cases intact and revealed for the final check",
     heldoutBroken ? false : input.heldout.exists ? input.heldout.revealed : true,
-    heldoutBroken ? "held-out lock bypassed" : input.heldout.exists ? (input.heldout.revealed ? "revealed" : "locked") : "no held-out cases",
+    heldoutBroken ? (has("heldout_removed") && !has("heldout_moved_to_dev") && !has("heldout_used_before_reveal") ? "held-out case(s) deleted unrevealed" : "held-out lock bypassed") : input.heldout.exists ? (input.heldout.revealed ? "revealed" : "locked") : "no held-out cases",
   );
   chk("real_data", "Real agent output (not example data)", !exampleData, exampleData ? "example data" : candidate ? candidate.run.execution_mode : "—");
   chk("baseline", "Complete baseline on the same cases", baseline && candidate ? baselineUsable : null, baseline ? baseline.run.agent_version : "no baseline run");
@@ -282,7 +307,7 @@ function nextStep(reasons: GateReason[], input: AgentGateInput, approval: AgentG
     if (!input.candidate) return "Now import traces.v2-candidate.jsonl as v2.";
     return "This is the starter kit: compare the runs and try reviewing a trace. To evaluate your own agent, copy the blank template: cp -r agents/_template agents/<your-agent>.";
   }
-  if (has("no_checks")) return "Add at least one code check to agent.json.";
+  if (has("no_checks") && !reasons.some((r) => r.level === "NO_SHIP")) return "Add at least one code check to agent.json.";
   if (has("heldout_moved_to_dev")) return "A never-revealed held-out case is now a dev case: move it back to \"split\": \"heldout\" and freeze a new version.";
   if (has("heldout_used_before_reveal")) return "Some held-out cases were already run before their reveal: give them fresh input, then freeze a new version.";
   if (has("cases_changed")) return "Your cases changed: freeze a new version, then re-run both versions.";
@@ -295,13 +320,18 @@ function nextStep(reasons: GateReason[], input: AgentGateInput, approval: AgentG
   if (has("baseline_is_candidate")) return "Pick a different run as the baseline.";
   if (has("baseline_set_mismatch")) return "The baseline ran on a different version of the cases: re-run it on the current cases.";
   if (has("baseline_cases_differ")) return "The baseline doesn't cover the same cases (held-out ones, after the reveal): re-run it on every case.";
-  if (has("required_tests_incomplete")) return "Some candidate cases have no trace or errored: re-run or re-import them.";
+  if (has("required_tests_incomplete")) {
+    return input.heldout.exists && input.heldout.revealed
+      ? "Some candidate cases have no trace or errored. After a reveal, re-run both versions on every case."
+      : "Some candidate cases have no trace or errored: re-run or re-import them.";
+  }
   if (has("baseline_incomplete")) return "Your baseline has missing or errored cases: re-run or re-import it.";
   if (reviewOpen && has("heldout_not_revealed")) {
     return "Review enough traces to see what fails and whether your change helped (Start reviewing). When you're done tuning, reveal the held-out cases and re-run both versions: the gate needs every trace of that final run reviewed.";
   }
   if (reviewOpen) return "Review traces: click Start reviewing and label each candidate trace pass or fail.";
-  if (has("judge_not_run")) return "Run the judge on the candidate.";
+  if (has("judge_flags_unanswered")) return "Answer the judge's question on the traces it flagged (listed under Still to review).";
+  if (has("judge_not_run")) return "Run the judge on the candidate (real traces need MOCK_MODE=false and ANTHROPIC_API_KEY in .env.local).";
   if (has("heldout_not_revealed")) return "When you're done tuning, reveal the held-out cases and re-run both versions on every case.";
   if (reasons.some((r) => r.level === "INSUFFICIENT_EVIDENCE")) return "Resolve the reasons listed under Why.";
   if (approval === "approved") return "Approved by a named human for this exact evidence.";

@@ -52,6 +52,11 @@ export function computeLockState(agent: LoadedAgent, frozen: FrozenVersion[], he
   const revealedHashes = new Set(heldout.revealed_cases.map((c) => c.input_hash));
   const heldIds = new Set<string>();
   const heldHashes = new Set<string>();
+  // Current held-out content counts from the very first run (before anything is frozen): a dev copy is locked too.
+  for (const c of agent.cases) {
+    const h = caseInputHash(c.input);
+    if (c.split === "heldout" && !revealedHashes.has(h)) heldHashes.add(h);
+  }
   for (const f of frozen) {
     for (const h of f.heldout_cases) {
       if (revealedHashes.has(h.input_hash)) continue;
@@ -108,7 +113,7 @@ export function parseImport(text: string, agent: LoadedAgent, lock: LockState): 
     return { lines: [], problems: [{ line: 0, message: `File is larger than ${MAX_IMPORT_BYTES / 1024 / 1024} MB.` }], heldout_case_ids: [], missing_case_ids: [] };
   }
 
-  text.split("\n").forEach((raw, i) => {
+  text.replace(/^\uFEFF/, "").split("\n").forEach((raw, i) => {
     const line = i + 1;
     if (!raw.trim()) return;
     let json: unknown;

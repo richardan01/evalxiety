@@ -19,7 +19,7 @@ export function jsonError(e: unknown): string {
 }
 
 export function agentsDir(): string {
-  return process.env.EVALXIETY_AGENTS_DIR ?? path.join(/*turbopackIgnore: true*/ process.cwd(), "agents");
+  return process.env.EVALXIETY_AGENTS_DIR || path.join(/*turbopackIgnore: true*/ process.cwd(), "agents");
 }
 
 export interface ConfigProblem {
@@ -100,7 +100,8 @@ export function parseAgentConfig(json: unknown, agentId?: string): { config: Age
 
 async function readText(file: string): Promise<string | null> {
   try {
-    return await fs.readFile(file, "utf8");
+    // Strip a UTF-8 byte-order mark (Windows editors add one), which JSON.parse would reject.
+    return (await fs.readFile(file, "utf8")).replace(/^\uFEFF/, "");
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code === "ENOENT") return null;
     throw err;

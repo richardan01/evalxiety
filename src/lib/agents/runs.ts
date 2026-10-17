@@ -178,7 +178,8 @@ export async function importRun(req: ImportRequest): Promise<{ run: AgentRun; cr
     frozen_hash: frozen.content_hash,
     case_ids: visibleCases(agent, lock).map((c) => c.case_id).sort(),
     trace_ids,
-    status: "completed",
+    // Same rule as HTTP runs: a run where every trace errored is a failed run, never a default baseline or candidate.
+    status: parsed.lines.length > 0 && parsed.lines.every(({ value: l }) => l.error || (!agent.config.allow_empty_output && isEmptyOutput(l.output))) ? "failed" : "completed",
     source_hash,
     notes: req.notes ?? null,
   };

@@ -256,6 +256,8 @@ function runBuiltIn(c: Exclude<CheckConfig, { type: "custom" }>, trace: AgentTra
         const v = field(c.field);
         if (v === MISSING) return { outcome: "FAIL", summary: `Output has no \`${c.field}\`.` };
         const text = typeof v === "string" ? v : textLeaves(v).join("\n");
+        // A blank answer field is no answer: a pattern that happens to match "" must not pass it.
+        if (c.field && !allowEmpty && isBlank(text)) return { outcome: "ERROR", summary: `\`${c.field}\` is empty, so there is no answer to check.` };
         if (text.length > MAX_REGEX_INPUT) return tooLong(text.length);
         const m = matchWithTimeout(re, text);
         if (m === "timeout") {
@@ -302,7 +304,7 @@ function runBuiltIn(c: Exclude<CheckConfig, { type: "custom" }>, trace: AgentTra
       const raw = field(c.citations_field);
       // Fail closed: if the field disappears (renamed, plain-text output) the citations can't be checked at all.
       if (raw === MISSING) return { outcome: "FAIL", summary: `Output has no \`${c.citations_field}\`, so its citations can't be checked.` };
-      const cited = raw === null ? [] : Array.isArray(raw) ? raw : [raw];
+      const cited = raw === null || (typeof raw === "string" && isBlank(raw)) ? [] : Array.isArray(raw) ? raw : [raw];
       const ids: string[] = [];
       for (const x of cited) {
         if (typeof x === "string") ids.push(x);

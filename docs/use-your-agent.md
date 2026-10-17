@@ -10,12 +10,14 @@ only when you choose:
 - **HTTP mode** sends each test input to your agent's URL.
 - **The optional LLM judge** sends each trace (input, evidence, output) to the Anthropic API.
 - **The optional MCP server** hands traces to the Claude client you connect it to.
+- **The in-app guide chat** (bottom right) sends your question and a summary of the app's state to the Anthropic API,
+  in live mode only.
 
 You don't need an Anthropic API key unless you turn on the judge.
 
 ## Try the starter kit (about 5 minutes)
 
-You need Node.js 22 (22.12 or newer) or 24.
+You need Node.js 22.12+ or 24.
 
 ```bash
 git clone https://github.com/richardan01/evalxiety.git && cd evalxiety
@@ -62,22 +64,23 @@ The steps:
 
 1. **Baseline.** Import or run the version you ship today. Label it with something you'll recognise, such as
    `prompt-v3` or a git SHA. Tag it in git (or keep it runnable): you'll run it again at the final check. While it is
-   your only version, it is shown as the baseline.
+   your only version, it is shown as the baseline. Until you approve a release, the first version you import stays the
+   default baseline.
 2. **Read and label.** Click **Start reviewing**. For each trace:
    - mark it pass or fail;
    - write down the *first* thing that went wrong;
    - give that failure a short type name ("missed hand-off"). Reuse names so failures group together;
    - pick a severity. **Critical** on a candidate trace means No ship. Major and minor are shown to the approver.
 
-   Review at least 10 (the gate's minimum), and keep going until new traces stop showing new kinds of failure. With a
-   10–30-case set, that usually means reading every trace of your first run.
+   Review at least 10 (the gate's minimum; reviews of any run count toward it), and keep going until new traces stop
+   showing new kinds of failure. With a 10–30-case set, that usually means reading every trace of your first run.
 3. **Name what matters.** The failure-type counts on the agent page show what to fix first. Turn the objective
    failures into [code checks](#code-checks-checks-in-agentjson). Give at most one subjective failure to the judge.
 4. **Candidate.** Change your agent, then import or run it under a new label. Review enough of it to see whether
    the change worked. The final run in step 5 replaces it, so this isn't the review the gate counts.
 5. **Final check.** When you've stopped tuning:
-   - on the agent page, in the **Cases** card, enter a reason and click **Reveal N held-out case(s)** (this can't be
-     undone);
+   - on the agent page, in the **Cases** card, enter your name and a reason (at least 10 characters), then click
+     **Reveal N held-out case(s)** (this can't be undone);
    - run both versions again on every case, re-using their exact labels. With the template script, add
      `--include-heldout`;
    - review **every** trace of the new candidate run: the gate needs a human look at each one;
@@ -85,14 +88,14 @@ The steps:
 
    No held-out cases? Then the candidate from step 4 is already your final run.
 
-   **Budget:** your first-run reviews, plus one per case on the final run.
+   **Budget:** for a 20-case set, roughly 15 reviews of your first run, plus 20 on the final run.
 6. **Decide.** Read the gate. Only a named person's approval of that exact evidence turns "Ready for approval" into
    **Approved**. If the evidence changes later, the approval goes stale.
 
-**Which runs are compared.** Only completed runs count, and labels match regardless of case and spaces (`v1` =
-`V1 `):
-- **Candidate:** the newest run of the label you introduced most recently.
-- **Baseline:** the newest run on the same cases under a different label.
+**Which runs are compared.** Only completed runs count. Labels match ignoring case and leading or trailing spaces
+(`v1` = `V1 `, but not `v 1`).
+- **Baseline:** the version you ship. That's the last version you approved, or else the first version you imported.
+- **Candidate:** the newest run of the label you introduced most recently, other than the baseline's.
 - **Re-runs:** re-running the baseline under its *exact* label keeps the roles; the label box suggests the labels
   you've used.
 - **Scratch runs:** runs labelled `scratch-…` are never picked by default.
@@ -159,11 +162,12 @@ need a new freeze. Runs on different versions are never compared.
 **Held-out cases.**
 - **Locked until revealed.** Evalxiety won't import, call or score a held-out case until its content is revealed.
   The reveal is logged and can't be undone. New content under a revealed id stays locked until its own reveal.
-- **Moving one doesn't unlock it.** A held-out case that hasn't been revealed stays locked if you move it to dev,
-  rename it or edit it. Move it back to fix it.
+- **Moving one doesn't unlock it.** Once a run has frozen a held-out case, it stays locked until revealed, even if
+  you move it to dev or rename it. A dev case that copies a held-out case's input is locked too. Move it back to fix
+  it. (Renaming it *and* rewording it makes it a new case, which Evalxiety can't tell apart from a fresh one.)
 - **The gate flags reused content.** If a held-out case's content was already run before its reveal (say, a dev
-  case you promoted to held-out), the gate flags it until you give it fresh input. Deleting a held-out case is shown
-  to the approver as a warning.
+  case you promoted to held-out), the gate flags it until you give it fresh input. Deleting some held-out cases is
+  shown to the approver as a warning; deleting all of them blocks the gate.
 - **The limit:** Evalxiety can't stop you reading `cases.jsonl` or running your agent on those inputs yourself. The
   final check only means something if you leave them alone.
 
@@ -204,9 +208,10 @@ Each line looks like this:
 Any other keys are kept under `metadata`.
 
 **Empty answers.** A line with an `error`, or with no answer at all (null, blank text, `{}`), is an errored case.
-It is ERROR on every check and never counts as a pass. So is a check whose `field` is present but empty (say
-`{"answer": "", "escalate": false}` for a check on `answer`). If an empty answer can be correct for your agent (an
-extractor that finds nothing, say), set `"allow_empty_output": true` in `agent.json`.
+It is ERROR on every check and never counts as a pass. When only the answer field is empty (say
+`{"answer": "", "escalate": false}`), a `regex` or `max_length` check on that field is ERROR and a `non_empty` check
+FAILs. That's why it's worth keeping a `non_empty` check on your answer field. If an empty answer can be correct for
+your agent (an extractor that finds nothing, say), set `"allow_empty_output": true` in `agent.json`.
 
 `npm run validate` checks a file and the agent's config:
 - every problem in the file, with its line number;
@@ -257,13 +262,14 @@ Each of these is recorded on its case as an error, and the run carries on:
 - **Where they live:** put secrets in `.env.local` and refer to them in header values as `${env:NAME}`.
 - **Allowed names:** NAME must be `EVALXIETY_AGENT_<AGENT_ID>_<SUFFIX>`.
   - `<AGENT_ID>` is the folder name in capitals with `_` for `-`.
-  - `<SUFFIX>` is letters and digits only.
+  - `<SUFFIX>` is capital letters and digits only.
   - So `my-agent` can read `EVALXIETY_AGENT_MY_AGENT_TOKEN`, and an agent called `my` can't.
   - An `agent.json` can't read `ANTHROPIC_API_KEY`, your cloud credentials, or another agent's token.
-- **Value rules:** values must be one line and at least 8 characters.
+- **Value rules:** values must be one line, at least 8 characters, with no leading or trailing spaces.
 - **Plain http:** secrets are never sent over plain `http://` to a host other than localhost.
-- **What's stored:** every value Evalxiety stores from a run has the secret values replaced with `[REDACTED:NAME]`,
-  even if your agent echoes them back. The URL is recorded in the audit log, so keep tokens out of it.
+- **What's stored:** before anything from an HTTP run is stored, secret values (including JSON- or HTML-escaped
+  copies) are replaced with `[REDACTED:NAME]`, even if your agent echoes them back. The URL is recorded in the audit
+  log, so keep tokens out of it. These rules cover HTTP mode; an imported file is stored as you wrote it.
 
 ## Code checks: `checks` in `agent.json`
 
@@ -299,6 +305,8 @@ default.
 - an unregistered custom function;
 - an `expected_field` that no case's `expected` contains.
 
+If only some cases' `expected` lacks the field (a typo in one line, say), the gate shows a warning listing them.
+
 **Reading results:**
 - **`field`** is a dot path into the output, such as `answer` or `result.items.0`. Leave it empty to check the whole
   output.
@@ -331,8 +339,9 @@ Use the judge for **one** subjective failure that code can't catch:
 **Setup and cost.**
 - **It needs an API key.** The judge calls Claude, so set `MOCK_MODE=false` and `ANTHROPIC_API_KEY` in `.env.local`
   and restart the app. Without them, it only runs on starter-kit data, using a labelled mock.
-- **The gate waits for it.** Once a judge is configured, the gate needs it run on every candidate trace with an
-  answer.
+- **The gate waits for it.** Once a judge is configured, the gate needs it run on every candidate trace that didn't
+  error. When it flags a trace, open it and answer the judge's question; the Release gate card lists those traces
+  under **Still to review**.
 - **You confirm the cost.** Judging more than one trace shows an estimated cost and asks you to confirm.
 - **Errors are retried.** Click **Run judge** again to retry errored verdicts (a rate limit, say).
 - **Spend cap.** `LIVE_SPEND_CAP_USD` caps Evalxiety's estimated Claude spend. It does not cap what your own agent
@@ -345,8 +354,9 @@ Use the judge for **one** subjective failure that code can't catch:
   measures how many real failures the judge catches (TPR) and how many good answers it clears (TNR).
 - **It stays "experimental".** The numbers are reported as insufficient until there are 30 human-labelled failures
   and 30 passes on the current judge version.
-- **New versions start from zero.** Editing the question, the definitions or the model, renaming the agent, or
-  switching between mock and live mode starts a new version: earlier verdicts and calibration stop counting.
+- **New versions start from zero.** Editing the question or the definitions, changing the model (in live mode),
+  renaming the agent, or switching between mock and live mode starts a new version: earlier verdicts and calibration
+  stop counting.
 - **It never replaces your review.** Every candidate trace still needs a human look.
 - **Long traces:** if a trace was too long for the judge to read in full, a PASS becomes "requires review".
 
@@ -397,15 +407,15 @@ Each of these reports ERROR or an error message rather than guessing.
 | HTTP reply | 2 MB; `timeout_ms` up to 300,000; `concurrency` 1–8 |
 | Regex checks | Text over 100,000 characters → ERROR. A pattern that runs over 250 ms → ERROR, and it isn't run again until the app restarts. |
 | Judge input | 20,000 characters each of input, evidence and output; a PASS on a cut trace becomes "requires review" |
-| Secrets | One line, at least 8 characters, named for the agent |
+| Secrets | One line, at least 8 characters, no surrounding spaces, named for the agent |
 
 ## Ask Claude about it
 
 The read-only MCP server (setup in the README) has `list_my_agents`, `get_agent_status` and `get_agent_trace`. Try
 "Is my-agent ready to ship?" or "Why did c09 regress?"
 
-`get_agent_trace` puts your agent's input and output, the check summaries and the judge's explanation under
-`untrusted_agent_data`, with a note telling the client to treat them as data. That's a hint to the client, not a
+`get_agent_trace` puts your agent's input and output, the check summaries, the judge's explanation and reviewer notes
+under `untrusted_agent_data`, and the tool's description tells the client to treat them as data. That's a hint to the client, not a
 guarantee against prompt injection. Don't connect it to a Claude session with tools you wouldn't let your agent's
 output trigger.
 

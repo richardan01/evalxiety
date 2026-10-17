@@ -8,9 +8,9 @@ import path from "node:path";
 import { promises as fs } from "node:fs";
 import { getAgent, loadAgents, parseAgentConfig, parseCases } from "./config";
 import { caseInputHash, computeLockState, parseImport } from "./ingest";
-import { AgentRun, HttpConnection } from "./schemas";
-import { assertSafeConnection, callAgent, envNameBelongsTo, mapResponse, resolveHeaders, UnsafeConnectionError } from "./http";
-import { lookupCustom } from "./checks";
+import { AgentRun, CheckConfig, HttpConnection, type AgentTrace as AgentTraceT, type LoadedAgent as LoadedAgentT } from "./schemas";
+import { assertSafeConnection, callAgent, envNameBelongsTo, mapResponse, redactSecrets, redactText, resolveHeaders, UnsafeConnectionError } from "./http";
+import { checkDefinitions, lookupCustom, runCheck } from "./checks";
 import { CasesChangedError, ConfirmationRequiredError, freezeNewVersion, httpRun, importRun, ImportValidationError } from "./runs";
 import { revealAgentHeldout, upsertAgentAnnotation, listAgentAudit, saveAgentRun } from "./repo";
 import { agentOverview, agentsList, agentTraceDetail, judgeRunMissing, pickDefaults, recordAgentApproval, GateNotEligibleError, JudgeBusyError } from "./services";
@@ -635,6 +635,75 @@ describe("review 3 regressions", () => {
     const msgs = (await loadAgents()).problems.filter((p) => p.agent_id === "copied-kit").map((p) => p.message).join(" | ");
     expect(msgs).toMatch(/start from agents\/_template instead/);
     await fs.rm(dest, { recursive: true });
+  });
+});
+
+describe("final-gate fixes", () => {
+  it("escaped and numeric echoes of a secret are redacted", () => {
+    const secret = "abc/def+ghi\"jkl==";
+    const secrets = { EVALXIETY_AGENT_X_TOKEN: secret };
+    for (const body of [
+      JSON.stringify({ detail: `invalid token ${secret}` }), // Node escaping
+      JSON.stringify({ detail: `invalid token ${secret}` }).replace(/\//g, "\\/"), // PHP escaping
+      `{"detail": "invalid token ${[...secret].map((ch) => "\\u" + ch.charCodeAt(0).toString(16).padStart(4, "0")).join("")}"}`,
+      `not json at all ${secret}`,
+    ]) {
+      const out = redactText(body, secrets);
+      expect(out).not.toContain("abc/def");
+      expect(out).not.toContain("abc\\/def");
+      expect(out).not.toContain("\\u0061\\u0062\\u0063");
+    }
+    expect(redactSecrets({ account: 12345678901 }, { EVALXIETY_AGENT_X_ID: "12345678901" })).toEqual({ account: "[REDACTED:EVALXIETY_AGENT_X_ID]" });
+  });
+
+  it("with allow_empty_output and a judge, an empty answer gets judged so the gate can finish", async () => {
+    await copyStarter("empty-bot", (c) => {
+      c.example = true; // mock judge runs on example data
+      c.allow_empty_output = true;
+    });
+    const agent = await getAgent("empty-bot");
+    const { run } = await importRun({ agent, text: '{"case_id":"c01","output":""}\n{"case_id":"c02","output":{"answer":"Annual plans can be refunded within 30 days of purchase.","citations":["KB-1"],"escalate":false}}', agent_version: "v1", actor: "t" });
+    expect(run.status).toBe("completed");
+    const r = await judgeRunMissing("empty-bot", run.run_id, "t", false);
+    expect(r.judged).toBe(2);
+    const ov = await agentOverview("empty-bot", { candidate: run.run_id, baseline: "none" });
+    expect(ov.gate.reasons.find((x) => x.code === "judge_not_run")).toBeUndefined();
+  });
+
+  it("an import where every line errored is a failed run and never a default", async () => {
+    await copyStarter("down-bot", (c) => (c.example = false));
+    const agent = await getAgent("down-bot");
+    const { run } = await importRun({ agent, text: '{"case_id":"c01","error":"agent down"}\n{"case_id":"c02","error":"agent down"}', agent_version: "v2", actor: "t" });
+    expect(run.status).toBe("failed");
+  });
+
+  it("the default baseline is the version you ship (first label, or the last approved), not the newest other run", () => {
+    const mk = (id: string, label: string, at: string) => ({ run_id: id, agent_version: label, created_at: at, status: "completed", frozen_hash: "H" }) as unknown as AgentRun;
+    const runs = [mk("a", "v1", "1"), mk("b", "v2", "2"), mk("c", "v3", "3")];
+    expect(pickDefaults(runs)).toMatchObject({ candidate: { run_id: "c" }, baseline: { run_id: "a" } });
+    // v2 was approved and shipped: v3 is compared with v2.
+    expect(pickDefaults(runs, null, null, ["b"])).toMatchObject({ candidate: { run_id: "c" }, baseline: { run_id: "b" } });
+    // Explicit "no baseline" with a single version leaves no candidate either (nothing to compare yet).
+    expect(pickDefaults([mk("a", "v1", "1")], null, "none")).toEqual({ candidate: null, baseline: null });
+    // Picking the candidate's run as the baseline never yields the same run on both sides.
+    const d = pickDefaults(runs, null, "c");
+    expect(d.candidate?.run_id).not.toBe("c");
+  });
+
+  it("a held-out case's content duplicated as a dev case is locked from the very first run", async () => {
+    await copyStarter("dup-bot", (c) => (c.example = false));
+    const dir = path.join(agentsDir, "dup-bot");
+    await fs.appendFile(path.join(dir, "cases.jsonl"), '{"case_id":"d99","input":{"question":"Can I get my money back for this month? I\'m on the monthly plan."}}\n');
+    const agent = await getAgent("dup-bot");
+    const err = await importRun({ agent, text: '{"case_id":"d99","output":"x"}', agent_version: "v1", actor: "t" }).catch((e) => e);
+    expect(err).toBeInstanceOf(ImportValidationError);
+  });
+
+  it("a regex must:match on a blank answer field is ERROR", () => {
+    const cfg = CheckConfig.parse({ id: "m", question: "q", type: "regex", field: "answer", pattern: "^.*$", must: "match" });
+    const a = { config: { checks: [cfg] } } as unknown as LoadedAgentT;
+    const t = { trace_id: "t", agent_id: "x", run_id: "r", case_id: "c", timestamp: "", agent_version: "v", input: {}, output: { answer: "", other: "text" }, evidence: [], tool_calls: [], model_id: null, latency_ms: null, cost_usd: null, execution_mode: "imported", execution_error: null, data_origin: "real", metadata: {} } as const;
+    expect(runCheck(cfg, checkDefinitions(a)[0], t as unknown as AgentTraceT, null, {}).outcome).toBe("ERROR");
   });
 });
 

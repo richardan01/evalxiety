@@ -84,7 +84,7 @@ export function resolveHeaders(headers: Record<string, string>, env: Record<stri
         missing.add(name);
         return "";
       }
-      if (/[\r\n\0]/.test(val) || val.length < MIN_SECRET_LENGTH) invalid.add(name);
+      if (/[\r\n\0]/.test(val) || val.length < MIN_SECRET_LENGTH || val.trim() !== val) invalid.add(name);
       secrets[name] = val;
       return val;
     });
@@ -94,7 +94,7 @@ export function resolveHeaders(headers: Record<string, string>, env: Record<stri
   }
   if (invalid.size) {
     throw new UnsafeConnectionError(
-      `${[...invalid].join(", ")} must be one line and at least ${MIN_SECRET_LENGTH} characters (shorter values can't be safely redacted from stored traces). Fix it in .env.local.`,
+      `${[...invalid].join(", ")} must be one line, at least ${MIN_SECRET_LENGTH} characters, with no leading or trailing spaces (otherwise it can't be safely redacted from stored traces). Fix it in .env.local.`,
     );
   }
   return { headers: out, secrets };
@@ -103,23 +103,51 @@ export function resolveHeaders(headers: Record<string, string>, env: Record<stri
 /** Shorter secret values are refused: they would match ordinary text, and redacting them would mangle stored output. */
 export const MIN_SECRET_LENGTH = 8;
 
+/** The ways a server may echo a secret back inside JSON or HTML text: JSON-escaped, "/" escaped, \u-escaped, HTML-escaped. */
+function escapedForms(v: string): string[] {
+  const json = JSON.stringify(v).slice(1, -1);
+  const unicode = [...v].map((ch) => `\\u${ch.charCodeAt(0).toString(16).padStart(4, "0")}`).join("");
+  const unicodeUpper = unicode.replace(/\\u([0-9a-f]{4})/g, (_m, h: string) => `\\u${h.toUpperCase()}`);
+  const html = v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const goJson = json.replace(/&/g, "\\u0026").replace(/</g, "\\u003c").replace(/>/g, "\\u003e");
+  return [...new Set([v, json, json.replace(/\//g, "\\/"), unicode, unicodeUpper, html, goJson, goJson.replace(/\//g, "\\/")])];
+}
+
 /**
- * Replace every secret value inside a value with [REDACTED:NAME]: in every string, at any depth, longest secret first
- * (so a secret that contains another is removed whole). Works on parsed values, so JSON escaping can't hide a match.
+ * Replace every secret value with [REDACTED:NAME]: in every string at any depth (and in numbers that spell a secret),
+ * longest secret first, including the escaped forms a server might echo back in JSON or HTML text.
  */
 export function redactSecrets<T>(value: T, secrets: Record<string, string>): T {
   const entries = Object.entries(secrets)
     .filter(([, v]) => v.length >= MIN_SECRET_LENGTH)
-    .sort((a, b) => b[1].length - a[1].length);
+    .sort((a, b) => b[1].length - a[1].length)
+    .flatMap(([name, v]) => escapedForms(v).map((form) => [name, form] as const));
   if (!entries.length) return value;
-  const scrub = (s: string) => entries.reduce((acc, [name, v]) => acc.split(v).join(`[REDACTED:${name}]`), s);
+  const scrub = (s: string) => entries.reduce((acc, [name, form]) => acc.split(form).join(`[REDACTED:${name}]`), s);
   const walk = (v: unknown): unknown => {
     if (typeof v === "string") return scrub(v);
+    if (typeof v === "number" || typeof v === "bigint") {
+      const s = String(v);
+      const out = scrub(s);
+      return out === s ? v : out;
+    }
     if (Array.isArray(v)) return v.map(walk);
     if (v && typeof v === "object") return Object.fromEntries(Object.entries(v as Record<string, unknown>).map(([k, x]) => [scrub(k), walk(x)]));
     return v;
   };
   return walk(value) as T;
+}
+
+/** Redact a raw body: parse it as JSON when possible (so escaping can't hide a match), else scrub the text and its escapes. */
+export function redactText(text: string, secrets: Record<string, string>): string {
+  if (/^\s*[[{"]/.test(text)) {
+    try {
+      return JSON.stringify(redactSecrets(JSON.parse(text), secrets));
+    } catch {
+      /* not JSON: fall through */
+    }
+  }
+  return redactSecrets(text, secrets);
 }
 
 const StructuredResponse = z.looseObject({
@@ -207,7 +235,7 @@ export async function callAgent(
   opts: { secrets?: Record<string, string>; allowEmpty?: boolean } = {},
 ): Promise<AgentCallResult> {
   // Redact before anything is cut short: a secret split by truncation could no longer be matched.
-  const clean = (s: string) => redactSecrets(s, opts.secrets ?? {});
+  const clean = (s: string) => redactText(s, opts.secrets ?? {});
   const started = performance.now();
   const empty = { output: null, evidence: [], tool_calls: [], model_id: null, cost_usd: null, metadata: {} };
   try {

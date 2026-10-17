@@ -160,7 +160,7 @@ export function MockBanner() {
   return (
     <div className="bg-amber-100 px-6 py-1.5 text-center text-xs font-medium text-amber-950">
       {pathname.startsWith("/agents")
-        ? `MOCK MODE — the LLM judge only runs on starter-kit data, using a labelled mock (${mode.reason}). Runs you import or call over HTTP are your real agent.`
+        ? `MOCK MODE — the LLM judge only runs on starter-kit data, using a labelled mock (${mode.reason}). Imported and HTTP runs come from the agent itself.`
         : `MOCK MODE — new runs use a mock agent and judge (${mode.reason}). Mock results are labelled and are not evidence.`}
     </div>
   );

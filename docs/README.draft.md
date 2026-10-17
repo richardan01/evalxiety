@@ -98,8 +98,10 @@ bot with two versions. Version 2 fixes 7 of the 9 cases you tune on, but it brea
 handing self-serve cancellations to a human. Evalxiety flags that regression. The starter data is labelled EXAMPLE,
 so by design the verdict reads "Not enough evidence".
 
-Then point it at your own agent. You'll need two sets of traces (the version you ship today, and your change) and
-time to read them: about one review per case on your final run.
+Then point it at your own agent. You'll need traces from two versions (the one you ship today, and your change).
+Getting the first traces in takes about 15 minutes; reading them is the real cost. For a 10–30-case set, plan on
+reading every trace of your first run and every trace of the final run, so 20–60 in all. If you hold out cases, you
+also run both versions a second time after revealing them.
 
 1. `cp -r agents/_template agents/my-agent`, and name it in `agent.json`.
 2. Put 10–30 real inputs in `cases.jsonl`, pulled from production logs with personal data removed.

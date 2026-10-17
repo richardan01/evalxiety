@@ -50,7 +50,7 @@ const PAGE_HELP: Record<string, string> = {
   "/experiments": "**Experiments** runs Baseline and Corrected on the same frozen set of cases and compares them case by case.",
   "/release": "**Release gate** turns all the evidence into a ship / no-ship decision that a named human must approve.",
   "/agents":
-    "**Your agents** evaluates any agent: each folder under agents/ holds agent.json (checks, optional judge, optional HTTP endpoint) and cases.jsonl. Import a run (JSONL) or call the agent over HTTP, review every candidate trace, then read the release gate on the agent's page. Start a new agent from agents/_template.",
+    "**Your agents** evaluates any agent: each folder under agents/ holds agent.json (checks, optional judge, optional HTTP endpoint) and cases.jsonl. Import a run (JSONL) or call the agent over HTTP, review traces (every trace of the final candidate run), then read the release gate on the agent's page. Start a new agent from agents/_template.",
   "/connect":
     "**Connect (MCP)** lets Claude Desktop or Claude Code read Evalxiety (release status, runs, traces, rubric) through a read-only MCP server. Copy the setup snippet for your client; the app must be running.",
 };

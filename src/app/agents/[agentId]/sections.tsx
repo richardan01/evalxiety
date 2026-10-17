@@ -50,13 +50,35 @@ export function GateCard({ view, url, onSelect, onChanged }: { view: AgentOvervi
       <div className="rounded-md bg-slate-50 px-3 py-2 text-sm">
         <span className="font-semibold">Next step:</span> {g.next_step}
       </div>
+      {g.unresolved_reviews.length > 0 && (
+        <details className="mt-2 text-sm">
+          <summary className="cursor-pointer text-slate-600">Still to review ({g.unresolved_reviews.length})</summary>
+          <ul className="mt-1 space-y-0.5 pl-1">
+            {g.unresolved_reviews.map((u) => (
+              <li key={u.trace_id}>
+                <Link href={`/agents/${view.agent.agent_id}/traces/${u.trace_id}`} className="font-mono text-xs text-sky-700 hover:underline">
+                  {u.case_id}
+                </Link>{" "}
+                <span className="text-xs text-slate-500">{u.reason}</span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
       <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
         {(["candidate", "baseline"] as const).map((k) => (
           <label key={k} className="flex items-center gap-2">
             <span className="w-20 text-slate-600">{k === "candidate" ? "Candidate" : "Baseline"}</span>
             <select
               value={sel[k] ?? (k === "baseline" ? "none" : "")}
-              onChange={(e) => onSelect({ ...url, [k]: e.target.value })}
+              onChange={(e) => {
+                const v = e.target.value;
+                const other = k === "candidate" ? "baseline" : "candidate";
+                // Picking the run the other side already has swaps the two, instead of comparing a run with itself.
+                const swapped: Selection =
+                  k === "candidate" ? { candidate: v, baseline: sel.candidate ?? "none" } : { candidate: sel.baseline ?? "", baseline: v };
+                onSelect(v && v === sel[other] ? swapped : { ...url, [k]: v });
+              }}
               className={cx(inputCls, "max-w-xs")}
             >
               {k === "baseline" && <option value="none">(no baseline)</option>}
@@ -274,12 +296,12 @@ export function RunsCard({ view, url, onSelect, onChanged }: { view: AgentOvervi
                         </Button>
                       )}
                       {r.status === "completed" && role !== "candidate" && (
-                        <Button variant="ghost" onClick={() => onSelect({ candidate: r.run_id, baseline: sel.baseline === r.run_id ? "" : url.baseline })}>
+                        <Button variant="ghost" onClick={() => onSelect(sel.baseline === r.run_id ? { candidate: r.run_id, baseline: sel.candidate ?? "none" } : { candidate: r.run_id, baseline: url.baseline })}>
                           As candidate
                         </Button>
                       )}
                       {r.status === "completed" && role !== "baseline" && (
-                        <Button variant="ghost" onClick={() => onSelect({ candidate: sel.candidate === r.run_id ? "" : url.candidate, baseline: r.run_id })}>
+                        <Button variant="ghost" onClick={() => onSelect(sel.candidate === r.run_id ? { candidate: sel.baseline ?? "", baseline: r.run_id } : { candidate: url.candidate, baseline: r.run_id })}>
                           As baseline
                         </Button>
                       )}
@@ -381,7 +403,11 @@ const short = (o: string | null) => (o === null ? "—" : o === "NOT_APPLICABLE"
 // ---------------------------------------------------------------------------
 
 export function ReviewCard({ view }: { view: AgentOverview }) {
-  const cand = view.runs.find((r) => r.run_id === view.selected.candidate) ?? view.runs[0];
+  // Review the candidate; before there is one, the baseline (your first run).
+  const cand =
+    view.runs.find((r) => r.run_id === view.selected.candidate) ??
+    view.runs.find((r) => r.run_id === view.selected.baseline) ??
+    view.runs.find((r) => r.status === "completed");
   const first = cand ? Object.values(cand.trace_ids)[0] : null;
   const need = view.agent.min_reviewed_traces;
   return (
@@ -556,7 +582,11 @@ export function CasesCard({ view, onChanged }: { view: AgentOverview; onChanged:
           <span key={c.case_id} title={c.notes ?? undefined} className="inline-flex items-center gap-1 rounded border border-slate-200 px-1.5 py-0.5 font-mono text-xs">
             {c.case_id}
             {c.split === "heldout" && <SplitBadge split="heldout" />}
-            {c.locked && <span aria-label="locked">🔒</span>}
+            {c.locked && (
+              <span aria-label="locked" title={c.lock_reason ?? undefined}>
+                🔒
+              </span>
+            )}
           </span>
         ))}
       </div>

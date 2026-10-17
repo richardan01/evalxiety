@@ -93,7 +93,8 @@ export function mockAgentJudge(trace: AgentTrace): Output {
   if (trace.output === null || trace.output === undefined) {
     return { relevant_claims: [], explanation: "[MOCK JUDGE] No output.", uncertainty_reason: "No output to judge.", failure_detected: false };
   }
-  const source = `${asText(trace.input)} ${trace.evidence.map((e) => e.text).join(" ")}`;
+  // Evidence ids count as source too, so a citation like "KB-1" isn't mistaken for an unsupported number.
+  const source = `${asText(trace.input)} ${trace.evidence.map((e) => `${e.id} ${e.text}`).join(" ")}`;
   const nums = asText(parsedOutput(trace.output)).match(/\$?\d+(?:[.,]\d+)?%?/g) ?? [];
   const unsupported = [...new Set(nums)].filter((n) => !source.includes(n.replace(/^\$/, "").replace(/%$/, "")));
   return {

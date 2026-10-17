@@ -6,7 +6,7 @@ gets built next.
 
 ## Run the tests
 
-You need Node.js 22.12 or newer (the test runner requires it; CI uses Node 24).
+You need Node.js 22.12+ or 24 (the test runner requires one of these; CI uses Node 24).
 
 ```bash
 npm ci                         # install exactly what package-lock.json pins
@@ -72,6 +72,7 @@ things that might go wrong. Once the idea is agreed, a built-in type touches the
 | The implementation and its plain-words rule | `runBuiltIn` and `describeRule` in `src/lib/agents/checks.ts` |
 | Tests: at least one PASS, one FAIL, and NOT_APPLICABLE or ERROR where they can happen | `src/lib/agents/checks.test.ts` |
 | The reference table | `docs/use-your-agent.md` |
+| The in-app guide's list of check types | `src/lib/guide/knowledge.ts` |
 
 A check that can't run must return ERROR, never PASS. Run `npm test` and say in the PR which outcome each new test
 forces.

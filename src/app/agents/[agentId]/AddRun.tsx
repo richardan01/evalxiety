@@ -16,7 +16,14 @@ async function post(url: string, payload: unknown): Promise<{ status: number; bo
 export function AddRun({ view, onDone }: { view: AgentOverview; onDone: () => void }) {
   // The starter-kit tour starts with an import; your own agent defaults to HTTP when it has a connection.
   const [tab, setTab] = useState<"import" | "http">(view.agent.connection && !view.agent.example ? "http" : "import");
-  const labels = [...new Set(view.runs.map((r) => r.agent_version))];
+  // Suggest each version once (as first written), from completed non-scratch runs.
+  const labels = [
+    ...new Map(
+      view.runs
+        .filter((r) => r.status === "completed" && !r.agent_version.trim().toLowerCase().startsWith("scratch-"))
+        .map((r) => [r.agent_version.trim().toLowerCase(), r.agent_version.trim()] as const),
+    ).values(),
+  ];
   const [name, setName] = useName();
   const [version, setVersion] = useState("");
   const [busy, setBusy] = useState(false);

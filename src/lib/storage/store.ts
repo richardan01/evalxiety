@@ -9,7 +9,7 @@ import crypto from "node:crypto";
 import type { z } from "zod";
 
 export function dataDir(): string {
-  return process.env.AGENTTRUST_DATA_DIR ?? path.join(/*turbopackIgnore: true*/ process.cwd(), "data");
+  return process.env.AGENTTRUST_DATA_DIR || path.join(/*turbopackIgnore: true*/ process.cwd(), "data");
 }
 
 function abs(rel: string): string {

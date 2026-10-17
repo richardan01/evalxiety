@@ -61,6 +61,8 @@ src/lib/agents/repo.ts     storage under data/agents/<id>/ (runs, traces, labels
 src/lib/agents/judge.ts    experimental judge from agent.json (mock heuristic only for example data)
 src/lib/agents/gate.ts     release gate with the agent's own checks and thresholds
 src/lib/agents/services.ts read models for /api/agents/** (results recomputed from traces on every read)
+src/lib/agents/api.ts      maps agent errors to HTTP responses (422/423 with line numbers, 409 confirmations)
+src/lib/agents/registry.ts re-exports agents/custom-checks.ts
 data/agents/<id>/          runs, traces, human labels, judge results, approvals, frozen versions, held-out state, audit log
 ```
 
@@ -75,10 +77,10 @@ calibration metrics, the storage primitives and the UI components.
 | One lock rule (`computeLockState`): a held-out case is locked until its content (input hash) is revealed; a dev case is locked too if its id or content was held out and never revealed, so moving, renaming or editing a held-out case can't unlock it. Locked cases can't be imported or run. A held-out case whose content was already traced before its reveal blocks the gate until it gets fresh input; deleting one is a warning | agents/ingest.ts, agents/runs.ts, agents/services.ts `heldoutIntegrity`, agents/gate.ts, `/api/agents/[agentId]/heldout` |
 | An import is all-or-nothing, with every problem reported by line number | agents/ingest.ts, agents/runs.ts `importRun` |
 | HTTP batches and live judge batches need explicit confirmation (with a cost estimate when known) | agents/runs.ts, agents/services.ts |
-| The HTTP URL and headers come only from agent.json on disk; an agent can only read env vars named `EVALXIETY_AGENT_<AGENT_ID>_<SUFFIX>` (suffix letters and digits only, so no agent can read another's), values one line and ≥ 8 chars, never sent over plain http off-host; header values must be one line; secret values are redacted from everything stored; any run that sends a secret needs confirmation; redirects are refused | agents/http.ts, agents/runs.ts |
+| The HTTP URL and headers come only from agent.json on disk; an agent can only read env vars named `EVALXIETY_AGENT_<AGENT_ID>_<SUFFIX>` (suffix letters and digits only, so no agent can read another's), secret values one line, ≥ 8 chars, no surrounding spaces; escaped echoes redacted too, never sent over plain http off-host; header values must be one line; secret values are redacted from everything stored; any run that sends a secret needs confirmation; redirects are refused | agents/http.ts, agents/runs.ts |
 | An errored trace or an empty answer is ERROR on every check, never a pass (unless `allow_empty_output`); a present-but-empty field is ERROR; "must not" and length checks read the whole output when their field is missing; `cites_evidence` fails on a missing field; regex checks report ERROR on text over 100k chars and on a pattern over 250 ms (which then isn't re-run) | agents/checks.ts, agents/http.ts, agents/runs.ts |
 | Check results are cached per (trace, check behaviour, case expectation) with LRU eviction, since traces never change after they are saved | agents/checks.ts `runChecks` |
-| Default runs: a lone version label is the baseline; otherwise the candidate is the newest run of the most recently introduced label (labels compared case- and space-insensitively; `scratch-…` labels skipped) | agents/services.ts `pickDefaults` |
+| Default runs: the baseline is the version you ship (last approved label, else the first label); the candidate is the newest run of the most recently introduced other label; a lone label has no candidate; labels compared ignoring case and surrounding spaces; `scratch-…` labels and failed runs skipped | agents/services.ts `pickDefaults` |
 | agent.json and cases.jsonl are strict: a misspelled key, a limitless `max_length`, or an unregistered custom check is a load error | agents/schemas.ts, agents/config.ts |
 | Judge responses for your agents are cached under data/agents/<id>/llm_cache (git-ignored) and the shared ledger gets no trace ids; MCP returns agent output under `untrusted_agent_data` | agents/judge.ts, llm/client.ts `cacheDir`, mcp/server.mjs |
 | Every candidate case needs a human review; the judge never exempts one, however many labels it has | agents/gate.ts |
