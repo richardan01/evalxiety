@@ -2,8 +2,9 @@
  * Load agent definitions from disk: agents/<agent_id>/agent.json + cases.jsonl.
  *
  * Definitions are files the agent owner edits and reviews (in their fork or their own repo via
- * EVALXIETY_AGENTS_DIR) — the app never creates or edits them, so an HTTP endpoint can only be configured by
- * someone with write access to the folder. Broken files are reported as problems with a file and line number
+ * EVALXIETY_AGENTS_DIR). The app never edits them; the only thing it writes is a brand-new folder from the onboarding
+ * wizard (onboard.ts), which refuses to overwrite one that exists — so an existing agent's endpoint can only be changed
+ * by someone with write access to the folder. Broken files are reported as problems with a file and line number
  * instead of crashing the app.
  */
 import { promises as fs } from "node:fs";
