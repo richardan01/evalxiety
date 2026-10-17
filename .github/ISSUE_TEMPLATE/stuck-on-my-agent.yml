@@ -1,0 +1,64 @@
+name: I tried it on my agent and got stuck
+description: You tried to point Evalxiety at your own agent or traces and hit a wall.
+title: "Stuck: "
+labels: ["stuck-on-my-agent"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is the most useful feedback the project gets, so thank you. There is no wrong answer here: "I didn't
+        know where to start" is a valid report.
+
+        Today Evalxiety only evaluates its built-in pricing agent. Trace import and support for your own agent are
+        planned (see `docs/plan-any-agent.md`). Telling us where you got stuck decides what gets built first.
+        Don't paste API keys or private data. A made-up example with the same shape is fine.
+  - type: textarea
+    id: agent
+    attributes:
+      label: Your agent
+      description: What does it do, roughly? What goes in and what comes out?
+      placeholder: "A support agent that reads a ticket and drafts a reply with links to help articles."
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: What you were trying to do
+      description: The question you wanted Evalxiety to answer about your agent.
+      placeholder: "Find out whether my new prompt makes things worse before I ship it."
+    validations:
+      required: true
+  - type: textarea
+    id: stuck
+    attributes:
+      label: Where you got stuck
+      description: The last step that worked, and the first one that didn't.
+    validations:
+      required: true
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Which step was it closest to?
+      options:
+        - Getting it running at all
+        - Getting my agent's runs (traces) into it
+        - Writing test cases
+        - Reviewing answers and labelling them
+        - Writing a code check for my agent
+        - Setting up the AI judge
+        - Comparing two versions
+        - Reading the release gate
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: traces
+    attributes:
+      label: What your traces look like (optional)
+      description: One example trace or log line, with anything private removed or made up. This is rendered as code.
+      render: json
+  - type: textarea
+    id: expected
+    attributes:
+      label: What would have helped?
+      description: A doc, an example, a command, a different UI ... anything.

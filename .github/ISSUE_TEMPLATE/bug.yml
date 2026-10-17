@@ -1,0 +1,55 @@
+name: Bug
+description: Something in Evalxiety is broken or gives a wrong result.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. If you were trying Evalxiety on your own agent and got stuck, the
+        "I tried it on my agent and got stuck" template is a better fit.
+        Don't paste API keys, `.env.local` contents or private trace data.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you saw instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. npm run dev -- -p 3123
+        2. Open /experiments and ...
+        3. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Mode
+      options:
+        - Mock (MOCK_MODE=true, the default)
+        - Live (MOCK_MODE=false with an API key)
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: where
+    attributes:
+      label: Where in the app
+      description: Page, API route, test file or MCP tool, plus a case or trace ID if there is one.
+      placeholder: "/release, or C13, or npm test"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error output
+      description: Terminal or browser console output. This is rendered as code.
+      render: shell
+  - type: input
+    id: version
+    attributes:
+      label: Commit and environment
+      description: "Output of `git rev-parse --short HEAD`, your Node version and your OS."
+      placeholder: "15c26e0, Node 24.14, macOS 15"
