@@ -5,5 +5,8 @@
   { "name": "compare_runs", "summary": "Paired case-level diff of two runs: fixed, regressed, new critical regressions." },
   { "name": "get_trace", "summary": "One trace: request, decision, price, policy, margin, approvals, claims, check results, judge verdict." },
   { "name": "get_review_queue", "summary": "What still needs a human label: counts and unreviewed trace ids with case and config." },
-  { "name": "get_rubric", "summary": "Review checklist questions and the judge's supported/unsupported criterion." }
+  { "name": "get_rubric", "summary": "Review checklist questions and the judge's supported/unsupported criterion." },
+  { "name": "list_my_agents", "summary": "Your agents (agents/<id>/): status, cases, checks, runs, human-review counts, config problems." },
+  { "name": "get_agent_status", "summary": "Your agent's release gate: status, next step, reasons, baseline vs candidate (fixed, regressed), failure types." },
+  { "name": "get_agent_trace", "summary": "One trace of your agent: input, output, evidence, check results, judge verdict, human labels." }
 ]

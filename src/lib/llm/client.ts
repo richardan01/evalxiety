@@ -162,6 +162,8 @@ export interface StructuredCallRequest {
   bypassCache?: boolean;
   /** Model to call; defaults to MODEL_ID (Claude Opus 5.5). */
   model?: string;
+  /** Data-dir folder for the response cache; defaults to "llm_cache". "Your agents" use their own git-ignored folder. */
+  cacheDir?: string;
 }
 
 export interface StructuredCallResult {
@@ -205,7 +207,7 @@ export async function callStructured(req: StructuredCallRequest): Promise<Struct
 
   const model = req.model ?? MODEL_ID;
   const cacheKey = sha256({ model, system: req.system, user: req.user, schema: req.format.schema, effort: req.effort });
-  const cacheFile = `llm_cache/${cacheKey}.json`;
+  const cacheFile = `${req.cacheDir ?? "llm_cache"}/${cacheKey}.json`;
   if (!req.bypassCache) {
     const hit = await readJson(cacheFile, CachedResponse.nullable(), null);
     if (hit) {

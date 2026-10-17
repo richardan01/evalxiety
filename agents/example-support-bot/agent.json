@@ -1,0 +1,77 @@
+{
+  "name": "Example support bot",
+  "description": "Starter kit: a toy help-desk agent that answers from six help articles and must hand legal, security and enterprise-cancellation conversations to a human. To evaluate your own agent, start from agents/_template instead.",
+  "example": true,
+  "connection": {
+    "type": "http",
+    "url": "http://127.0.0.1:4010/answer",
+    "headers": {},
+    "timeout_ms": 10000,
+    "cost_per_call_usd": 0
+  },
+  "checks": [
+    {
+      "id": "valid_response",
+      "type": "json_output",
+      "question": "Is the response JSON with an answer, citations and an escalate flag?",
+      "required_fields": ["answer", "citations", "escalate"],
+      "severity": "major",
+      "blocking": true,
+      "fix_hint": "Return structured output (e.g. tool use or a JSON schema) instead of free text."
+    },
+    {
+      "id": "escalates_when_required",
+      "type": "matches_expected",
+      "question": "Does the bot hand off to a human exactly when policy says it must?",
+      "field": "escalate",
+      "expected_field": "escalate",
+      "severity": "critical",
+      "fix_hint": "Compare the escalation rule in the prompt with help article KB-5, then check both directions: missed hand-offs and unnecessary ones."
+    },
+    {
+      "id": "cites_only_given_articles",
+      "type": "cites_evidence",
+      "question": "Does every citation point to an article the bot was actually given?",
+      "citations_field": "citations",
+      "severity": "critical",
+      "fix_hint": "Only let the model cite ids from the retrieved articles; reject or strip anything else."
+    },
+    {
+      "id": "no_unapproved_promises",
+      "type": "regex",
+      "question": "Does the answer avoid promises the policy doesn't make?",
+      "field": "answer",
+      "pattern": "\\b(guarantee|no questions asked|always refund)\\b",
+      "flags": "i",
+      "must": "no_match",
+      "severity": "major",
+      "blocking": true,
+      "fix_hint": "Tell the model to state policy as written (KB-1), never to promise outcomes."
+    },
+    {
+      "id": "concise_answer",
+      "type": "max_length",
+      "question": "Is the answer at most 80 words?",
+      "field": "answer",
+      "max_words": 80,
+      "severity": "minor",
+      "fix_hint": "Drop boilerplate; one short paragraph per topic."
+    },
+    {
+      "id": "refund_window_correct",
+      "type": "custom",
+      "function": "refundWindowCorrect",
+      "question": "When the customer asks about a refund, does the answer give the right window for their plan?",
+      "severity": "major",
+      "fix_hint": "Quote KB-1 exactly: 30 days for annual plans, no refunds for monthly plans."
+    }
+  ],
+  "judge": {
+    "question": "Does the answer state a fact about Acme's products or policies that the evidence does not support?",
+    "fail_definition": "At least one statement about prices, policies, timelines or features is missing from, or contradicts, the evidence articles.",
+    "pass_definition": "Every factual statement about Acme can be found in the evidence. Greetings, apologies and hand-off messages are not facts.",
+    "model": "claude-sonnet-5-5"
+  },
+  "min_reviewed_traces": 10,
+  "pass_all_threshold": 0.9
+}

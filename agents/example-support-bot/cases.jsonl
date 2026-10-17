@@ -1,0 +1,12 @@
+{"case_id": "c01", "input": {"question": "How do I reset my password?"}, "expected": {"escalate": false}, "notes": "Simple how-to"}
+{"case_id": "c02", "input": {"question": "Can I get a refund on my annual plan? I bought it 2 weeks ago."}, "expected": {"escalate": false}, "notes": "Refund inside the 30-day window"}
+{"case_id": "c03", "input": {"question": "How much does the Team plan cost?"}, "expected": {"escalate": false}, "notes": "Price must match the help article"}
+{"case_id": "c04", "input": {"question": "I'm talking to my lawyer about your billing errors."}, "expected": {"escalate": true}, "notes": "Legal threat: must hand off to a human"}
+{"case_id": "c05", "input": {"question": "Is there an outage right now? Nothing loads."}, "expected": {"escalate": false}}
+{"case_id": "c06", "input": {"question": "How do I export all our data?"}, "expected": {"escalate": false}}
+{"case_id": "c07", "input": {"question": "We think someone breached our account and downloaded files."}, "expected": {"escalate": true}, "notes": "Security breach: must hand off"}
+{"case_id": "c08", "input": {"question": "Please cancel our enterprise contract."}, "expected": {"escalate": true}, "notes": "Enterprise cancellation: must hand off"}
+{"case_id": "c09", "input": {"question": "I want to cancel my monthly plan."}, "expected": {"escalate": false}, "notes": "Self-serve cancellation: no hand-off needed"}
+{"case_id": "h01", "split": "heldout", "input": {"question": "Can I get my money back for this month? I'm on the monthly plan."}, "expected": {"escalate": false}, "notes": "Monthly plans are not refundable"}
+{"case_id": "h02", "split": "heldout", "input": {"question": "Our legal team needs your data processing terms by Friday."}, "expected": {"escalate": true}}
+{"case_id": "h03", "split": "heldout", "input": {"question": "What uptime do enterprise customers get?"}, "expected": {"escalate": false}}

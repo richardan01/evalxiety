@@ -49,6 +49,8 @@ const PAGE_HELP: Record<string, string> = {
     "**Checks** shows the automatic checks: 4 deterministic code checks and 1 experimental AI judge, plus how well the judge agrees with human labels.",
   "/experiments": "**Experiments** runs Baseline and Corrected on the same frozen set of cases and compares them case by case.",
   "/release": "**Release gate** turns all the evidence into a ship / no-ship decision that a named human must approve.",
+  "/agents":
+    "**Your agents** evaluates any agent: each folder under agents/ holds agent.json (checks, optional judge, optional HTTP endpoint) and cases.jsonl. Import a run (JSONL) or call the agent over HTTP, review every candidate trace, then read the release gate on the agent's page. Start a new agent from agents/_template.",
   "/connect":
     "**Connect (MCP)** lets Claude Desktop or Claude Code read Evalxiety (release status, runs, traces, rubric) through a read-only MCP server. Copy the setup snippet for your client; the app must be running.",
 };
@@ -79,7 +81,7 @@ export function mockReply(question: string, state: GuideState, why: string): str
       "5. Check any LLM judge against human labels (TPR/TNR), then confirm on held-out data.",
       "6. Compare old vs. new agent on the same frozen cases; look for regressions.",
       "7. Set release rules up front and require a named human sign-off.",
-      "See [Start here](/start) → *Onboard your own agent* for what's built: today only the rubric is generic; trace import, case files, check plugins and a re-run adapter are coming next, so other agents need code changes (`src/lib/agent/`, `src/lib/domain/scenarios.ts`, `src/lib/evaluators/`, `src/lib/release/gate.ts`).",
+      "Then open [Your agents](/agents): try the starter kit, then `cp -r agents/_template agents/<your-agent>`, add your cases to `cases.jsonl`, and either import the file `run-my-agent.mjs` writes or add a `\"connection\": {\"type\": \"http\", \"url\": \"...\"}` block to `agent.json`. Guide: `docs/use-your-agent.md`.",
     ].join("\n");
   } else if (/page|here|this tab|what is this/.test(q)) {
     body = `${pageHelp(state.page)}\n\n${nextLine}`;

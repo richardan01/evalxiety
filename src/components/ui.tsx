@@ -54,13 +54,24 @@ export function Badge({ tone = "neutral", children, title }: { tone?: Tone; chil
 }
 
 /** Mandatory label on anything produced by mock execution. */
-export function MockBadge({ mode }: { mode: "live" | "mock" }) {
+export function MockBadge({ mode }: { mode: "live" | "mock" | "imported" | "http" }) {
+  if (mode === "imported") return <Badge tone="blue" title="Produced by your agent outside Evalxiety and imported from a file">IMPORTED</Badge>;
+  if (mode === "http") return <Badge tone="blue" title="Produced by calling your agent's HTTP endpoint">HTTP</Badge>;
   return mode === "mock" ? (
     <Badge tone="amber" title="Produced by the mock agent/judge. Not evidence about the real model.">
       MOCK
     </Badge>
   ) : (
     <Badge tone="blue" title="Produced by a real Claude API call">LIVE</Badge>
+  );
+}
+
+/** Mandatory label on starter-kit data: shows the workflow, never evidence about a real agent. */
+export function ExampleBadge() {
+  return (
+    <Badge tone="amber" title="Starter-kit example data. It shows how the workflow works and never counts as release evidence.">
+      EXAMPLE
+    </Badge>
   );
 }
 
@@ -250,12 +261,12 @@ export function PageHeader({ title, question, info, action }: { title: string; q
 }
 
 /** Big status pill with an icon so status is never colour-only. */
-export function StatusPill({ status }: { status: string }) {
+export function StatusPill({ status, approvedLabel = "Approved for demo" }: { status: string; approvedLabel?: string }) {
   const map: Record<string, { label: string; icon: string; cls: string }> = {
     NO_SHIP: { label: "No ship", icon: "✕", cls: "bg-rose-600 text-white" },
     INSUFFICIENT_EVIDENCE: { label: "Not enough evidence", icon: "…", cls: "bg-amber-400 text-amber-950" },
     ELIGIBLE_FOR_DEMO_APPROVAL: { label: "Ready for approval", icon: "✓", cls: "bg-sky-600 text-white" },
-    APPROVED_FOR_DEMO: { label: "Approved for demo", icon: "✓", cls: "bg-emerald-600 text-white" },
+    APPROVED_FOR_DEMO: { label: approvedLabel, icon: "✓", cls: "bg-emerald-600 text-white" },
   };
   const m = map[status] ?? { label: status, icon: "•", cls: "bg-slate-700 text-white" };
   return (

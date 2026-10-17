@@ -17,7 +17,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <MockBanner />
           <main className="mx-auto w-full max-w-7xl flex-1 px-8 py-7">{children}</main>
           <footer className="border-t border-slate-200 bg-white px-8 py-3 text-xs text-slate-500">
-            Evalxiety · synthetic merchant-pricing scenario · results describe a small prototype test set, not production certification.
+            Evalxiety · results describe the test cases you ran, not a production certification.
           </footer>
         </div>
         <GuideAgent />

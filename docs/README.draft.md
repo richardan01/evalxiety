@@ -6,7 +6,8 @@ Evalxiety tests an AI agent before you ship it. It runs the agent on test cases,
 checks the evidence, and refuses to say "ship it" until the evidence holds up.
 
 I built it in one day for a Claude hackathon. The agent under test is a Claude-powered **merchant pricing agent** working
-on synthetic business data. Want it running in 30 seconds? Skip to [Run it](#run-it).
+on synthetic business data. Want it running in 30 seconds? Skip to [Run it](#run-it). Got an agent of your own? See
+[Use it on your own agent](#use-it-on-your-own-agent).
 
 ![Evalxiety dashboard: "Absolutely not shipping this."](docs/screenshots/dashboard.png)
 
@@ -87,6 +88,28 @@ claude mcp add evalxiety -- node /absolute/path/to/mcp/server.mjs
 The project was called AgentTrust during the hackathon. That name survives in the package name, the `AGENTTRUST_URL`
 variable and some internal docs.
 
+## Use it on your own agent
+
+The pricing agent is only the demo: Evalxiety works on any agent, built with any stack, because it only needs your
+agent's outputs. It is new and nobody outside this project has tried it on a real agent yet (see Limitations).
+
+Start with the [5-minute starter kit](docs/use-your-agent.md#try-the-starter-kit-about-5-minutes), a toy help-desk
+bot with two versions. Version 2 fixes 7 of the 9 cases you tune on, but it breaks one that used to work: it starts
+handing self-serve cancellations to a human. Evalxiety flags that regression. The starter data is labelled EXAMPLE,
+so by design the verdict reads "Not enough evidence".
+
+Then point it at your own agent. You'll need two sets of traces (the version you ship today, and your change) and
+time to read them: about one review per case on your final run.
+
+1. `cp -r agents/_template agents/my-agent`, and name it in `agent.json`.
+2. Put 10–30 real inputs in `cases.jsonl`, pulled from production logs with personal data removed.
+3. Get traces in. Either edit `run-my-agent.mjs` to call your agent and import the file it writes, or add a
+   `connection` block with your endpoint's URL to `agent.json` so Evalxiety calls it (after you confirm).
+4. Review your traces, add code checks for the failures you find, then run your change and review every case of the
+   final run. Read the gate at `/agents/my-agent`.
+
+Full guide: [docs/use-your-agent.md](docs/use-your-agent.md).
+
 ## Built with
 
 Next.js 16 (App Router) · TypeScript · Tailwind CSS · Anthropic SDK (Claude Opus 5.5) · Zod · Vitest · Model Context
@@ -99,8 +122,10 @@ Protocol SDK · local JSON storage. Built with Claude Code.
   production reliability.
 - **The AI judge is uncalibrated.** It has 3 human labels against a 30-per-class minimum, so treat its verdicts as
   unvalidated.
-- **Only the built-in pricing agent is supported today.** Next steps are trace import, an HTTP adapter for your own
-  agent, and a CI gate command.
+- **Running it on your own agent is new.** The import and HTTP paths have automated tests, including HTTP calls to a
+  real local server, but nobody outside this project has tried them on a real agent yet. Expect rough edges, and if
+  you try it, [open an issue](https://github.com/richardan01/evalxiety/issues/new/choose) where it broke.
+- **No CI command yet.** `npm run validate` checks your files in CI, but nothing yet fails a build on No ship.
 
 ## Credits
 
