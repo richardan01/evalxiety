@@ -25,6 +25,16 @@ describe("enforceable spend cap", () => {
     expect(worstCaseCostUsd(10_000, 16000)).toBeGreaterThan(worstCaseCostUsd(0, 16000));
   });
 
+  it("worst case is priced for the requested model, with the fallback term only where fallback exists", () => {
+    // Haiku 5.5: input $0.1/M (cache write $0.125/M), output $0.5/M, no server-side fallback.
+    expect(worstCaseCostUsd(0, 16000, "claude-haiku-5-5")).toBeCloseTo((2000 * 0.125 + 16000 * 0.5) / 1e6, 9);
+    // Sonnet 5.5 keeps the fallback attempt: input $2/M (cache write $2.5/M), output $10/M + fallback.
+    expect(worstCaseCostUsd(0, 16000, "claude-sonnet-5-5")).toBeCloseTo((2000 * 2.5 + 16000 * 10 + 2000 * 6.25 + 16000 * 25) / 1e6, 9);
+    expect(worstCaseCostUsd(0, 16000, "claude-haiku-5-5")).toBeLessThan(worstCaseCostUsd(0, 16000) / 40);
+    // Unknown model ids fall back to the default (Opus) bound rather than under-reserving.
+    expect(worstCaseCostUsd(0, 16000, "claude-unknown")).toBeCloseTo(worstCaseCostUsd(0, 16000), 12);
+  });
+
   it("concurrent reservations can never jointly exceed the cap", async () => {
     const results = await Promise.allSettled(Array.from({ length: 10 }, (_, i) => reserveSpend(`c${i}`, 0.3)));
     const ok = results.filter((r) => r.status === "fulfilled");

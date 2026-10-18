@@ -105,14 +105,19 @@ export function committedUsd(l: Ledger): number {
 /**
  * Upper bound on what one call can cost: every input token at the cache-write
  * rate (a token always covers ≥ 1 byte, so bytes bound tokens), the full
- * max_tokens of output, and — because a refusal can be followed by a
- * server-side fallback in the same call — the same again at fallback prices.
+ * max_tokens of output, and — for models with server-side fallback, because a
+ * refusal can be followed by a fallback attempt in the same call — the same
+ * again at fallback prices. Priced for the model actually requested, so a
+ * Haiku judge call does not hold Opus-sized budget and starve concurrent workers.
  */
-export function worstCaseCostUsd(inputBytes: number, maxTokens: number): number {
+export function worstCaseCostUsd(inputBytes: number, maxTokens: number, model: string = MODEL_ID): number {
   const inTok = inputBytes + INPUT_OVERHEAD_TOKENS;
   const attempt = (p: { input: number; output: number; cache_write: number }) =>
     (inTok * Math.max(p.input, p.cache_write) + maxTokens * p.output) / 1_000_000;
-  return attempt(PRICE) + attempt(FALLBACK_PRICE);
+  const known = Object.hasOwn(PRICES, model);
+  const own = attempt(known ? PRICES[model] : PRICE);
+  // Unknown ids fail closed: default prices plus the fallback attempt.
+  return !known || SUPPORTS_FALLBACK.has(model) ? own + attempt(FALLBACK_PRICE) : own;
 }
 
 export const utf8Bytes = (...parts: string[]) => parts.reduce((n, p) => n + Buffer.byteLength(p, "utf8"), 0);
@@ -229,7 +234,7 @@ export async function callStructured(req: StructuredCallRequest): Promise<Struct
     }
   }
 
-  const reservedUsd = worstCaseCostUsd(utf8Bytes(req.system, req.user, JSON.stringify(req.format.schema)), MAX_TOKENS);
+  const reservedUsd = worstCaseCostUsd(utf8Bytes(req.system, req.user, JSON.stringify(req.format.schema)), MAX_TOKENS, model);
   const reservationId = await reserveSpend(req.purpose, reservedUsd);
   let settled = false;
   const settle = async (usd: number | null, model: string | null) => {

@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     if (state.mode !== "live") return textStream(mockReply(question, state, modeInfo().reason), { "X-Guide-Mode": "mock" });
 
     const messages = [...body.messages, { role: "system" as const, content: state.text }];
-    const reservedUsd = worstCaseCostUsd(utf8Bytes(GUIDE_SYSTEM, ...messages.map((m) => m.content)), MAX_TOKENS);
+    const reservedUsd = worstCaseCostUsd(utf8Bytes(GUIDE_SYSTEM, ...messages.map((m) => m.content)), MAX_TOKENS, MODEL_ID);
     let reservationId: string;
     try {
       reservationId = await reserveSpend("guide", reservedUsd);
