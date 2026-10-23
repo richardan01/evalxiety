@@ -61,3 +61,6 @@ next-env.d.ts
 
 # A Claude API key connected from the UI (data/ is tracked, so keep secrets out of it).
 /data/private/
+
+# Claude Code local scheduler lock
+/.claude/scheduled_tasks.lock
