@@ -69,7 +69,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:12.668Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C01_trace_1ab18d0afdbd",
@@ -141,7 +142,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:12.677Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C01_trace_562292cc3688",
@@ -213,7 +215,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:12.685Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C01_trace_58358835c9d9",
@@ -285,7 +288,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:12.693Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C01_trace_7b96ad97a7d9",
@@ -357,7 +361,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:12.714Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C01_trace_d69bcfddaa1c",
@@ -429,7 +434,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:12.728Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C01_trace_d904a8d7f61b",
@@ -501,7 +507,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:12.737Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C02_trace_4ad31fff6913",
@@ -573,7 +580,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:12.755Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C02_trace_4d02ef4c99ca",
@@ -645,7 +653,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:12.769Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C02_trace_af54490d0ea0",
@@ -717,7 +726,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:12.778Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C02_trace_b05b8f643283",
@@ -789,7 +799,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:12.799Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C02_trace_bd6a0e8ce778",
@@ -861,7 +872,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:12.812Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C02_trace_c3802609838c",
@@ -933,7 +945,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:12.820Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C02_trace_d2ee315fffee",
@@ -1005,7 +1018,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:12.841Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C03_trace_2b22d6693aca",
@@ -1077,7 +1091,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:12.849Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C03_trace_4b9d7b0995a6",
@@ -1149,7 +1164,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:12.858Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C03_trace_5003f29c2eb4",
@@ -1221,7 +1237,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:12.883Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C03_trace_9342a6862af2",
@@ -1293,7 +1310,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:12.904Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C03_trace_ce7a0d8a19f3",
@@ -1365,7 +1383,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:12.914Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C03_trace_d8529d273764",
@@ -1437,7 +1456,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:12.922Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C04_trace_1466d732c96c",
@@ -1506,7 +1526,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:12.932Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C04_trace_a16c0b7ab4a1",
@@ -1575,7 +1596,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:12.947Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C04_trace_a74dcb19bffb",
@@ -1644,7 +1666,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:12.964Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C04_trace_afd549f98902",
@@ -1713,7 +1736,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:12.975Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C04_trace_c4f15e441276",
@@ -1782,7 +1806,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:12.992Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C04_trace_d302a2fdf6c1",
@@ -1851,7 +1876,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.001Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C04_trace_e54871ffd6c7",
@@ -1920,7 +1946,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.023Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C04_trace_fd4299d20930",
@@ -1991,7 +2018,8 @@
     "label_source": "human",
     "trace_execution_mode": "mock",
     "promoted_at": "2026-10-19T01:05:13.053Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C05_trace_493c9bfd97b9",
@@ -2065,7 +2093,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.062Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C05_trace_6323ff501293",
@@ -2137,7 +2166,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.070Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C05_trace_81ce7d9e6c76",
@@ -2209,7 +2239,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.079Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C05_trace_85cc204fd590",
@@ -2281,7 +2312,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.094Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C05_trace_8b25fc2b7f03",
@@ -2353,7 +2385,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.113Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C05_trace_c957173dbcc1",
@@ -2425,7 +2458,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.122Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C06_trace_ce5defa3c840",
@@ -2497,7 +2531,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.137Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C06_trace_f0cd0d5694ab",
@@ -2569,7 +2604,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.158Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C07_trace_24fe96385380",
@@ -2643,7 +2679,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.180Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C07_trace_2dcabb76de65",
@@ -2717,7 +2754,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.189Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C08_trace_249ee1f360fb",
@@ -2785,7 +2823,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.197Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C08_trace_fc96499b218a",
@@ -2855,7 +2894,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.217Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C09_trace_32fb25fd102e",
@@ -2923,7 +2963,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.231Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C09_trace_58c293180464",
@@ -2991,7 +3032,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.240Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C09_trace_803befcd07c6",
@@ -3059,7 +3101,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.259Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C09_trace_9963e2cc4407",
@@ -3127,7 +3170,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.272Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C09_trace_d2eead6f189a",
@@ -3195,7 +3239,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.280Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C09_trace_d2f96c6b2163",
@@ -3263,7 +3308,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.312Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C10_trace_33ac26b649c4",
@@ -3334,7 +3380,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.324Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C10_trace_a518a3e34065",
@@ -3405,7 +3452,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.332Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C11_trace_0ba88fd6dfa2",
@@ -3477,7 +3525,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.341Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C11_trace_2edbd7b87b5c",
@@ -3549,7 +3598,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.359Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C11_trace_901ea8abffce",
@@ -3621,7 +3671,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.372Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C11_trace_d718363ea1f9",
@@ -3693,7 +3744,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.386Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C11_trace_efa1b724d6b9",
@@ -3765,7 +3817,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.415Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C11_trace_f4e330f4b025",
@@ -3837,7 +3890,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.424Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C12_trace_213575c26660",
@@ -3911,7 +3965,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.432Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C12_trace_24a5828430ef",
@@ -3983,7 +4038,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.441Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C12_trace_4708a396173e",
@@ -4055,7 +4111,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.458Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C12_trace_676148f89195",
@@ -4127,7 +4184,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.483Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C12_trace_aaefedd20e2e",
@@ -4201,7 +4259,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.492Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C12_trace_ac11fa1b8012",
@@ -4273,7 +4332,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.500Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C13_trace_433c5b2d0b8f",
@@ -4345,7 +4405,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.509Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C13_trace_a5802dc705c2",
@@ -4417,7 +4478,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.525Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C13_trace_b4e725f7ff94",
@@ -4489,7 +4551,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.542Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C13_trace_d1db737832a3",
@@ -4563,7 +4626,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.550Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C13_trace_e9e7e7f4efdb",
@@ -4635,7 +4699,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.567Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C13_trace_fa31d13accf3",
@@ -4707,7 +4772,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.583Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C14_trace_039e77d8602e",
@@ -4775,7 +4841,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.592Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C14_trace_7d871a53b628",
@@ -4843,7 +4910,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.609Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C15_trace_2a301606a925",
@@ -4915,7 +4983,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.624Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C15_trace_5261d8ab69b6",
@@ -4987,7 +5056,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.637Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C16_trace_3468c9716295",
@@ -5059,7 +5129,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.654Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C16_trace_8d713a942f47",
@@ -5133,7 +5204,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.668Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C16_trace_aa7d6b166dab",
@@ -5205,7 +5277,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.677Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C16_trace_b2f5827664a5",
@@ -5277,7 +5350,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.697Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C16_trace_c17a551705c6",
@@ -5349,7 +5423,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.710Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C16_trace_f4b1af31829e",
@@ -5423,7 +5498,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.719Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C17_trace_4d0d9fb694e7",
@@ -5495,7 +5571,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.739Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C17_trace_d46a5a20ee99",
@@ -5567,7 +5644,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.761Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C18_trace_1ae850fc52fe",
@@ -5639,7 +5717,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.794Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C18_trace_6dc691f949bc",
@@ -5711,7 +5790,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.805Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C18_trace_8622e0064935",
@@ -5785,7 +5865,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.815Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C18_trace_ae1e4fa8559b",
@@ -5857,7 +5938,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.835Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C18_trace_b2dd761bf340",
@@ -5929,7 +6011,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.844Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C18_trace_cd288e29bbe8",
@@ -6003,7 +6086,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.854Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C19_trace_60e158f472f6",
@@ -6075,7 +6159,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.881Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C19_trace_afd46878cb11",
@@ -6147,7 +6232,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.890Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C20_trace_0277b0c0dc0c",
@@ -6215,7 +6301,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.899Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C20_trace_5d36136abcab",
@@ -6283,7 +6370,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.910Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C20_trace_86e6cffb2d5f",
@@ -6351,7 +6439,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.925Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C20_trace_ce36bed66dfb",
@@ -6419,7 +6508,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.934Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C20_trace_d8a8f6b42bb5",
@@ -6487,7 +6577,8 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.952Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   },
   {
     "gold_id": "gold_C20_trace_ff695ac1c359",
@@ -6555,6 +6646,7 @@
     "label_source": "human",
     "trace_execution_mode": "live",
     "promoted_at": "2026-10-19T01:05:13.961Z",
-    "promoted_by": "demo-reviewer"
+    "promoted_by": "demo-reviewer",
+    "demo": true
   }
 ]

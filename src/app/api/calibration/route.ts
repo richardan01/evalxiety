@@ -7,6 +7,7 @@ import { calibrationView } from "@/lib/services";
 const Query = z.object({
   split: DatasetSplit.default("dev"),
   mode: ExecutionMode.default("live"),
+  include_demo: z.enum(["1", "true"]).optional(),
 });
 
 /**
@@ -17,7 +18,11 @@ export async function GET(req: NextRequest) {
   await connection();
   return handle(async () => {
     const sp = req.nextUrl.searchParams;
-    const query = Query.parse({ split: sp.get("split") || undefined, mode: sp.get("mode") || undefined });
-    return ok(await calibrationView(query));
+    const query = Query.parse({
+      split: sp.get("split") || undefined,
+      mode: sp.get("mode") || undefined,
+      include_demo: sp.get("include_demo") || undefined,
+    });
+    return ok(await calibrationView({ split: query.split, mode: query.mode, include_demo: query.include_demo !== undefined }));
   });
 }

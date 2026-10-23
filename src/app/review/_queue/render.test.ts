@@ -27,7 +27,7 @@ const ann: Annotation = {
   trace_id: trace.trace_id,
   case_id: "C01",
   reviewer: "Grace",
-  label_source: "human", checklist: {}, rubric_version: null,
+  label_source: "human", checklist: {}, rubric_version: null, demo: false,
   created_at: "2026-10-13T00:00:00Z",
   updated_at: "2026-10-13T00:00:00Z",
   open_coding_notes: "Observed X.",

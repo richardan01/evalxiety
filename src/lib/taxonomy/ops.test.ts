@@ -18,7 +18,7 @@ const ann = (traceId: string, first: string | null, extra: string[] = [], review
   trace_id: traceId,
   case_id: "C01",
   reviewer,
-  label_source: "human", checklist: {}, rubric_version: null,
+  label_source: "human", checklist: {}, rubric_version: null, demo: false,
   created_at: "2026-10-13T00:00:00Z",
   updated_at: "2026-10-13T00:00:00Z",
   open_coding_notes: "note",

@@ -19,12 +19,13 @@ export function JudgeCalibration({ initialSplit = "dev", initialMode = "live" }:
   const [split, setSplit] = useState<Split>(initialSplit);
   const [mode, setMode] = useState<Mode>(initialMode);
   const [nonce, setNonce] = useState(0);
+  const [includeDemo, setIncludeDemo] = useState(false);
   const [result, setResult] = useState<{ key: string; data: CalibrationResponse | null; error: string | null } | null>(null);
-  const key = `${split}|${mode}|${nonce}`;
+  const key = `${split}|${mode}|${nonce}|${includeDemo}`;
 
   useEffect(() => {
     let alive = true;
-    getJSON<CalibrationResponse>(`/api/calibration?split=${split}&mode=${mode}`)
+    getJSON<CalibrationResponse>(`/api/calibration?split=${split}&mode=${mode}${includeDemo ? "&include_demo=1" : ""}`)
       .then((data) => {
         if (alive) setResult({ key, data, error: null });
       })
@@ -34,7 +35,7 @@ export function JudgeCalibration({ initialSplit = "dev", initialMode = "live" }:
     return () => {
       alive = false;
     };
-  }, [key, split, mode]);
+  }, [key, split, mode, includeDemo]);
 
   const current = result?.key === key ? result : null;
   const data = current?.data ?? null;
@@ -78,7 +79,7 @@ export function JudgeCalibration({ initialSplit = "dev", initialMode = "live" }:
         ) : data?.locked ? (
           <HeldoutReveal onRevealed={() => setNonce((n) => n + 1)} />
         ) : data ? (
-          <CalibrationBody view={data} />
+          <CalibrationBody view={data} onToggleDemo={() => setIncludeDemo((v) => !v)} />
         ) : null}
       </div>
     </section>
@@ -102,12 +103,13 @@ function RevealedLine({ state }: { state: HeldoutState }) {
   );
 }
 
-export function CalibrationBody({ view }: { view: CalibrationUnlocked }) {
+export function CalibrationBody({ view, onToggleDemo }: { view: CalibrationUnlocked; onToggleDemo?: () => void }) {
   const { report } = view;
   const m = report.matrix;
 
   return (
     <div className="space-y-4">
+      <DemoNotice view={view} onToggle={onToggleDemo} />
       <div className="space-y-1">
         <div className="flex flex-wrap items-center gap-2">
           <ExperimentalBadge />
@@ -194,6 +196,41 @@ export function CalibrationBody({ view }: { view: CalibrationUnlocked }) {
       )}
     </div>
   );
+}
+
+/** Demo labels are placeholders seeded to exercise the UI; they are left out of the numbers unless asked for. */
+function DemoNotice({ view, onToggle }: { view: CalibrationUnlocked; onToggle?: () => void }) {
+  if (view.demo_included > 0) {
+    return (
+      <div className="flex flex-wrap items-center gap-2 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-xs text-rose-900">
+        <Badge tone="red">DEMO DATA</Badge>
+        <span>
+          {view.demo_included} demo-labelled example{view.demo_included === 1 ? " is" : "s are"} counted below. These numbers are not validation evidence.
+        </span>
+        {onToggle && (
+          <button type="button" onClick={onToggle} className="font-medium text-rose-900 underline">
+            Hide demo labels
+          </button>
+        )}
+      </div>
+    );
+  }
+  if (view.demo_excluded > 0) {
+    return (
+      <div className="flex flex-wrap items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+        <Badge tone="amber">DEMO LABELS HIDDEN</Badge>
+        <span>
+          {view.demo_excluded} placeholder label{view.demo_excluded === 1 ? " is" : "s are"} left out. Real validation needs labels from a named domain expert.
+        </span>
+        {onToggle && (
+          <button type="button" onClick={onToggle} className="font-medium text-amber-900 underline">
+            Show them anyway
+          </button>
+        )}
+      </div>
+    );
+  }
+  return null;
 }
 
 function ConfusionMatrix({ tp, fn, fp, tn }: { tp: number; fn: number; fp: number; tn: number }) {

@@ -213,6 +213,7 @@ export async function promoteToGold(input: { annotation_id: string; promoted_by:
     label_version: (existing?.label_version ?? 0) + 1,
     dataset_split: split,
     label_source: "human",
+    demo: annotation.demo,
     trace_execution_mode: trace.execution_mode,
     promoted_at: new Date().toISOString(),
     promoted_by: input.promoted_by.trim(),
@@ -223,6 +224,7 @@ export async function promoteToGold(input: { annotation_id: string; promoted_by:
     annotation_id: annotation.annotation_id,
     split,
     label_version: gold.label_version,
+    demo: gold.demo,
     replaced_annotation_id: existing && existing.annotation_id !== annotation.annotation_id ? existing.annotation_id : null,
   });
   return gold;
@@ -232,7 +234,11 @@ export async function promoteToGold(input: { annotation_id: string; promoted_by:
 // Judge calibration
 // ---------------------------------------------------------------------------
 
-export async function calibrationView(opts: { split: "dev" | "heldout"; mode: "live" | "mock" }) {
+/**
+ * `include_demo` is off by default: demo labels (placeholders seeded to exercise the UI) must never move the numbers
+ * the release gate or a reader treats as validation evidence.
+ */
+export async function calibrationView(opts: { split: "dev" | "heldout"; mode: "live" | "mock"; include_demo?: boolean }) {
   const heldout = await getHeldoutState();
   if (opts.split === "heldout" && !heldout.revealed) {
     return { locked: true as const, heldout };
@@ -253,7 +259,10 @@ export async function calibrationView(opts: { split: "dev" | "heldout"; mode: "l
     judgeChangedAfterReveal =
       JSON.stringify(atReveal.judge_criterion) !== JSON.stringify(rubric.judge_criterion) || atReveal.judge_model !== rubric.judge_model;
   }
-  const inScope = gold.filter((g) => g.dataset_split === opts.split && g.trace_execution_mode === opts.mode);
+  const includeDemo = opts.include_demo === true;
+  const inSplitAndMode = gold.filter((g) => g.dataset_split === opts.split && g.trace_execution_mode === opts.mode);
+  const demoExcluded = includeDemo ? 0 : inSplitAndMode.filter((g) => g.demo && g.unsupported_justification_label !== "not_assessed").length;
+  const inScope = includeDemo ? inSplitAndMode : inSplitAndMode.filter((g) => !g.demo);
   const labelled = inScope.filter((g) => g.unsupported_justification_label !== "not_assessed");
   const pairs: Array<CalibrationPair & { gold_id: string }> = [];
   const notJudged: string[] = [];
@@ -265,10 +274,13 @@ export async function calibrationView(opts: { split: "dev" | "heldout"; mode: "l
     }
     pairs.push({ gold_id: g.gold_id, trace_id: g.trace_id, case_id: g.case_id, human_failure: g.unsupported_justification_label === "present", judge_verdict: j.verdict });
   }
-  const report = calibrationReport(pairs);
+  const base = calibrationReport(pairs);
+  const demoIncluded = includeDemo ? labelled.filter((g) => g.demo).length : 0;
+  // Including demo labels is for exercising the UI; whatever the numbers say, they are not validation evidence.
+  const report = demoIncluded > 0 ? { ...base, status_label: "Demo data — not validation evidence.", insufficient: true } : base;
   const goldTraceIds = new Set(gold.map((g) => g.trace_id));
   const reviewedNotPromoted = annotations.filter(
-    (a) => a.unsupported_justification_label !== "not_assessed" && !goldTraceIds.has(a.trace_id),
+    (a) => (includeDemo || !a.demo) && a.unsupported_justification_label !== "not_assessed" && !goldTraceIds.has(a.trace_id),
   ).length;
   const inScopeTraceIds = new Set(labelled.map((g) => g.trace_id));
   const versions = [...new Set([...latest.values()].filter((j) => inScopeTraceIds.has(j.trace_id)).map((j) => j.judge_version))];
@@ -282,6 +294,11 @@ export async function calibrationView(opts: { split: "dev" | "heldout"; mode: "l
     rubric_version: rubric.version,
     judge_changed_after_reveal: judgeChangedAfterReveal,
     judge_versions_present: versions,
+    include_demo: includeDemo,
+    /** Demo-labelled examples left out of every number below (0 when include_demo is on). */
+    demo_excluded: demoExcluded,
+    /** Demo-labelled examples counted in the numbers below (only when include_demo is on). */
+    demo_included: demoIncluded,
     gold_in_scope: inScope.length,
     labelled_examples: labelled.length,
     labelled_positives: labelled.filter((g) => g.unsupported_justification_label === "present").length,
@@ -365,12 +382,14 @@ function latestCompleted(runs: ExperimentRun[], role: "baseline" | "corrected", 
 export async function releaseView(opts: { candidate_run_id?: string; baseline_run_id?: string } = {}) {
   await recoverOrphanedRuns();
   const required = getFrozenSet("FROZEN-FULL-v1")!;
-  const [runs, annotations, approvals, judgeResults] = await Promise.all([
+  const [runs, allAnnotations, approvals, judgeResults] = await Promise.all([
     listExperimentRuns(),
     listAnnotations(),
     listApprovals(),
     listJudgeResults(),
   ]);
+  // Demo labels are placeholders: they must not satisfy review coverage or decide a candidate's task outcome.
+  const annotations = allAnnotations.filter((a) => !a.demo);
   const candidateRun = opts.candidate_run_id
     ? (runs.find((r) => r.run_id === opts.candidate_run_id) ?? null)
     : latestCompleted(runs, "corrected", required.frozen_set_id);
@@ -581,7 +600,9 @@ export async function overviewView() {
   const judge = cal.locked
     ? null
     : { n: cal.report.matrix.n, tpr: cal.report.tpr, tnr: cal.report.tnr, status_label: cal.report.status_label, mode: cal.mode };
-  const reviewed = new Set(annotations.map((a) => a.trace_id));
+  // Demo labels are shown separately, never as progress toward the review or gold targets.
+  const reviewed = new Set(annotations.filter((a) => !a.demo).map((a) => a.trace_id));
+  const realGold = gold.filter((g) => !g.demo);
   return {
     executions: {
       total: traces.length,
@@ -596,9 +617,11 @@ export async function overviewView() {
       target_min: REVIEW_TARGET.min,
       target_max: REVIEW_TARGET.max,
       unreviewed: traces.length - reviewed.size,
-      gold_examples: gold.length,
-      gold_dev: gold.filter((g) => g.dataset_split === "dev").length,
-      gold_heldout: gold.filter((g) => g.dataset_split === "heldout").length,
+      gold_examples: realGold.length,
+      gold_dev: realGold.filter((g) => g.dataset_split === "dev").length,
+      gold_heldout: realGold.filter((g) => g.dataset_split === "heldout").length,
+      demo_labels: new Set(annotations.filter((a) => a.demo).map((a) => a.trace_id)).size,
+      demo_gold: gold.length - realGold.length,
     },
     pass_all_rate: release.gate.pass_all_rate,
     candidate_summary: release.candidate_summary,

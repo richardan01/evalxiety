@@ -5,7 +5,7 @@ import type { OverviewData } from "./types";
 function overview(over: Partial<OverviewData> = {}): OverviewData {
   return {
     executions: { total: 40, live: 40, mock: 0, errors: 0, live_cost_usd: 1 },
-    review: { reviewed_traces: 6, reviewed_live: 6, target_min: 5, target_max: 10, unreviewed: 0, gold_examples: 0, gold_dev: 0, gold_heldout: 0 },
+    review: { reviewed_traces: 6, reviewed_live: 6, target_min: 5, target_max: 10, unreviewed: 0, gold_examples: 0, gold_dev: 0, gold_heldout: 0, demo_labels: 0, demo_gold: 0 },
     pass_all_rate: 0.9,
     candidate_summary: null,
     candidate_run: { run_id: "r" } as OverviewData["candidate_run"],
