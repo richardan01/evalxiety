@@ -18,11 +18,11 @@ const AnnotationBody = Annotation.omit({
 })
   .extend({
     case_id: z.string().optional(), // ignored unless it contradicts the trace
-    reviewer: z.string().trim().min(1, "A named reviewer is required"),
-    open_coding_notes: z.string().trim().default(""), // required for Fail (checked below); optional for Pass
+    reviewer: z.string().trim().min(1, "A named reviewer is required").max(100),
+    open_coding_notes: z.string().trim().max(20_000).default(""), // required for Fail (checked below); optional for Pass
     first_failure: z
       .object({
-        description: z.string().trim().min(1, "Describe the first observed failure"),
+        description: z.string().trim().min(1, "Describe the first observed failure").max(5_000),
         failure_mode_id: z.string().trim().min(1).nullable(),
       })
       .nullable(),

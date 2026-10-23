@@ -5,7 +5,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import http from "node:http";
 import net from "node:net";
-import { callAgent, mapLimit, MAX_RESPONSE_BYTES } from "./http";
+import { assertSafeConnection, callAgent, mapLimit, MAX_RESPONSE_BYTES, UnsafeConnectionError } from "./http";
 import { HttpConnection, type AgentCase } from "./schemas";
 
 let server: http.Server;
@@ -117,4 +117,25 @@ describe("mapLimit", () => {
     expect(out).toEqual([50, 10, 30, 20, 40]);
     expect(peak).toBe(2);
   });
+});
+
+describe("metadata endpoints are refused", () => {
+  it.each([
+    "http://169.254.169.254/latest/meta-data/",
+    "http://2852039166/", // decimal form of 169.254.169.254
+    "http://0xa9fea9fe/", // hex form
+    "http://[::ffff:169.254.169.254]/", // IPv4-mapped IPv6
+    "http://[fe80::1]/",
+    "http://metadata.google.internal/computeMetadata/v1/",
+    "http://100.100.100.200/",
+  ])("%s", (url) => {
+    expect(() => assertSafeConnection("my-bot", url, {})).toThrow(UnsafeConnectionError);
+  });
+
+  it.each(["http://localhost:3000/", "http://127.0.0.1:8080/run", "https://agent.example.com/run", "http://10.0.0.5/run", "http://192.168.1.20:9000/"])(
+    "%s is allowed",
+    (url) => {
+      expect(() => assertSafeConnection("my-bot", url, {})).not.toThrow();
+    },
+  );
 });

@@ -9,7 +9,7 @@ import crypto from "node:crypto";
 import type { z } from "zod";
 
 export function dataDir(): string {
-  return process.env.AGENTTRUST_DATA_DIR || path.join(/*turbopackIgnore: true*/ process.cwd(), "data");
+  return process.env.EVALXIETY_DATA_DIR || process.env.AGENTTRUST_DATA_DIR || path.join(/*turbopackIgnore: true*/ process.cwd(), "data");
 }
 
 function abs(rel: string): string {
@@ -57,10 +57,21 @@ export async function appendLine(rel: string, value: unknown): Promise<void> {
 export async function readLines<T>(rel: string, schema: z.ZodType<T>): Promise<T[]> {
   try {
     const raw = await fs.readFile(abs(rel), "utf8");
-    return raw
-      .split("\n")
-      .filter((l) => l.trim().length > 0)
-      .map((l) => schema.parse(JSON.parse(l)));
+    const out: T[] = [];
+    raw.split("\n").forEach((line, i) => {
+      if (!line.trim()) return;
+      // A torn line (crash mid-append) must not take the whole log down; skip it and say so.
+      const parsed = (() => {
+        try {
+          return schema.safeParse(JSON.parse(line));
+        } catch {
+          return null;
+        }
+      })();
+      if (parsed?.success) out.push(parsed.data);
+      else console.warn(`[store] skipped unreadable line ${i + 1} of ${rel}`);
+    });
+    return out;
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code === "ENOENT") return [];
     throw err;

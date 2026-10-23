@@ -18,6 +18,13 @@ export async function handle(fn: () => Promise<Response>): Promise<Response> {
       return fail(400, "Invalid request", err.issues.map((i) => `${i.path.join(".")}: ${i.message}`));
     }
     const message = err instanceof Error ? err.message : String(err);
+    // File-system and parse errors carry local paths and file contents: log them, return a reference instead.
+    const code = (err as NodeJS.ErrnoException | undefined)?.code;
+    if (err instanceof SyntaxError || typeof code === "string" || message.includes(process.cwd())) {
+      const ref = crypto.randomUUID().slice(0, 8);
+      console.error(`[api] internal error ${ref}:`, err);
+      return fail(500, `Internal error (ref ${ref}). The details are in the server log.`);
+    }
     return fail(500, message);
   }
 }

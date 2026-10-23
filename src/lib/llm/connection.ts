@@ -23,8 +23,13 @@ export function readConnectedKey(): string | null {
 
 export function saveConnectedKey(apiKey: string): void {
   const f = file();
-  fs.mkdirSync(path.dirname(f), { recursive: true });
-  fs.writeFileSync(f, JSON.stringify({ api_key: apiKey, connected_at: new Date().toISOString() }) + "\n", { mode: 0o600 });
+  fs.mkdirSync(path.dirname(f), { recursive: true, mode: 0o700 });
+  // Write a fresh 0600 file and rename it over the old one: `mode` on writeFileSync only applies when the file is
+  // created, so overwriting in place would keep whatever permissions an earlier file had.
+  const tmp = `${f}.${process.pid}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify({ api_key: apiKey, connected_at: new Date().toISOString() }) + "\n", { mode: 0o600 });
+  fs.chmodSync(tmp, 0o600);
+  fs.renameSync(tmp, f);
 }
 
 export function clearConnectedKey(): void {
