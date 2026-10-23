@@ -9,7 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit -p .",
+    "typecheck": "next typegen && tsc --noEmit -p .",
     "mcp": "node mcp/server.mjs",
     "validate": "tsx scripts/validate.ts",
     "example-agent": "node agents/example-support-bot/server.mjs"
@@ -17,7 +17,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",
     "@modelcontextprotocol/sdk": "^1.32.1",
-    "next": "16.4.0",
+    "next": "16.4.2",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "zod": "^4.6.7"
@@ -28,7 +28,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.4.0",
+    "eslint-config-next": "16.4.2",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5",
