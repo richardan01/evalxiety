@@ -9,7 +9,7 @@ function ann(over: Partial<Annotation>): Annotation {
     trace_id: "t1",
     case_id: "C01",
     reviewer: "Dana",
-    label_source: "human", checklist: {}, rubric_version: null,
+    label_source: "human", checklist: {}, rubric_version: null, demo: false,
     created_at: "2026-10-13T00:00:00.000Z",
     updated_at: "2026-10-13T00:00:00.000Z",
     open_coding_notes: "",

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Fragment, useState, type ReactNode } from "react";
 import { postJSON } from "@/lib/client/api";
 import type { GoldExample } from "@/lib/domain/schemas";
-import { Button, JsonDetails, MockBadge, SplitBadge, cx, fmtDateTime } from "@/components/ui";
+import { Badge, Button, JsonDetails, MockBadge, SplitBadge, cx, fmtDateTime } from "@/components/ui";
 import { ErrorText, TextInput, attempt, useAuthor } from "../taxonomy/_shared/forms";
 import { HumanLabelBadge, ModeNames, UnsupportedLabelBadge } from "./labels";
 import type { GoldPostRequest } from "./types";
@@ -93,7 +93,16 @@ function GoldRow({ g, names, reload }: { g: GoldExample; names: Record<string, s
         <td className="pr-3">
           <ModeNames ids={g.failure_mode_ids} names={names} />
         </td>
-        <td className="pr-3 text-slate-700">{g.reviewer}</td>
+        <td className="pr-3 text-slate-700">
+          {g.reviewer}
+          {g.demo && (
+            <span className="ml-1.5 align-middle">
+              <Badge tone="amber" title="Placeholder label seeded to exercise the UI. Not validation evidence; excluded from calibration and the release gate.">
+                DEMO
+              </Badge>
+            </span>
+          )}
+        </td>
         <td className="pr-3">
           <SplitBadge split={g.dataset_split} />
         </td>
@@ -136,7 +145,7 @@ function GoldRow({ g, names, reload }: { g: GoldExample; names: Record<string, s
               )}
             </DetailRow>
             <DetailRow label="Reviewed">
-              {g.reviewer} ({g.label_source}) · {fmtDateTime(g.review_timestamp)} · label v{g.label_version}
+              {g.reviewer} ({g.demo ? "demo label" : g.label_source}) · {fmtDateTime(g.review_timestamp)} · label v{g.label_version}
             </DetailRow>
             <DetailRow label="Promoted">
               {g.promoted_by} · {fmtDateTime(g.promoted_at)}

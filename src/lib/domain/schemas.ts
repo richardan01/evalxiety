@@ -262,6 +262,9 @@ export const Annotation = z.object({
   // Rubric checklist answers (item id -> ok/problem/skip) and the rubric version they were given under.
   checklist: z.record(z.string(), z.enum(["ok", "problem", "skip"])).default({}),
   rubric_version: z.number().int().nullable().default(null),
+  // True for placeholder labels seeded to exercise the UI. They are stored as human annotations so the workflow runs
+  // end to end, but they are never validation evidence: calibration excludes them unless explicitly asked to include them.
+  demo: z.boolean().default(false),
 });
 export type Annotation = z.infer<typeof Annotation>;
 
@@ -313,6 +316,8 @@ export const GoldExample = z.object({
   label_version: z.number().int(),
   dataset_split: DatasetSplit,
   label_source: z.literal("human"),
+  // Copied from the annotation at promotion time; demo gold is excluded from calibration by default.
+  demo: z.boolean().default(false),
   trace_execution_mode: ExecutionMode,
   promoted_at: z.string(),
   promoted_by: z.string().min(1),

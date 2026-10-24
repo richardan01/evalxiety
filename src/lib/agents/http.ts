@@ -48,8 +48,24 @@ export function envNameBelongsTo(agentId: string, name: string): boolean {
   return name.startsWith(prefix) && /^[A-Z0-9]+$/.test(name.slice(prefix.length));
 }
 
+/**
+ * Link-local and cloud-metadata addresses are never where an agent lives, and calling one (169.254.169.254 and friends)
+ * would hand instance credentials to whoever can edit agent.json or use the wizard. Private ranges (10.x, 192.168.x)
+ * stay allowed: staging agents often live there. `new URL` has already normalised decimal/hex/octal IPv4 forms.
+ */
+export function isMetadataHost(hostname: string): boolean {
+  const h = hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  if (["metadata.google.internal", "metadata", "instance-data", "100.100.100.200", "fd00:ec2::254"].includes(h)) return true;
+  if (h.startsWith("169.254.") || /^fe[89ab][0-9a-f]:/.test(h)) return true;
+  const mapped = h.match(/^::ffff:([0-9a-f]{1,4}):[0-9a-f]{1,4}$/); // ::ffff:a9fe:a9fe is 169.254.169.254
+  return mapped !== null && parseInt(mapped[1], 16) === 0xa9fe;
+}
+
 /** Refuse configurations that would leak a secret: another agent's or a non-agent env var, or clear text off this machine. */
 export function assertSafeConnection(agentId: string, url: string, headers: Record<string, string>): void {
+  if (isMetadataHost(new URL(url).hostname)) {
+    throw new UnsafeConnectionError(`Refusing to call ${new URL(url).host}: link-local and cloud-metadata addresses are not valid agent endpoints.`);
+  }
   const refs = referencedEnv(headers);
   const prefix = agentEnvPrefix(agentId);
   const bad = refs.filter((n) => !envNameBelongsTo(agentId, n));

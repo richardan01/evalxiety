@@ -27,13 +27,20 @@ afterAll(async () => {
   await fs.rm(dir, { recursive: true, force: true });
 });
 
-const post = (body: unknown) => runRoute(new Request("http://x/api/run", { method: "POST", body: JSON.stringify(body) }));
+const post = (body: object) => runRoute(new Request("http://x/api/run", { method: "POST", body: JSON.stringify({ actor: "tester", ...body }) }));
 
 describe("held-out lock on single-case execution", () => {
   it("identifies held-out cases by ID and by copied content", () => {
     expect(heldoutCaseFor(HELD)).toBe(HELD.case_id);
     expect(heldoutCaseFor({ ...HELD, case_id: "CUSTOM-copy", variation: null, data_origin: "user_supplied" })).toBe(HELD.case_id);
     expect(heldoutCaseFor(DEV)).toBeNull();
+  });
+
+  it("POST /api/run refuses an unattributed run: live spend needs a named actor", async () => {
+    const res = await runRoute(new Request("http://x/api/run", { method: "POST", body: JSON.stringify({ config_id: CONFIG, case_id: DEV.case_id }) }));
+    expect(res.status).toBe(400);
+    expect(JSON.stringify(await res.json())).toContain("actor");
+    expect((await listTraces()).length).toBe(0);
   });
 
   it("runPricingAgent refuses a held-out case before reveal (mock mode too) and writes no trace", async () => {

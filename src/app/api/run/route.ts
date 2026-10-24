@@ -15,7 +15,7 @@ const Body = z.object({
   scenario: MerchantScenario.optional(), // user-supplied custom scenario
   force_mock: z.boolean().optional(),
   bypass_cache: z.boolean().optional(),
-  actor: z.string().optional(),
+  actor: z.string().trim().min(1, "actor (a named person) is required: live runs spend money and are audited"),
 });
 
 /** Execute the pricing agent on ONE scenario (single call — never a batch). */
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
       if (err instanceof HeldoutAccessError) return fail(403, err.message);
       throw err;
     }
-    await audit(body.actor ?? "anonymous", "agent.run", {
+    await audit(body.actor, "agent.run", {
       trace_id: trace.trace_id,
       case_id: trace.case_id,
       config_id: body.config_id,

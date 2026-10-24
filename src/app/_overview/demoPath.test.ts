@@ -6,7 +6,7 @@ import type { OverviewData } from "./types";
 function overview(over: Partial<OverviewData> = {}): OverviewData {
   return {
     executions: { total: 0, live: 0, mock: 0, errors: 0, live_cost_usd: 0 },
-    review: { reviewed_traces: 0, reviewed_live: 0, target_min: 10, target_max: 15, unreviewed: 0, gold_examples: 0, gold_dev: 0, gold_heldout: 0 },
+    review: { reviewed_traces: 0, reviewed_live: 0, target_min: 10, target_max: 15, unreviewed: 0, gold_examples: 0, gold_dev: 0, gold_heldout: 0, demo_labels: 0, demo_gold: 0 },
     pass_all_rate: null,
     candidate_summary: null,
     candidate_run: null,
@@ -55,7 +55,7 @@ describe("demo path", () => {
     const steps = demoSteps(
       overview({
         executions: { total: 42, live: 0, mock: 42, errors: 0, live_cost_usd: 0 },
-        review: { reviewed_traces: 12, reviewed_live: 0, target_min: 10, target_max: 15, unreviewed: 30, gold_examples: 5, gold_dev: 3, gold_heldout: 2 },
+        review: { reviewed_traces: 12, reviewed_live: 0, target_min: 10, target_max: 15, unreviewed: 30, gold_examples: 5, gold_dev: 3, gold_heldout: 2, demo_labels: 0, demo_gold: 0 },
         observed_failure_modes: 2,
         taxonomy_version: 3,
         candidate_run: run,

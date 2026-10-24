@@ -59,8 +59,8 @@ export async function listAnnotations(): Promise<Annotation[]> {
 
 export type AnnotationInput = Omit<
   Annotation,
-  "annotation_id" | "created_at" | "updated_at" | "label_source" | "checklist" | "rubric_version"
-> & { checklist?: Annotation["checklist"]; rubric_version?: number | null };
+  "annotation_id" | "created_at" | "updated_at" | "label_source" | "checklist" | "rubric_version" | "demo"
+> & { checklist?: Annotation["checklist"]; rubric_version?: number | null; /** Omit to keep an existing label's flag. */ demo?: boolean };
 
 /** Invariants every stored human label must satisfy (enforced here, not only in routes). */
 export function validateAnnotationInput(input: AnnotationInput): AnnotationInput {

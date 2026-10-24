@@ -84,7 +84,8 @@ function RunForm({ onRan }: { onRan?: (t: Trace) => void }) {
           throw new Error(`Custom case is not valid JSON: ${e instanceof Error ? e.message : String(e)}`);
         }
       }
-      const actor = getReviewer() || undefined;
+      const actor = getReviewer();
+      if (!actor) throw new Error("Enter your name as the reviewer first: runs are attributed to a named person.");
       const payload = custom
         ? { config_id: configId, scenario, actor }
         : { config_id: configId, case_id: caseId, actor };
