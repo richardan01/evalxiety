@@ -2,10 +2,10 @@
  * Onboarding wizard ("Connect your agent"): test an endpoint once, suggest checks from its reply, and write a NEW
  * agents/<id>/ folder (agent.json + cases.jsonl).
  *
- * The wizard only ever creates a folder that doesn't exist yet — it never edits or overwrites one — so everything
- * after onboarding still lives in files the owner controls. Secrets are never accepted as values: an auth header is
- * always written as a ${env:EVALXIETY_AGENT_<ID>_TOKEN} reference, checked by the same assertSafeConnection rules as a
- * hand-written agent.json. The routes are mutating API calls, so the proxy already limits them to same-origin JSON
+ * The wizard only ever creates a folder that doesn't exist yet — it never edits or overwrites one. After onboarding,
+ * the agent page can edit the rules, AI reviewer question and cases (edit.ts), but never the connection. Secrets are
+ * never accepted as values: an auth header is always written as a ${env:EVALXIETY_AGENT_<ID>_TOKEN} reference, checked
+ * by the same assertSafeConnection rules as a hand-written agent.json. The routes are mutating API calls, so the proxy already limits them to same-origin JSON
  * requests on a local Host.
  */
 import { promises as fs } from "node:fs";

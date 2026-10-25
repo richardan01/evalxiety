@@ -37,6 +37,12 @@ export const AgentCase = z.strictObject({
   expected: z.unknown().optional(),
   /** Optional note for reviewers (what this case is testing). */
   notes: z.string().optional(),
+  /**
+   * "ai_drafted": Claude proposed this input and a named person accepted it (who and when is in the audit log). Absent =
+   * written or imported by a person. Shown on the case and counted in the release report, so nobody mistakes synthetic
+   * questions for real traffic. Not part of the case hash: it says where the question came from, not what is tested.
+   */
+  origin: z.enum(["ai_drafted"]).optional(),
 });
 export type AgentCase = z.infer<typeof AgentCase>;
 

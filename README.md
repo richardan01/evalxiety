@@ -99,7 +99,12 @@ No code is needed if your agent already has an HTTP endpoint.
 2. Paste 10–30 real questions your agent gets, one per line, or upload a spreadsheet of them. Every fifth one is kept
    back as a final exam that stays locked while you improve the agent.
 3. On the agent's page, test the version you ship today, then your change, and review the answers yourself.
-4. Read the verdict at the top: what got fixed, what got worse, and what's still needed before anyone can approve.
+4. Define what good means, still without JSON. Under **Rules**, describe a rule in plain English and Claude drafts
+   it, or fill in the form yourself. Try it on your agent's answers and on a bad answer you write: it can be added only
+   once it has failed at least once, so a rule that can't catch anything never counts. Edit the AI reviewer's question
+   the same way, and add, edit or remove test cases (Claude can draft practice questions; you keep the ones worth
+   testing, and they stay marked AI-drafted).
+5. Read the verdict at the top: what got fixed, what got worse, and what's still needed before anyone can approve.
    **Release report** gives you a one-page summary.
 
 No endpoint? Choose **I'll upload its answers**, then import a spreadsheet with a question column and an answer column
@@ -124,8 +129,8 @@ Protocol SDK · local JSON storage. Built with Claude Code.
 - **The AI judge is uncalibrated.** It has 3 human labels against a 30-per-class minimum, so treat its verdicts as
   unvalidated.
 - **Your own agent's answers need a set format.** Over HTTP, the endpoint must accept `{"case_id", "input"}`; a
-  spreadsheet needs a question (or case id) column and an answer column. Still to come: editing test cases and rules in
-  the app, and a CI command that fails a build on No ship.
+  spreadsheet needs a question (or case id) column and an answer column. Still to come: a CI command that fails a
+  build on No ship.
 
 ## Credits
 

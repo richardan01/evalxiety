@@ -13,9 +13,12 @@ import { getAgent, loadAgents } from "./config";
 import { evaluateAgentGate, type AgentGateResult } from "./gate";
 import { assertSafeConnection, referencedEnv } from "./http";
 import { agentEnv } from "./secrets";
-import { caseInputHash, computeLockState, hashAgentCases, revealableCases } from "./ingest";
-import { maxRunDurationMs } from "./runs";
+import { caseInputHash, computeLockState, hashAgentCases, revealableCases, type LockState } from "./ingest";
+import { getLockState, maxRunDurationMs } from "./runs";
 import { agentJudgeVersion, judgeAgentTrace } from "./judge";
+import { inputShape } from "./define";
+import { answerShape } from "./draft";
+import { readDefinition, STARTER_KIT_READ_ONLY } from "./edit";
 import { CUSTOM_CHECKS } from "./registry";
 import {
   agentAudit,
@@ -371,7 +374,15 @@ export async function agentOverview(agentId: string, opts: { candidate?: string 
         l.agent.config.checks.map((c) => ("field" in c && typeof c.field === "string" ? c.field : "")).find((f) => /^[A-Za-z0-9_-]+$/.test(f)) ?? null,
     },
     checks: defs,
-    cases: l.agent.cases.map((c) => ({ case_id: c.case_id, split: c.split, has_expected: c.expected !== undefined, notes: c.notes ?? null, locked: lock.locked.has(c.case_id), lock_reason: lock.locked.get(c.case_id) ?? null })),
+    cases: l.agent.cases.map((c) => ({
+      case_id: c.case_id,
+      split: c.split,
+      has_expected: c.expected !== undefined,
+      notes: c.notes ?? null,
+      origin: c.origin ?? null,
+      locked: lock.locked.has(c.case_id),
+      lock_reason: lock.locked.get(c.case_id) ?? null,
+    })),
     frozen: { versions: frozen, current_hash: currentHash, changed_since_latest: frozen.length > 0 && frozen[frozen.length - 1].content_hash !== currentHash },
     heldout,
     runs,
@@ -567,3 +578,54 @@ export async function recordAgentApproval(agentId: string, body: { approver: str
 }
 
 export { getAgentRun, getAgentTrace };
+
+// ---------------------------------------------------------------------------
+// Defining "good": what the rules, AI reviewer and test-case editors need
+// ---------------------------------------------------------------------------
+
+/** The latest finished test's answers (what a new rule is tried on, and what drafting learns field names from). */
+export async function latestAnswers(agent: LoadedAgent, lock: LockState): Promise<{ run: AgentRun | null; traces: AgentTrace[] }> {
+  const run = (await listAgentRuns(agent.agent_id)).filter((r) => r.status === "completed").sort((a, b) => b.created_at.localeCompare(a.created_at))[0] ?? null;
+  if (!run) return { run: null, traces: [] };
+  const ids = Object.entries(run.trace_ids).filter(([cid]) => !lock.locked.has(cid)).map(([, tid]) => tid);
+  const traces = await Promise.all(ids.slice(0, 50).map((tid) => getAgentTrace(agent.agent_id, tid)));
+  return { run, traces: traces.filter((t): t is AgentTrace => t !== null) };
+}
+
+/**
+ * The editable definition. Locked final-exam cases are listed without their input or reference answer: nobody sees
+ * them before the audited reveal. The connection is never part of it.
+ */
+export async function agentDefinition(agentId: string) {
+  const d = await readDefinition(agentId);
+  const lock = await getLockState(d.agent);
+  const { traces } = await latestAnswers(d.agent, lock);
+  const frozen = await listFrozenVersions(agentId);
+  const visible = d.agent.cases.filter((c) => !lock.locked.has(c.case_id));
+  const mode = modeInfo();
+  return {
+    editable: !d.agent.config.example,
+    read_only_reason: d.agent.config.example ? STARTER_KIT_READ_ONLY : null,
+    definition_hash: d.hash,
+    mode: mode.mode,
+    mode_reason: mode.reason,
+    rules: d.agent.config.checks,
+    judge: d.agent.config.judge,
+    answers: answerShape(traces),
+    input_shape: inputShape(visible.filter((c) => c.split === "dev").map((c) => c.input)),
+    cases: d.agent.cases.map((c) => {
+      const locked = lock.locked.has(c.case_id);
+      return {
+        case_id: c.case_id,
+        split: c.split,
+        locked,
+        lock_reason: lock.locked.get(c.case_id) ?? null,
+        input: locked ? null : c.input,
+        expected: locked ? null : c.expected ?? null,
+        notes: c.notes ?? null,
+        origin: c.origin ?? null,
+      };
+    }),
+    latest_frozen_version: frozen[frozen.length - 1]?.version ?? null,
+  };
+}

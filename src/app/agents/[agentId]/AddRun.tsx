@@ -10,14 +10,9 @@ import { Button, Callout, Card, cx, fmtUsd } from "@/components/ui";
 import { ColumnSelect } from "../ColumnSelect";
 import { TokenField } from "../TokenField";
 import type { AgentOverview } from "../types";
-import { ErrorList, inputCls, NameField, useName } from "./shared";
+import { ErrorList, inputCls, NameField, post, useName } from "./shared";
 
 type Problem = { line: number; message: string };
-
-async function post(url: string, payload: unknown): Promise<{ status: number; body: Record<string, unknown> }> {
-  const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-  return { status: res.status, body: await res.json().catch(() => ({})) };
-}
 
 export function AddRun({ view, onDone }: { view: AgentOverview; onDone: () => void }) {
   // The starter-kit tour starts with an import; your own agent defaults to HTTP when it has a connection.

@@ -2,10 +2,11 @@
  * Load agent definitions from disk: agents/<agent_id>/agent.json + cases.jsonl.
  *
  * Definitions are files the agent owner edits and reviews (in their fork or their own repo via
- * EVALXIETY_AGENTS_DIR). The app never edits them; the only thing it writes is a brand-new folder from the onboarding
- * wizard (onboard.ts), which refuses to overwrite one that exists — so an existing agent's endpoint can only be changed
- * by someone with write access to the folder. Broken files are reported as problems with a file and line number
- * instead of crashing the app.
+ * EVALXIETY_AGENTS_DIR). The app writes them in two places only: the onboarding wizard creates a brand-new folder
+ * (onboard.ts, never overwriting one), and the agent page edits an existing agent's rules, AI reviewer question and
+ * test cases (edit.ts). Neither ever changes the connection, so an agent's endpoint and headers can only be changed by
+ * someone with write access to the folder. Broken files are reported as problems with a file and line number instead
+ * of crashing the app.
  */
 import { promises as fs } from "node:fs";
 import path from "node:path";
@@ -99,7 +100,7 @@ export function parseAgentConfig(json: unknown, agentId?: string): { config: Age
   return { config: parsed.data, problems };
 }
 
-async function readText(file: string): Promise<string | null> {
+export async function readText(file: string): Promise<string | null> {
   try {
     // Strip a UTF-8 byte-order mark (Windows editors add one), which JSON.parse would reject.
     return (await fs.readFile(file, "utf8")).replace(/^\uFEFF/, "");
@@ -121,6 +122,16 @@ export async function loadAgentFromDir(agentId: string, dir: string): Promise<{ 
     p("agent.json", "agent.json is missing.");
     return { agent: null, problems };
   }
+  return validateDefinition(agentId, dir, configText, await readText(path.join(dir, "cases.jsonl")));
+}
+
+/**
+ * Every rule loading applies, on file contents in memory: the in-app editor validates what it is about to write with
+ * exactly the rules the next load will apply. casesText null = cases.jsonl is missing.
+ */
+export function validateDefinition(agentId: string, dir: string, configText: string, casesText: string | null): { agent: LoadedAgent | null; problems: ConfigProblem[] } {
+  const problems: ConfigProblem[] = [];
+  const p = (file: string, message: string, line: number | null = null) => problems.push({ agent_id: agentId, file, line, message });
   let configJson: unknown;
   try {
     configJson = JSON.parse(configText);
@@ -132,7 +143,6 @@ export async function loadAgentFromDir(agentId: string, dir: string): Promise<{ 
   cfgProblems.forEach((m) => p("agent.json", m));
   if (!config) return { agent: null, problems }; // schema errors: nothing more can be checked
 
-  const casesText = await readText(path.join(dir, "cases.jsonl"));
   if (casesText === null) {
     p("cases.jsonl", "cases.jsonl is missing. Add one test case per line: {\"case_id\": \"c1\", \"input\": ...}");
     return { agent: null, problems };

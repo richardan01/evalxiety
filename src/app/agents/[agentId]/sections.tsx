@@ -17,12 +17,12 @@ import {
   MockBadge,
   OutcomeBadge,
   Ratio,
-  SeverityBadge,
   SplitBadge,
   Stat,
   StatusPill,
 } from "@/components/ui";
-import type { AgentOverview, RunRow } from "../types";
+import type { AgentOverview, DefinitionView, RunRow } from "../types";
+import { CaseEditor } from "./CaseEditor";
 import type { Selection } from "./AgentWorkspace";
 import { ErrorList, inputCls, NameField, useName } from "./shared";
 
@@ -456,88 +456,10 @@ export function ReviewCard({ view }: { view: AgentOverview }) {
 }
 
 // ---------------------------------------------------------------------------
-// Checks
-// ---------------------------------------------------------------------------
-
-export function ChecksCard({ view }: { view: AgentOverview }) {
-  const cand = view.runs.find((r) => r.run_id === view.selected.candidate);
-  return (
-    <Card title="Rules (code checks)" subtitle={<>Automatic yes/no tests on every answer, defined in <code>agents/{view.agent.agent_id}/agent.json</code>. No AI involved.</>}>
-      {view.checks.length === 0 ? (
-        <EmptyState title="No rules yet">
-          Add objective rules to <code>checks</code> in agent.json — see <code>docs/use-your-agent.md</code> for the rule types.
-        </EmptyState>
-      ) : (
-        <ul className="divide-y divide-slate-100">
-          {view.checks.map((d) => {
-            const t = cand?.summary.per_evaluator[d.evaluator_id];
-            return (
-              <li key={d.evaluator_id} className="py-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-mono text-sm font-medium">{d.evaluator_id}</span>
-                  <Badge>{d.type}</Badge>
-                  <SeverityBadge severity={d.severity} />
-                  {d.blocking && <Badge tone="red">blocking</Badge>}
-                  {d.validation === "custom" && <Badge tone="purple" title="Your own TypeScript in agents/custom-checks.ts — force it to FAIL once to prove it can">custom code</Badge>}
-                  {t && (
-                    <span className="ml-auto text-xs text-slate-600">
-                      new version: {t.pass} pass · <span className={cx(t.fail > 0 && "font-semibold text-rose-700")}>{t.fail} fail</span> · {t.not_applicable} n/a
-                      {t.error ? <span className="text-purple-700"> · {t.error} error</span> : null}
-                    </span>
-                  )}
-                </div>
-                <div className="mt-0.5 text-sm text-slate-700">{d.question}</div>
-                <div className="text-xs text-slate-500">{d.rule}</div>
-                {d.fix_hint && <div className="mt-0.5 text-xs text-slate-600">Fix: {d.fix_hint}</div>}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </Card>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Judge
-// ---------------------------------------------------------------------------
-
-export function JudgeCard({ view }: { view: AgentOverview; onChanged: () => void }) {
-  const j = view.agent.judge;
-  const cal = view.calibration;
-  if (!j) {
-    return (
-      <Card title="AI reviewer (optional)">
-        <p className="text-sm text-slate-600">
-          No AI reviewer set up. For a subjective problem your rules can&apos;t catch, add one yes/no question under <code>judge</code> in agent.json. It is
-          always experimental: how often it agrees with you is reported once you&apos;ve labelled 30+ problems and 30+ fine answers, and it never replaces your
-          review.
-        </p>
-      </Card>
-    );
-  }
-  return (
-    <Card title="AI reviewer (experimental)" subtitle="Claude answering one yes/no question about each answer, measured against your own labels. Never counts toward “passed every rule”." actions={<Badge tone="purple">{j.model}</Badge>}>
-      <p className="text-sm font-medium">{j.question}</p>
-      <p className="mt-1 text-xs text-slate-500">
-        Version <code>{j.version}</code> · runs in {view.mode === "live" ? "live mode (billed)" : "mock mode: example traces only — real traces need MOCK_MODE=false and an API key"}
-      </p>
-      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="Answers you labelled" value={cal.pairs} hint={`need ${cal.min_per_class} problems and ${cal.min_per_class} fine`} />
-        <Stat label="Catches real problems (TPR)" value={<Ratio value={cal.tpr} undefinedReason={cal.undefined_reasons[0]} />} hint={`${cal.matrix.positives} human failures`} />
-        <Stat label="Avoids false alarms (TNR)" value={<Ratio value={cal.tnr} undefinedReason={cal.undefined_reasons[1] ?? cal.undefined_reasons[0]} />} hint={`${cal.matrix.negatives} human passes`} />
-        <Stat label="Disagreements" value={cal.disagreements.length} />
-      </div>
-      <p className={cx("mt-2 text-xs", cal.insufficient ? "text-amber-800" : "text-slate-600")}>{cal.status_label}</p>
-    </Card>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Cases, frozen versions, held-out
 // ---------------------------------------------------------------------------
 
-export function CasesCard({ view, onChanged }: { view: AgentOverview; onChanged: () => void }) {
+export function CasesCard({ view, def, onChanged }: { view: AgentOverview; def: DefinitionView | null; onChanged: () => void }) {
   const [name, setName] = useName();
   const [note, setNote] = useState("");
   const [reason, setReason] = useState("");
@@ -586,6 +508,11 @@ export function CasesCard({ view, onChanged }: { view: AgentOverview; onChanged:
           <span key={c.case_id} title={c.notes ?? undefined} className="inline-flex items-center gap-1 rounded border border-slate-200 px-1.5 py-0.5 font-mono text-xs">
             {c.case_id}
             {c.split === "heldout" && <SplitBadge split="heldout" />}
+            {c.origin === "ai_drafted" && (
+              <span className="text-[10px] font-sans text-purple-700" title="Claude proposed this question and a person accepted it">
+                AI
+              </span>
+            )}
             {c.locked && (
               <span aria-label="locked" title={c.lock_reason ?? undefined}>
                 🔒
@@ -624,6 +551,7 @@ export function CasesCard({ view, onChanged }: { view: AgentOverview; onChanged:
       <div className="mt-2">
         <ErrorList error={error} />
       </div>
+      {def?.editable && <CaseEditor view={view} def={def} onChanged={onChanged} />}
       {view.runs.length > 0 && view.runs.some((r) => r.status === "completed") && (
         <p className="mt-3 text-xs text-slate-500">
           Every case carries an <OutcomeBadge outcome="PASS" />/<OutcomeBadge outcome="FAIL" /> per check in each run — see the comparison above.

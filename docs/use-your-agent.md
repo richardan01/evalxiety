@@ -170,6 +170,21 @@ One JSON object per line. Lines starting with `//` are ignored.
 | `split` | no | `dev` (default) or `heldout` |
 | `expected` | no | A reference answer for `matches_expected` checks. Never sent to your agent. |
 | `notes` | no | What the case tests, shown to reviewers |
+| `origin` | no | `ai_drafted`: Claude proposed the input and a named person accepted it. Set by the app. |
+
+**Or edit them on the agent page.** Under **Test cases** (your own agents only; the starter kit is read-only):
+- **Add a test case:** type the question, optionally a reference answer and what it tests. Tick **Final exam** to hold
+  it out: it's locked from then on, like any held-out case.
+- **See and edit all cases:** change a question, reference answer or note, or remove a case. Locked final-exam cases
+  are listed without their content and can't be changed or removed until they're unlocked.
+- **Draft questions with Claude** (needs an API key): Claude proposes practice questions like yours; you edit them and
+  keep the ones worth testing. They're added as practice (dev) cases marked **AI-drafted**, and the release report
+  counts them, so nobody mistakes them for real traffic. Claude is sent your agent's name and description and up to
+  20 practice questions, never a final-exam question.
+
+The app writes `cases.jsonl` line by line, so comments and other cases stay as you wrote them. Each change is logged
+under your name, and it's refused if the file changed since you opened the page (an edit by hand, or another tab).
+Changing what a case asks or expects means locking the cases as a new version before the next test (below).
 
 A misspelled field is reported with its line number. Use 10–30 real inputs that vary on what matters for your agent
 (user type, edge cases, missing data). Pull them from production logs and remove personal data. Hold out about a
@@ -326,6 +341,29 @@ Each of these is recorded on its case as an error, and the run carries on:
 
 Add checks after your first review, for failures you've actually seen. Each check answers one yes/no question.
 
+### Add a rule from the agent page
+
+Under **Rules → Add a rule** (your own agents only):
+1. **Describe it in plain English**, and click **Draft with Claude** (needs an API key; a few cents). Claude fills in
+   the form below. If the requirement needs judgement (tone, a wrong fact), it suggests an AI reviewer question
+   instead, which you can save with one click. Claude is sent your request, your agent's name and description, and
+   the field names of its answers (not their content). Or skip this and fill in the form yourself.
+2. **The rule:** the yes/no question it answers, what kind of rule it is ("must not contain certain words", "not
+   longer than…", "matches the reference answer"…), which part of the answer it reads, and how bad a failure is.
+3. **Try it.** It runs on your latest test's answers and on a bad answer you write. The rule can be added only once it
+   has **failed at least once**: a rule that never fails can't catch anything, and would make every version look
+   good. A failure that happens only because the answer has no such field (a typo in the field name) doesn't count.
+   The server runs this check again when you add the rule.
+4. **Add rule.** It's written to `agent.json` and logged under your name, with what proved it could fail (an answer's
+   case id, or your bad answer as written). Every test's results are recomputed with it, and an approval already given
+   no longer applies.
+
+**Remove** takes a rule out the same way. Custom rules run your own code, so they're only added in
+`agents/custom-checks.ts`. The app never changes an agent's connection (its URL and headers): only someone who can
+edit the folder can point the agent somewhere else.
+
+### Rule types
+
 Every check has:
 - an `id` and a `question`;
 - a `severity`: `critical`, `major` (the default) or `minor`;
@@ -371,12 +409,14 @@ If only some cases' `expected` lacks the field (a typo in one line, say), the ga
   against the pass-all bar and shows as "incomplete" in the comparison. Keep one check that applies to every case,
   like the template's `non_empty`.
 
-Before you trust a new check, make it fail once on purpose. Copy a trace file, break one output, and import it under
-a label starting with `scratch-` (scratch runs are never picked as defaults).
+Before you trust a check you wrote by hand, make it fail once on purpose (the app does this for rules added there).
+Copy a trace file, break one output, and import it under a label starting with `scratch-` (scratch runs are never
+picked as defaults).
 
 ## Optional LLM judge: `judge` in `agent.json`
 
-Use the judge for **one** subjective failure that code can't catch:
+Use the judge for **one** subjective failure that code can't catch. Set it on the agent page (**AI reviewer → Add**
+or **Edit**), or in `agent.json`:
 
 ```json
 "judge": {
@@ -473,5 +513,6 @@ output trigger.
 ## Not built yet
 
 - A CI command that fails a build on No ship.
-- Deleting runs, or editing cases, checks or the judge question in the app. The wizard creates a new agent's files;
-  after that they are files you review like code.
+- Deleting runs in the app.
+- Changing an agent's connection in the app. That's deliberate: pointing an agent (and its token) at a new URL takes
+  write access to its folder.

@@ -11,7 +11,10 @@ import { useEffect, useState, useTransition } from "react";
 import { getJSON } from "@/lib/client/api";
 import { Button, Callout, ExampleBadge, PageHeader, StatusPill } from "@/components/ui";
 import { AddRun } from "./AddRun";
-import { CasesCard, ChecksCard, CompareCard, GateCard, JudgeCard, ReviewCard, RunsCard } from "./sections";
+import { JudgeCard } from "./JudgeCard";
+import { ChecksCard } from "./RulesCard";
+import { CasesCard, CompareCard, GateCard, ReviewCard, RunsCard } from "./sections";
+import { useDefinition } from "./useDefinition";
 import { VerdictCard } from "./VerdictCard";
 import type { AgentOverview } from "../types";
 
@@ -32,6 +35,9 @@ export function AgentWorkspace({ agentId, candidate, baseline }: { agentId: stri
   const router = useRouter();
   const [navigating, startNav] = useTransition();
   const [nonce, setNonce] = useState(0);
+  // Bumped only by a person's change (not the poll while a test runs), so open editors aren't disturbed.
+  const [defNonce, setDefNonce] = useState(0);
+  const { def } = useDefinition(agentId, defNonce);
   const [result, setResult] = useState<{ key: string; view: AgentOverview | null; error: string | null } | null>(null);
   const url = `/api/agents/${agentId}${query({ candidate, baseline })}`;
   const key = `${url}#${nonce}`;
@@ -57,7 +63,10 @@ export function AgentWorkspace({ agentId, candidate, baseline }: { agentId: stri
     return () => clearTimeout(t);
   }, [running, nonce]);
 
-  const refresh = () => setNonce((n) => n + 1);
+  const refresh = () => {
+    setNonce((n) => n + 1);
+    setDefNonce((n) => n + 1);
+  };
   const select = (next: Selection) => startNav(() => router.replace(`/agents/${agentId}${query(next)}`, { scroll: false }));
 
   if (result?.error && !view) {
@@ -130,13 +139,13 @@ export function AgentWorkspace({ agentId, candidate, baseline }: { agentId: stri
           <ReviewCard view={view} />
         </div>
         <div id="rules" className="scroll-mt-4">
-          <ChecksCard view={view} />
+          <ChecksCard view={view} def={def} onChanged={refresh} />
         </div>
         <div id="judge" className="scroll-mt-4">
-          <JudgeCard view={view} onChanged={refresh} />
+          <JudgeCard view={view} def={def} onChanged={refresh} />
         </div>
         <div id="cases" className="scroll-mt-4">
-          <CasesCard view={view} onChanged={refresh} />
+          <CasesCard view={view} def={def} onChanged={refresh} />
         </div>
       </div>
     </div>

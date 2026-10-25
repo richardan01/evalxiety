@@ -50,5 +50,10 @@ describe("release report", () => {
     expect(md).toContain("- No decision yet.");
     expect(md).toContain(`\`${view.evidence_snapshot_hash}\``);
     expect(md).toContain("still locked");
+    expect(md).not.toContain("drafted by AI");
+
+    // Questions Claude drafted are called out as synthetic, so nobody reads them as real traffic.
+    const drafted = reportMarkdown({ ...view, cases: view.cases.map((c, i) => (i < 2 ? { ...c, origin: "ai_drafted" as const } : c)) });
+    expect(drafted).toContain("- 2 test cases drafted by AI and accepted by a person: synthetic questions, not real traffic.");
   });
 });
