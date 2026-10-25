@@ -1,17 +1,18 @@
 "use client";
 
-/** Add a test (a run): import a JSONL file of answers, or call the agent's HTTP endpoint on every visible case. */
-import { useState } from "react";
+/**
+ * Add a test (a run): import the agent's answers (a JSONL file, or a spreadsheet with a question or case id column and
+ * an answer column), or call the agent's HTTP endpoint on every visible case.
+ */
+import { useMemo, useState } from "react";
+import { ANSWER_WORDS, CASE_ID_WORDS, guessColumn, looksLikeTable, parseTable, QUESTION_WORDS, type Table } from "@/lib/agents/csv";
 import { Button, Callout, Card, cx, fmtUsd } from "@/components/ui";
+import { ColumnSelect } from "../ColumnSelect";
+import { TokenField } from "../TokenField";
 import type { AgentOverview } from "../types";
-import { ErrorList, inputCls, NameField, useName } from "./shared";
+import { ErrorList, inputCls, NameField, post, useName } from "./shared";
 
 type Problem = { line: number; message: string };
-
-async function post(url: string, payload: unknown): Promise<{ status: number; body: Record<string, unknown> }> {
-  const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-  return { status: res.status, body: await res.json().catch(() => ({})) };
-}
 
 export function AddRun({ view, onDone }: { view: AgentOverview; onDone: () => void }) {
   // The starter-kit tour starts with an import; your own agent defaults to HTTP when it has a connection.
@@ -32,6 +33,38 @@ export function AddRun({ view, onDone }: { view: AgentOverview; onDone: () => vo
   const [notice, setNotice] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [confirm, setConfirm] = useState<{ message: string } | null>(null);
+  // A pasted or uploaded spreadsheet (anything that isn't JSONL) needs its columns mapped before import.
+  const sheet = useMemo((): { table: Table | null; error: string | null } => {
+    if (!looksLikeTable(text)) return { table: null, error: null };
+    try {
+      return { table: parseTable(text), error: null };
+    } catch (e) {
+      return { table: null, error: e instanceof Error ? e.message : String(e) };
+    }
+  }, [text]);
+  const [cols, setCols] = useState<{ answer: number | null; by: "question" | "case_id"; question: number | null; case_id: number | null } | null>(null);
+  // Rules that read a field (e.g. `answer`) need spreadsheet answers in that field, like answers that came over HTTP.
+  const [asField, setAsField] = useState(view.agent.answer_field !== null);
+  const header = sheet.table?.header ?? [];
+  const guessed = {
+    answer: guessColumn(header, ANSWER_WORDS),
+    by: (guessColumn(header, CASE_ID_WORDS) !== null ? "case_id" : "question") as "question" | "case_id",
+    question: guessColumn(header, QUESTION_WORDS),
+    case_id: guessColumn(header, CASE_ID_WORDS),
+  };
+  const map = cols ?? guessed;
+  const sheetReady = !sheet.table || (map.answer !== null && (map.by === "case_id" ? map.case_id !== null : map.question !== null));
+  const source = sheet.table
+    ? {
+        format: "csv" as const,
+        mapping: {
+          answer: map.answer,
+          answer_field: asField ? view.agent.answer_field : null,
+          question: map.by === "question" ? map.question : null,
+          case_id: map.by === "case_id" ? map.case_id : null,
+        },
+      }
+    : {};
   const base = `/api/agents/${view.agent.agent_id}`;
   const ready = name.trim() && version.trim();
 
@@ -45,18 +78,24 @@ export function AddRun({ view, onDone }: { view: AgentOverview; onDone: () => vo
     reset();
     setBusy(true);
     try {
-      const { status, body } = await post(`${base}/import`, { text, agent_version: version, actor: name, dry_run: dryRun });
+      const { status, body } = await post(`${base}/import`, { text, ...source, agent_version: version, actor: name, dry_run: dryRun });
+      const lockedNote = (ids: string[] | undefined) =>
+        ids?.length ? ` ${ids.length} row(s) are final-exam questions and were left out while they're locked (${ids.join(", ")}).` : "";
       if (dryRun && status === 200) {
-        const b = body as { ok: boolean; problems: Problem[]; lines: number; missing_case_ids: string[] };
-        if (b.ok) setNotice(`Looks good: ${b.lines} trace(s).${b.missing_case_ids.length ? ` No trace for ${b.missing_case_ids.length} case(s): ${b.missing_case_ids.join(", ")} — the run will be incomplete.` : ""}`);
-        else setProblems(b.problems);
+        const b = body as { ok: boolean; problems: Problem[]; lines: number; missing_case_ids: string[]; skipped_locked?: string[] };
+        if (b.ok) {
+          setNotice(
+            `Looks good: ${b.lines} answer(s).${b.missing_case_ids.length ? ` No answer for ${b.missing_case_ids.length} case(s): ${b.missing_case_ids.join(", ")} — the test will be incomplete.` : ""}${lockedNote(b.skipped_locked)}`,
+          );
+        } else setProblems(b.problems);
         return;
       }
       if (status === 201 || status === 200) {
-        const b = body as { created: boolean; missing_case_ids: string[] };
-        const missing = b.missing_case_ids.length ? ` No trace for ${b.missing_case_ids.join(", ")}, so this run is incomplete.` : "";
-        setNotice((b.created ? "Imported." : "This exact file was already imported — nothing new was added.") + missing);
+        const b = body as { created: boolean; missing_case_ids: string[]; skipped_locked?: string[] };
+        const missing = b.missing_case_ids.length ? ` No answer for ${b.missing_case_ids.join(", ")}, so this test is incomplete.` : "";
+        setNotice((b.created ? "Imported." : "This exact file was already imported — nothing new was added.") + missing + lockedNote(b.skipped_locked));
         setText("");
+        setCols(null);
         onDone();
         return;
       }
@@ -91,6 +130,7 @@ export function AddRun({ view, onDone }: { view: AgentOverview; onDone: () => vo
   async function onFile(f: File | undefined) {
     if (!f) return;
     setText(await f.text());
+    setCols(null);
     reset();
   }
 
@@ -133,8 +173,9 @@ export function AddRun({ view, onDone }: { view: AgentOverview; onDone: () => vo
       {tab === "import" ? (
         <div className="mt-3 space-y-2">
           <p className="text-xs text-slate-500">
-            JSONL, one line per case: <code>{`{"case_id": "c01", "output": ..., "evidence": [{"id": "...", "text": "..."}]}`}</code>. Optional:{" "}
-            <code>tool_calls</code>, <code>model_id</code>, <code>latency_ms</code>, <code>cost_usd</code>, <code>error</code>, <code>metadata</code>.
+            A spreadsheet (CSV, or cells pasted from Google Sheets or Excel) with a question column and an answer column, or JSONL, one line per case:{" "}
+            <code>{`{"case_id": "c01", "output": ..., "evidence": [{"id": "...", "text": "..."}]}`}</code>. JSONL can also carry <code>tool_calls</code>,{" "}
+            <code>model_id</code>, <code>latency_ms</code>, <code>cost_usd</code>, <code>error</code> and <code>metadata</code>.
             {view.agent.example && (
               <>
                 {" "}
@@ -143,13 +184,58 @@ export function AddRun({ view, onDone }: { view: AgentOverview; onDone: () => vo
               </>
             )}
           </p>
-          <input type="file" accept=".jsonl,.json,.txt" onChange={(e) => onFile(e.target.files?.[0])} className="text-sm" />
-          <textarea value={text} onChange={(e) => setText(e.target.value)} rows={5} placeholder="…or paste JSONL here" className={cx(inputCls, "w-full font-mono text-xs")} />
+          <input type="file" accept=".jsonl,.json,.txt,.csv,.tsv" onChange={(e) => onFile(e.target.files?.[0])} className="text-sm" />
+          <textarea
+            value={text}
+            onChange={(e) => {
+              setText(e.target.value);
+              setCols(null);
+            }}
+            rows={5}
+            placeholder="…or paste JSONL, or cells copied from a spreadsheet (with the header row)"
+            className={cx(inputCls, "w-full font-mono text-xs")}
+          />
+          {sheet.error && <div className="text-xs text-rose-700">Couldn&apos;t read this as a spreadsheet: {sheet.error}</div>}
+          {sheet.table && (
+            <div className="space-y-2 rounded-md border border-slate-200 bg-slate-50 p-2 text-xs">
+              <div className="text-slate-700">
+                Spreadsheet with {sheet.table.rows.length} row{sheet.table.rows.length === 1 ? "" : "s"}. Which columns hold the answer, and which test case each row is?
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <ColumnSelect label="Agent's answer" header={header} value={map.answer} onChange={(v) => setCols({ ...map, answer: v })} />
+                <label className="flex items-center gap-1.5">
+                  <span className="text-slate-600">Match rows by</span>
+                  <select value={map.by} onChange={(e) => setCols({ ...map, by: e.target.value as "question" | "case_id" })} className="rounded border border-slate-300 bg-white px-1.5 py-1 text-xs">
+                    <option value="question">question text</option>
+                    <option value="case_id">case id</option>
+                  </select>
+                </label>
+                {map.by === "question" ? (
+                  <ColumnSelect label="Question" header={header} value={map.question} onChange={(v) => setCols({ ...map, question: v })} />
+                ) : (
+                  <ColumnSelect label="Case id" header={header} value={map.case_id} onChange={(v) => setCols({ ...map, case_id: v })} />
+                )}
+              </div>
+              {view.agent.answer_field && (
+                <label className="flex items-center gap-1.5">
+                  <span className="text-slate-600">Store each answer as</span>
+                  <select value={asField ? "field" : "text"} onChange={(e) => setAsField(e.target.value === "field")} className="rounded border border-slate-300 bg-white px-1.5 py-1 text-xs">
+                    <option value="field">the “{view.agent.answer_field}” field (what your rules read)</option>
+                    <option value="text">plain text</option>
+                  </select>
+                </label>
+              )}
+              <div className="text-slate-500">
+                Questions are matched to your test cases ignoring capitals and extra spaces. Final-exam questions are left out while they&apos;re locked. Import every
+                version the same way (or with answers in the same shape), so a difference in format doesn&apos;t show up as a fix or a regression.
+              </div>
+            </div>
+          )}
           <div className="flex gap-2">
-            <Button variant="secondary" disabled={busy || !text.trim()} onClick={() => importFile(true)}>
+            <Button variant="secondary" disabled={busy || !text.trim() || !sheetReady} onClick={() => importFile(true)}>
               Check file
             </Button>
-            <Button disabled={busy || !text.trim() || !ready} onClick={() => importFile(false)} title={ready ? undefined : "Enter your name and a version name"}>
+            <Button disabled={busy || !text.trim() || !ready || !sheetReady} onClick={() => importFile(false)} title={ready ? undefined : "Enter your name and a version name"}>
               Import answers
             </Button>
           </div>
@@ -178,8 +264,19 @@ export function AddRun({ view, onDone }: { view: AgentOverview; onDone: () => vo
             </Callout>
           )}
           {conn.missing_env.length > 0 && (
-            <Callout tone="red" title="Missing secrets">
-              Set {conn.missing_env.map((n) => <code key={n}>{n} </code>)} in <code>.env.local</code> and restart the app.
+            <Callout tone="red" title={conn.missing_env.length === 1 ? "Your agent's token is missing" : "Your agent's tokens are missing"}>
+              <div className="space-y-3">
+                {conn.missing_env.map((n) => {
+                  const prefix = `EVALXIETY_AGENT_${view.agent.agent_id.toUpperCase().replace(/-/g, "_")}_`;
+                  return n.startsWith(prefix) ? (
+                    <TokenField key={n} agentId={view.agent.agent_id} suffix={n.slice(prefix.length)} onSaved={onDone} />
+                  ) : (
+                    <div key={n}>
+                      Set <code>{n}</code> in <code>.env.local</code> and restart the app.
+                    </div>
+                  );
+                })}
+              </div>
             </Callout>
           )}
           {view.agent.example && (

@@ -31,6 +31,16 @@ export function NameField({ name, setName }: { name: string; setName: (v: string
 
 export const inputCls = "rounded border border-slate-300 px-2 py-1 text-sm";
 
+/** POST JSON and return the status with the body, for callers that act on a specific status (409 confirm, 422 problems). */
+export async function post<T = Record<string, unknown>>(url: string, payload: unknown): Promise<{ status: number; body: T & { error?: string; details?: string[] } }> {
+  const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+  return { status: res.status, body: await res.json().catch(() => ({})) };
+}
+
+/** The error a failed response carries, in the words the API wrote it. */
+export const errorOf = (body: { error?: string; details?: string[] }, status: number) =>
+  `${body.error ?? `Request failed (${status})`}${Array.isArray(body.details) && body.details.length ? `: ${body.details.join("; ")}` : ""}`;
+
 export function ErrorList({ error, problems }: { error: string | null; problems?: Array<{ line: number; message: string }> }) {
   if (!error && !problems?.length) return null;
   return (

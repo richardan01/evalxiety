@@ -15,11 +15,26 @@ npm test                       # Vitest suite
 npm run lint                   # ESLint
 npm run typecheck              # next typegen + tsc --noEmit
 npm run build                  # production build
+npm run check:files            # nothing private is tracked (env files, keys, data/private, your agents, credentials)
 ```
 
-CI runs `npm ci`, `npm test`, `npm run lint`, `npm run typecheck` and `npm run build` on every pull request and on
-every push to `main`. Please run them
+CI runs `npm ci`, `npm run check:files`, `npm test`, `npm run lint`, `npm run typecheck` and `npm run build` on every
+pull request and on every push to `main`. Please run them
 locally before you open a PR. The tests run in mock mode and need no API key.
+
+**What never goes to GitHub.** `.gitignore` keeps out `.env*` (except `.env.example`), keys and certificates,
+`data/private/` (the connected API key and saved agent tokens), `data/agents/` and your own `agents/<id>/` folders
+(traces and labels can hold customer data), spreadsheets (`*.csv`, `*.tsv`, `*.xlsx`), downloaded release reports,
+build output, editor folders and personal Claude Code settings. `npm run check:files` fails if any of these is tracked
+anyway (say, after a `git add -f`) or if a tracked file contains something shaped like an API key, token or private
+key. To check before every commit, add it as a hook:
+
+```bash
+printf '#!/bin/sh\nnpm run -s check:files -- --staged\n' > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+```
+
+`data/` itself is tracked on purpose: it holds the pricing demo's runs, so the dashboard shows real results on a fresh
+clone. If you run the demo yourself, your runs change those files; commit them only if you mean to share them.
 
 This project runs on Next.js 16, which differs from older versions in ways that matter (for example, `params` is a
 Promise). Read [AGENTS.md](AGENTS.md) and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) before you change routes or

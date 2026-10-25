@@ -8,6 +8,7 @@
 import { newId, sha256 } from "../storage/store";
 import { isEmptyOutput } from "./checks";
 import { assertSafeConnection, callAgent, mapLimit, redactSecrets, referencedEnv, resolveHeaders } from "./http";
+import { agentEnv } from "./secrets";
 import { caseInputHash, computeLockState, hashAgentCases, parseImport, visibleCases, type ImportProblem, type LockState } from "./ingest";
 import {
   agentAudit,
@@ -241,7 +242,7 @@ export async function prepareHttpRun(
     cases = visible.filter((c) => req.case_ids!.includes(c.case_id));
   }
   if (needsConfirmation(agent, cases.length) && !req.confirm_batch) throw new ConfirmationRequiredError(estimateHttpRun(agent, cases.length));
-  const { headers, secrets } = resolveHeaders(conn.headers);
+  const { headers, secrets } = resolveHeaders(conn.headers, agentEnv());
   const frozen = await currentFrozen(agent, req.actor);
   const run: AgentRun = {
     run_id: newId("arun"),

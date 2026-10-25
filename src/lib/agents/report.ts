@@ -120,12 +120,14 @@ export function reportMarkdown(view: ReportView, now: Date = new Date()): string
   out.push(`- ${judgeLine(view)} It never replaces a human review.`);
 
   const heldout = view.cases.filter((c) => c.split === "heldout").length;
+  const drafted = view.cases.filter((c) => c.origin === "ai_drafted").length;
   const latest = view.frozen.versions[view.frozen.versions.length - 1];
   out.push(
     "",
     "## Test set",
     "",
     `- ${plural(view.cases.length, "test case")}, ${plural(heldout, "final-exam case")}${heldout ? ` (${view.heldout.revealed && view.heldout.revealed_at ? `unlocked ${fmtDate(view.heldout.revealed_at)} by ${view.heldout.revealed_by}` : "still locked"})` : ""}.`,
+    ...(drafted ? [`- ${plural(drafted, "test case")} drafted by AI and accepted by a person: synthetic questions, not real traffic.`] : []),
     latest ? `- Cases locked as version ${latest.version} (fingerprint ${latest.content_hash.slice(0, 12)}).` : "- Cases not locked yet (the first test locks them).",
   );
 

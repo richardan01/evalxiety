@@ -110,6 +110,31 @@ describe("import", () => {
     expect(held.status).toBe(423);
   });
 
+  it("a spreadsheet is matched to cases by question text; locked final-exam rows are left out, not imported", async () => {
+    const sheet = [
+      "Question\tBot answer",
+      "how do I reset my  password?\tGo to Settings → Security.",
+      "How much does the Team plan cost?\t$12 per user per month.",
+      "Can I get my money back for this month? I'm on the monthly plan.\tNo, monthly plans aren't refundable.",
+    ].join("\n");
+    const mapping = { answer: 1, question: 0 };
+    const ok = await json(await postImport(req(url, { text: sheet, format: "csv", mapping, dry_run: true }), ctx({ agentId: ID })));
+    expect(ok.status).toBe(200);
+    expect(ok.body).toMatchObject({ ok: true, lines: 2, skipped_locked: ["h01"] });
+    expect(ok.body.missing_case_ids).toContain("c02");
+
+    const unknown = await json(await postImport(req(url, { text: "question,answer\nWho are you?,A bot", format: "csv", mapping, dry_run: true }), ctx({ agentId: ID })));
+    expect(unknown.body.ok).toBe(false);
+    expect(unknown.body.problems[0]).toMatchObject({ line: 2 });
+    expect(unknown.body.problems[0].message).toMatch(/No test case has the question “Who are you\?”/);
+
+    // Nothing is imported when a row doesn't match, and a missing mapping is a problem, not a crash.
+    const bad = await json(await postImport(req(url, { text: "question,answer\nWho are you?,A bot", format: "csv", mapping, agent_version: "sheet", actor: "t" }), ctx({ agentId: ID })));
+    expect(bad.status).toBe(422);
+    const noMap = await json(await postImport(req(url, { text: sheet, format: "csv", dry_run: true }), ctx({ agentId: ID })));
+    expect(noMap.body.problems[0].message).toMatch(/Pick the answer column/);
+  });
+
   it("400 when the actor or version is missing", async () => {
     expect((await postImport(req(url, { text: "x", agent_version: "", actor: "t" }), ctx({ agentId: ID }))).status).toBe(400);
     expect((await postImport(req(url, { text: "x", agent_version: "v1", actor: " " }), ctx({ agentId: ID }))).status).toBe(400);

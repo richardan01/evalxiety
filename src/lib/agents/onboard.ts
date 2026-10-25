@@ -2,10 +2,10 @@
  * Onboarding wizard ("Connect your agent"): test an endpoint once, suggest checks from its reply, and write a NEW
  * agents/<id>/ folder (agent.json + cases.jsonl).
  *
- * The wizard only ever creates a folder that doesn't exist yet — it never edits or overwrites one — so everything
- * after onboarding still lives in files the owner controls. Secrets are never accepted as values: an auth header is
- * always written as a ${env:EVALXIETY_AGENT_<ID>_TOKEN} reference, checked by the same assertSafeConnection rules as a
- * hand-written agent.json. The routes are mutating API calls, so the proxy already limits them to same-origin JSON
+ * The wizard only ever creates a folder that doesn't exist yet — it never edits or overwrites one. After onboarding,
+ * the agent page can edit the rules, AI reviewer question and cases (edit.ts), but never the connection. Secrets are
+ * never accepted as values: an auth header is always written as a ${env:EVALXIETY_AGENT_<ID>_TOKEN} reference, checked
+ * by the same assertSafeConnection rules as a hand-written agent.json. The routes are mutating API calls, so the proxy already limits them to same-origin JSON
  * requests on a local Host.
  */
 import { promises as fs } from "node:fs";
@@ -13,6 +13,7 @@ import path from "node:path";
 import { z } from "zod";
 import { agentsDir, parseAgentConfig, parseCases } from "./config";
 import { agentEnvPrefix, assertSafeConnection, callAgent, resolveHeaders } from "./http";
+import { agentEnv } from "./secrets";
 import { AgentId, CheckConfig, HttpConnection, type AgentConfig } from "./schemas";
 import { suggestChecks } from "./suggest";
 
@@ -60,7 +61,7 @@ export const TestBody = z.object({
 export async function testConnection(body: z.infer<typeof TestBody>, fetchImpl: typeof fetch = fetch) {
   const conn = HttpConnection.parse({ type: "http", url: body.connection.url, timeout_ms: body.connection.timeout_ms, headers: connectionHeaders(body.agent_id, body.connection.auth) });
   assertSafeConnection(body.agent_id, conn.url, conn.headers);
-  const { headers, secrets } = resolveHeaders(conn.headers);
+  const { headers, secrets } = resolveHeaders(conn.headers, agentEnv());
   const result = await callAgent(conn, { case_id: "wizard-test", input: body.sample_input, split: "dev" }, headers, fetchImpl, { secrets });
   return {
     result: { output: result.output, evidence: result.evidence, model_id: result.model_id, latency_ms: Math.round(result.latency_ms), error: result.error },
