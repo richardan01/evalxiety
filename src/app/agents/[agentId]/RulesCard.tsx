@@ -6,7 +6,7 @@
  * least once. The server checks that again when it saves.
  */
 import { useState } from "react";
-import { EDITABLE_RULE_TYPES, patternToPhrases, phrasesToPattern, ruleIdFrom } from "@/lib/agents/define";
+import { EDITABLE_RULE_TYPES, expectedShape, patternToPhrases, phrasesToPattern, ruleIdFrom } from "@/lib/agents/define";
 import type { RuleDraft } from "@/lib/agents/draft";
 import type { RulePreview } from "@/lib/agents/rules";
 import type { CheckConfig } from "@/lib/agents/schemas";
@@ -152,8 +152,9 @@ function ruleFromForm(f: Form, taken: string[]): { rule: Record<string, unknown>
 }
 
 const PROBE_LABEL: Partial<Record<EditableType, string>> = {
-  max_latency_ms: "Try it on a slow answer: how many milliseconds did it take?",
-  max_cost_usd: "Try it on an expensive answer: what did it cost, in US dollars?",
+  max_latency_ms: "Try it on a slow answer: how long did it take? e.g. 9000 ms or 9 s",
+  max_cost_usd: "Try it on an expensive answer: what did it cost? e.g. $0.50",
+  no_tool_errors: "Try it on an answer where a tool call failed: write the tool's error, e.g. Timeout calling the orders API",
   json_output: "Try it on a bad answer: one that isn't JSON or lacks a field",
   cites_evidence: "Try it on a bad answer: an id it was never given (e.g. KB-99)",
 };
@@ -174,12 +175,17 @@ export function ChecksCard({ view, def, onChanged }: { view: AgentOverview; def:
     if (!def) return;
     setBusy(true);
     setError(null);
-    const { status, body } = await post(`/api/agents/${view.agent.agent_id}/rules`, { action: "remove", actor: name, base: def.definition_hash, id });
-    setBusy(false);
-    if (status >= 400) return setError(errorOf(body, status));
-    setRemoving(null);
-    setNotice(`Removed “${id}”. Every test's results were recomputed without it.`);
-    onChanged();
+    try {
+      const { status, body } = await post(`/api/agents/${view.agent.agent_id}/rules`, { action: "remove", actor: name, base: def.definition_hash, id });
+      if (status >= 400) return setError(errorOf(body, status));
+      setRemoving(null);
+      setNotice(`Removed “${id}”. Every test's results were recomputed without it.`);
+      onChanged();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -278,8 +284,10 @@ function RuleEditor({ view, def, onCancel, onDone }: { view: AgentOverview; def:
   const url = `/api/agents/${agentId}/rules`;
   const taken = def.rules.map((r) => r.id);
   const defaultField = view.agent.answer_field ?? "";
+  // References written as { "answer": … } (a spreadsheet's or the case editor's) are compared on their "answer".
+  const defaultExpectedField = expectedShape(def.cases.filter((c) => !c.locked && c.expected !== null).map((c) => c.expected)) === "answer" && def.cases.some((c) => c.expected !== null) ? "answer" : "";
   const [name, setName] = useName();
-  const [form, setForm] = useState<Form>(() => emptyForm(defaultField));
+  const [form, setForm] = useState<Form>(() => ({ ...emptyForm(defaultField), expected_field: defaultExpectedField }));
   const [request, setRequest] = useState("");
   const [draft, setDraft] = useState<RuleDraft | null>(null);
   const [draftedByAi, setDraftedByAi] = useState(false);
@@ -292,8 +300,7 @@ function RuleEditor({ view, def, onCancel, onDone }: { view: AgentOverview; def:
 
   const set = (patch: Partial<Form>) => setForm((f) => ({ ...f, ...patch }));
   const built = ruleFromForm(form, taken);
-  const usesProbe = form.type !== "no_tool_errors";
-  const probeBody = usesProbe && (probe.trim() || form.type === "non_empty") ? { answer: form.type === "non_empty" ? "(the rest of the answer)" : probe, ...(probeCase ? { case_id: probeCase } : {}) } : null;
+  const probeBody = probe.trim() || form.type === "non_empty" ? { answer: form.type === "non_empty" ? "(the rest of the answer)" : probe, ...(probeCase ? { case_id: probeCase } : {}) } : null;
   const key = JSON.stringify({ rule: built.rule, probe: probeBody });
   const fresh = preview?.key === key ? preview.result : null;
   const visibleCases = def.cases.filter((c) => !c.locked);
@@ -552,9 +559,9 @@ function RuleEditor({ view, def, onCancel, onDone }: { view: AgentOverview; def:
       <div className="mt-4">
         <div className="text-xs font-medium text-slate-700">3. Try it before it counts</div>
         <p className="text-xs text-slate-500">
-          It runs on your latest test&apos;s answers{usesProbe ? " and on a bad answer you write" : ""}. You can add it only once it has failed at least once: a rule that never fails can&apos;t catch anything.
+          It runs on your latest test&apos;s answers and on a bad answer you write. You can add it only once it has failed at least once: a rule that never fails can&apos;t catch anything.
         </p>
-        {usesProbe && form.type !== "non_empty" && (
+        {form.type !== "non_empty" && (
           <div className="mt-1 flex flex-wrap items-start gap-2">
             <textarea
               value={probe}
@@ -580,7 +587,6 @@ function RuleEditor({ view, def, onCancel, onDone }: { view: AgentOverview; def:
           </div>
         )}
         {form.type === "non_empty" && <p className="mt-1 text-xs text-slate-600">It&apos;s also tried on an answer where “{form.field || "…"}” is blank.</p>}
-        {form.type === "no_tool_errors" && <p className="mt-1 text-xs text-slate-600">This one can only be proven on real answers: one of them needs a failed tool call.</p>}
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <Button variant="secondary" disabled={busy !== null || !built.rule} onClick={tryIt}>
             {busy === "preview" ? "Trying…" : "Try it"}
@@ -598,7 +604,9 @@ function RuleEditor({ view, def, onCancel, onDone }: { view: AgentOverview; def:
               </div>
             ) : (
               <div className="rounded border border-amber-200 bg-amber-50 px-3 py-2 text-amber-900">
-                It hasn&apos;t failed on anything yet, so there&apos;s no proof it can catch a problem. {usesProbe ? "Write a bad answer it should catch, and try again." : ""}
+                {fresh.counts.fail > 0 || fresh.probe?.outcome === "FAIL"
+                  ? "Its failures don't prove anything yet: see why below, fix the rule, and try again."
+                  : "It hasn't failed on anything yet, so there's no proof it can catch a problem. Write a bad answer it should catch, and try again."}
               </div>
             )}
             {fresh.warnings.map((w) => (

@@ -612,7 +612,8 @@ export async function agentDefinition(agentId: string) {
     rules: d.agent.config.checks,
     judge: d.agent.config.judge,
     answers: answerShape(traces),
-    input_shape: inputShape(visible.filter((c) => c.split === "dev").map((c) => c.input)),
+    // The shape of practice questions; with none visible, of any question (only the shape, never the content, is returned).
+    input_shape: inputShape((visible.some((c) => c.split === "dev") ? visible.filter((c) => c.split === "dev") : d.agent.cases).map((c) => c.input)),
     cases: d.agent.cases.map((c) => {
       const locked = lock.locked.has(c.case_id);
       return {

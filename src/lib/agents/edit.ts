@@ -16,9 +16,9 @@ import { promises as fs } from "node:fs";
 import crypto from "node:crypto";
 import path from "node:path";
 import { sha256, stableStringify, withLock } from "../storage/store";
-import { getAgent, readText, validateDefinition } from "./config";
+import { agentsDir, AgentNotFoundError, readText, validateDefinition } from "./config";
 import { agentAudit } from "./repo";
-import type { AgentCase, AgentJudgeConfig, CheckConfig, LoadedAgent } from "./schemas";
+import { AGENT_ID_RE, type AgentCase, type AgentJudgeConfig, type CheckConfig, type LoadedAgent } from "./schemas";
 
 export class EditError extends Error {
   constructor(
@@ -47,10 +47,15 @@ export interface Definition {
   hash: string;
 }
 
+/** Both files, read once: the agent, the fingerprint and the edit all come from the same text. */
 export async function readDefinition(agentId: string): Promise<Definition> {
-  const agent = await getAgent(agentId); // unknown or broken agent → AgentNotFoundError with the problems
-  const configText = (await readText(path.join(agent.dir, "agent.json"))) ?? "";
-  const casesText = (await readText(path.join(agent.dir, "cases.jsonl"))) ?? "";
+  if (!AGENT_ID_RE.test(agentId)) throw new AgentNotFoundError(`Unknown agent "${agentId}"`);
+  const dir = path.join(agentsDir(), agentId);
+  const configText = await readText(path.join(dir, "agent.json"));
+  if (configText === null) throw new AgentNotFoundError(`Unknown agent "${agentId}"`);
+  const casesText = (await readText(path.join(dir, "cases.jsonl"))) ?? "";
+  const { agent, problems } = validateDefinition(agentId, dir, configText, casesText);
+  if (!agent) throw new AgentNotFoundError(`Agent "${agentId}" has config problems: ${problems.map((p) => `${p.file}${p.line ? `:${p.line}` : ""} ${p.message}`).join("; ")}`);
   return { agent, configText, casesText, raw: JSON.parse(configText) as RawConfig, hash: definitionHash(configText, casesText) };
 }
 
@@ -151,14 +156,18 @@ function lineOf(text: string, caseId: string): { lines: string[]; index: number 
   return { lines, index };
 }
 
+/** The file's own line ending, so a file saved on Windows keeps CRLF. */
+const eolOf = (text: string) => (text.includes("\r\n") ? "\r\n" : "\n");
+
 export function withCasesAdded(text: string, cases: AgentCase[]): string {
-  const start = text === "" || text.endsWith("\n") ? text : `${text}\n`;
-  return start + cases.map((c) => `${serializeCase(c)}\n`).join("");
+  const eol = eolOf(text);
+  const start = text === "" || text.endsWith("\n") ? text : `${text}${eol}`;
+  return start + cases.map((c) => `${serializeCase(c)}${eol}`).join("");
 }
 
 export function withCaseReplaced(text: string, c: AgentCase): string {
   const { lines, index } = lineOf(text, c.case_id);
-  lines[index] = serializeCase(c);
+  lines[index] = serializeCase(c) + (lines[index].endsWith("\r") ? "\r" : "");
   return lines.join("\n");
 }
 

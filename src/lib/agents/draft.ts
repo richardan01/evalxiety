@@ -126,9 +126,11 @@ bad_example: a short answer this rule must catch (for a rule on a field, just th
 severity: critical = harms users or breaks policy; major = wrong or unusable; minor = style. blocking: true only if one failure should stop a release on its own.
 fix_hint: one sentence on what to change in the agent when the rule fails, or null.`;
 
-export function ruleDraftPrompt(agent: LoadedAgent, request: string, answers: ReturnType<typeof answerShape>): string {
-  const expected = fieldsOf(agent.cases.filter((c) => c.split === "dev").map((c) => c.expected));
-  const hasTextExpected = agent.cases.some((c) => c.split === "dev" && typeof c.expected === "string");
+export function ruleDraftPrompt(agent: LoadedAgent, lock: LockState, request: string, answers: ReturnType<typeof answerShape>): string {
+  // Practice cases only, and not one that is locked (it was held out before): nothing about a final-exam case is sent.
+  const practice = agent.cases.filter((c) => c.split === "dev" && !lock.locked.has(c.case_id));
+  const expected = fieldsOf(practice.map((c) => c.expected));
+  const hasTextExpected = practice.some((c) => typeof c.expected === "string");
   return `<agent>
 Name: ${agent.config.name}
 Description: ${agent.config.description || "(none)"}
@@ -184,14 +186,14 @@ export type RuleDraft =
   | { kind: "ai_reviewer"; judge: { question: string; fail_definition: string; pass_definition: string }; explanation: string }
   | { kind: "unclear"; explanation: string };
 
-export async function draftRule(agent: LoadedAgent, request: string, recentTraces: AgentTrace[], fresh = false): Promise<RuleDraft & { cost_usd: number | null }> {
+export async function draftRule(agent: LoadedAgent, lock: LockState, request: string, recentTraces: AgentTrace[], fresh = false): Promise<RuleDraft & { cost_usd: number | null }> {
   requireLive();
   const res = await callStructured({
     // The shared spend ledger gets no agent ids; the cached response is under data/agents/<id>/ (git-ignored).
     purpose: "agent-draft-rule",
     cacheDir: cacheDir(agent.agent_id),
     system: RULE_DRAFT_SYSTEM,
-    user: ruleDraftPrompt(agent, request, answerShape(recentTraces)),
+    user: ruleDraftPrompt(agent, lock, request, answerShape(recentTraces)),
     format: DRAFT_FORMAT,
     effort: "medium",
     bypassCache: fresh,

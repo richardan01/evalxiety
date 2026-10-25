@@ -127,15 +127,43 @@ describe("rules", () => {
     const { body } = await rules({ action: "preview", rule: typo });
     expect(body.counts.fail).toBe(body.results.length);
     expect(body.proven).toBe(false);
-    expect(body.warnings.join(" ")).toMatch(/None of the answers has a field called “anwser”/);
+    expect(body.warnings.join(" ")).toMatch(/None of the answers has “anwser”/);
     // The probe for "must fill in a field" blanks that field, which does prove a correctly named rule.
     const ok = await rules({ action: "preview", rule: { ...typo, id: "has_citations", field: "citations" }, probe: { answer: "x" } });
     expect(ok.body.probe).toMatchObject({ outcome: "FAIL", counts_as_proof: true });
   });
 
-  it("proves a time limit with a slow answer, and refuses a probe on a locked case", async () => {
-    const slow = await rules({ action: "preview", rule: { id: "fast", type: "max_latency_ms", max: 3000, question: "Does it answer within 3 s?" }, probe: { answer: "9000" } });
+  it("never counts a bad answer as proof for a field no real answer has (a typo)", async () => {
+    // The bad answer is built around the field, so it "fails"; with no real answer having the field, that proves nothing.
+    const typo = { id: "has_anwser", type: "non_empty", field: "anwser", question: "Is the answer filled in?", severity: "critical" };
+    const probe = await rules({ action: "add", actor: "Priya", base, rule: typo, probe: { answer: "x" } });
+    expect(probe.status).toBe(422);
+    expect(probe.body.preview.probe.counts_as_proof).toBe(false);
+    const must = { id: "says_sorry", type: "regex", field: "anwser", pattern: "sorry", flags: "i", must: "match", question: "Does it apologise?", severity: "minor" };
+    expect((await rules({ action: "preview", rule: must, probe: { answer: "no apology" } })).body.proven).toBe(false);
+    const fields = { id: "shape", type: "json_output", required_fields: ["answer", "citatoins"], question: "Is the answer complete?", severity: "major" };
+    const json = await rules({ action: "preview", rule: fields });
+    expect(json.body.counts.fail).toBe(json.body.results.length);
+    expect(json.body.proven).toBe(false);
+    expect(json.body.warnings.join(" ")).toMatch(/None of the answers has “citatoins”/);
+  });
+
+  it("doesn't count text answers compared with structured reference answers as proof", async () => {
+    const rule = { id: "same", type: "matches_expected", field: "answer", expected_field: "", mode: "exact", question: "Is it the reference answer?", severity: "major" };
+    const { body } = await rules({ action: "preview", rule, probe: { answer: "anything" } });
+    expect(body.counts.fail).toBeGreaterThan(0);
+    expect(body.proven).toBe(false);
+    expect(body.warnings.join(" ")).toMatch(/reference answers are structured \(escalate\)/);
+  });
+
+  it("proves time, cost and tool-error limits with a bad answer, and refuses a probe on a locked case", async () => {
+    const slow = await rules({ action: "preview", rule: { id: "fast", type: "max_latency_ms", max: 3000, question: "Does it answer within 3 s?" }, probe: { answer: "9 s" } });
     expect(slow.body.probe).toMatchObject({ outcome: "FAIL", counts_as_proof: true });
+    const cost = await rules({ action: "preview", rule: { id: "cheap", type: "max_cost_usd", max: 0.1, question: "Does it cost at most 10 cents?" }, probe: { answer: "$0.50" } });
+    expect(cost.body.probe).toMatchObject({ outcome: "FAIL", counts_as_proof: true });
+    expect((await rules({ action: "preview", rule: { id: "cheap", type: "max_cost_usd", max: 0.1, question: "Cheap?" }, probe: { answer: "a lot" } })).status).toBe(400);
+    const tools = await rules({ action: "preview", rule: { id: "tools_ok", type: "no_tool_errors", question: "Do its tools work?" }, probe: { answer: "Timeout calling the orders API" } });
+    expect(tools.body.probe).toMatchObject({ outcome: "FAIL", counts_as_proof: true });
     const locked = await rules({ action: "preview", rule: PROMISES, probe: { answer: "pinky promise", case_id: "h01" } });
     expect(locked.status).toBe(400);
   });
@@ -202,6 +230,27 @@ describe("test cases", () => {
     expect((await listAgentAudit(ID)).at(-1)).toMatchObject({ action: "case_updated", details: { case_id: "c11", changed: ["input", "notes"] } });
   });
 
+  it("changes only what was sent, and refuses a save that changes nothing", async () => {
+    const before = (await casesText()).split("\n").find((l) => l.includes('"c11"'))!;
+    const res = await cases({ action: "update", actor: "Priya", base: (await definition()).definition_hash, case_id: "c11", notes: "Billing, charged twice" });
+    expect(res.status).toBe(200);
+    const after = JSON.parse((await casesText()).split("\n").find((l) => l.includes('"c11"'))!);
+    expect(after).toEqual({ ...JSON.parse(before), notes: "Billing, charged twice" });
+    expect(res.body.needs_lock).toBe(true); // still from the earlier question changes, not from this note
+    const none = await cases({ action: "update", actor: "Priya", base: res.body.definition_hash, case_id: "c11", notes: "Billing, charged twice" });
+    expect(none.status).toBe(400);
+  });
+
+  it("refuses a question another case already asks, without saying which", async () => {
+    const dev = await cases({ action: "add", actor: "Priya", base, cases: [{ input: { question: "How much does the Team plan cost?" } }] });
+    expect(dev.status).toBe(409);
+    // A final-exam question gets the same answer, so adding cases can't be used to find out what the exam asks.
+    const exam = await cases({ action: "add", actor: "Priya", base, cases: [{ input: { question: "What uptime do enterprise customers get?" } }] });
+    expect(exam.status).toBe(409);
+    expect(exam.body.error).toBe(dev.body.error);
+    expect(exam.body.error).not.toMatch(/h0|held|exam/i);
+  });
+
   it("never changes or removes a locked final-exam case", async () => {
     const edit = await cases({ action: "update", actor: "Priya", base, case_id: "h01", input: { question: "peek" } });
     expect(edit.status).toBe(423);
@@ -223,6 +272,29 @@ describe("test cases", () => {
     expect(await casesText()).not.toContain('"c10"');
     const frozen = await call(postFreeze as Handler, "freeze", { actor: "Priya", note: "Added billing questions" });
     expect(frozen.body.version.version).toBe(2);
+  });
+});
+
+describe("answers that no longer fit their case", () => {
+  it("leaves out answers to an older wording, and never hands a removed case's id to a new question", async () => {
+    const id = "small-bot";
+    await fs.mkdir(path.join(agentsDir, id));
+    await fs.writeFile(path.join(agentsDir, id, "agent.json"), JSON.stringify({ name: "Small bot", checks: [{ id: "answers", type: "non_empty", question: "Answers?" }] }));
+    await fs.writeFile(path.join(agentsDir, id, "cases.jsonl"), ["a", "b", "c"].map((q, i) => JSON.stringify({ case_id: `c0${i + 1}`, input: q })).join("\n") + "\n");
+    const text = ["c01", "c02", "c03"].map((c) => JSON.stringify({ case_id: c, output: `answer to ${c} pinky promise` })).join("\n");
+    expect((await call(postImport as Handler, "import", { text, agent_version: "v1", actor: "Priya" }, id)).status).toBe(201);
+
+    let h = (await definition(id)).definition_hash;
+    const edited = await cases({ action: "update", actor: "Priya", base: h, case_id: "c01", input: "a, reworded" }, id);
+    expect(edited.status).toBe(200);
+    const preview = await rules({ action: "preview", rule: { ...PROMISES, field: "" } }, id);
+    expect(preview.body.results.map((r: { case_id: string }) => r.case_id)).toEqual(["c02", "c03"]);
+    expect(preview.body.warnings.join(" ")).toMatch(/1 answer\(s\) in this test were to an older wording/);
+
+    h = edited.body.definition_hash;
+    const removed = await cases({ action: "remove", actor: "Priya", base: h, case_id: "c03" }, id);
+    const added = await cases({ action: "add", actor: "Priya", base: removed.body.definition_hash, cases: [{ input: "d" }] }, id);
+    expect(added.body.added).toEqual(["c04"]); // c03 was answered in v1, so it's never reused
   });
 });
 

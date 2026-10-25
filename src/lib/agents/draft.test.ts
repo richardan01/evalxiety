@@ -84,7 +84,7 @@ describe("what drafting learns about the answers", () => {
 describe("draftRule", () => {
   it("needs live mode", async () => {
     call.mode = "mock";
-    await expect(draftRule(agent, "Never promise refunds", [])).rejects.toThrow(/needs a Claude API key/);
+    await expect(draftRule(agent, lock, "Never promise refunds", [])).rejects.toThrow(/needs a Claude API key/);
     expect(call.requests).toHaveLength(0);
   });
 
@@ -96,7 +96,7 @@ describe("draftRule", () => {
       ai_reviewer: null,
       bad_example: "I guarantee a full refund.",
     });
-    const d = await draftRule(agent, "Never promise refunds", [trace({ answer: "CONFIDENTIAL customer text" })]);
+    const d = await draftRule(agent, lock, "Never promise refunds", [trace({ answer: "CONFIDENTIAL customer text" })]);
     expect(d).toMatchObject({ kind: "rule", bad_example: "I guarantee a full refund.", cost_usd: 0.01 });
     if (d.kind !== "rule") throw new Error("expected a rule");
     // "answers" is taken, so it's renamed from its question; properties the type doesn't use (max) are dropped.
@@ -112,7 +112,7 @@ describe("draftRule", () => {
 
   it("refuses a draft that isn't a usable rule (an invalid pattern) instead of passing it on", async () => {
     call.reply = JSON.stringify({ kind: "rule", explanation: "x", rule: { ...nullRule, id: "x", question: "Q?", type: "regex", field: "answer", pattern: "(", flags: "i", must: "no_match", severity: "major", blocking: false }, ai_reviewer: null, bad_example: null });
-    const d = await draftRule(agent, "something", []);
+    const d = await draftRule(agent, lock, "something", []);
     expect(d.kind).toBe("unclear");
     expect(d.kind === "unclear" && d.explanation).toMatch(/wasn't a usable rule/);
   });
@@ -125,7 +125,7 @@ describe("draftRule", () => {
       ai_reviewer: { question: "Is the answer rude to the customer?", fail_definition: "It insults or blames the customer.", pass_definition: "It is polite or neutral." },
       bad_example: null,
     });
-    expect(await draftRule(agent, "Be polite", [])).toMatchObject({ kind: "ai_reviewer", judge: { question: "Is the answer rude to the customer?" } });
+    expect(await draftRule(agent, lock, "Be polite", [])).toMatchObject({ kind: "ai_reviewer", judge: { question: "Is the answer rude to the customer?" } });
   });
 
   it("turns each rule type's fields into exactly that type's rule", () => {

@@ -37,7 +37,7 @@ export function AgentWorkspace({ agentId, candidate, baseline }: { agentId: stri
   const [nonce, setNonce] = useState(0);
   // Bumped only by a person's change (not the poll while a test runs), so open editors aren't disturbed.
   const [defNonce, setDefNonce] = useState(0);
-  const { def } = useDefinition(agentId, defNonce);
+  const { def, error: defError } = useDefinition(agentId, defNonce);
   const [result, setResult] = useState<{ key: string; view: AgentOverview | null; error: string | null } | null>(null);
   const url = `/api/agents/${agentId}${query({ candidate, baseline })}`;
   const key = `${url}#${nonce}`;
@@ -138,6 +138,11 @@ export function AgentWorkspace({ agentId, candidate, baseline }: { agentId: stri
         <div id="review" className="scroll-mt-4">
           <ReviewCard view={view} />
         </div>
+        {defError && !view.agent.example && (
+          <Callout tone="red" title="Couldn't load the editors for rules and test cases">
+            {defError} Reload the page to try again.
+          </Callout>
+        )}
         <div id="rules" className="scroll-mt-4">
           <ChecksCard view={view} def={def} onChanged={refresh} />
         </div>

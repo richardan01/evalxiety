@@ -12,27 +12,35 @@ import type { AgentOverview, DefinitionView } from "../types";
 import { errorOf, ErrorList, inputCls, NameField, post, useName } from "./shared";
 
 type CaseRow = DefinitionView["cases"][number];
-type SaveResult = { needs_lock?: boolean; next_version?: number | null };
+type SaveResult = { needs_lock?: boolean; next_version?: number | null; relocked?: boolean };
 
 const inputLabel = (s: InputShape) => (s.kind === "field" ? `Question (sent to your agent as “${s.key}”)` : s.kind === "text" ? "Question (sent to your agent as is)" : "Input (JSON, like your other cases)");
 const expectedLabel = (s: ExpectedShape) => (s === "json" ? "Reference answer (JSON, like your other cases; optional)" : "Reference answer (optional: shown to reviewers, used by “matches the reference answer” rules)");
 
-function useSave(agentId: string, def: DefinitionView, onSaved: (message: string) => void) {
+/**
+ * `base` is the version of the files the form was opened on: if they changed since (an edit by hand, another tab), the
+ * save is refused instead of overwriting that change.
+ */
+function useSave(agentId: string, base: string, onSaved: (message: string) => void) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   async function save(payload: Record<string, unknown>, what: string): Promise<boolean> {
     setBusy(true);
     setError(null);
     try {
-      const { status, body } = await post<SaveResult>(`/api/agents/${agentId}/cases`, { ...payload, base: def.definition_hash });
+      const { status, body } = await post<SaveResult>(`/api/agents/${agentId}/cases`, { ...payload, base });
       if (status >= 400) {
         setError(errorOf(body, status));
         return false;
       }
       onSaved(
-        body.needs_lock
-          ? `${what} Before the next test, lock the cases as v${body.next_version} (the box above), so old and new results aren't compared as if they were on the same questions.`
-          : what,
+        [
+          what,
+          body.relocked ? "It has a new question now, so it's locked again until you unlock the final exam." : "",
+          body.needs_lock ? `Before the next test, lock the cases as v${body.next_version} (the box above), so old and new results aren't compared as if they were on the same questions.` : "",
+        ]
+          .filter(Boolean)
+          .join(" "),
       );
       return true;
     } catch (e) {
@@ -86,13 +94,13 @@ function AddCase({ agentId, def, expShape, onSaved }: { agentId: string; def: De
   const [expected, setExpected] = useState("");
   const [notes, setNotes] = useState("");
   const [finalExam, setFinalExam] = useState(false);
-  const { busy, error, setError, save } = useSave(agentId, def, onSaved);
+  const { busy, error, setError, save } = useSave(agentId, def.definition_hash, onSaved);
 
   async function add() {
     let input: unknown;
     let exp: unknown;
     try {
-      input = inputFromText(def.input_shape, question.trim());
+      input = inputFromText(def.input_shape, def.input_shape.kind === "json" ? question : question.trim());
       exp = expectedFromText(expShape, expected);
     } catch (e) {
       return setError(e instanceof Error ? e.message : String(e));
@@ -140,17 +148,22 @@ function DraftCases({ agentId, def, onSaved }: { agentId: string; def: Definitio
   const [count, setCount] = useState(5);
   const [drafts, setDrafts] = useState<Array<{ text: string; notes: string; keep: boolean }> | null>(null);
   const [drafting, setDrafting] = useState(false);
-  const { busy, error, setError, save } = useSave(agentId, def, onSaved);
+  const { busy, error, setError, save } = useSave(agentId, def.definition_hash, onSaved);
   const live = def.mode === "live";
   const kept = drafts?.filter((d) => d.keep && d.text.trim()) ?? [];
 
   async function draft() {
     setDrafting(true);
     setError(null);
-    const { status, body } = await post<{ drafts: Array<{ input: unknown; notes: string }> }>(`/api/agents/${agentId}/cases`, { action: "draft", actor: name, request, count, fresh: drafts !== null });
-    setDrafting(false);
-    if (status >= 400) return setError(errorOf(body, status));
-    setDrafts(body.drafts.map((d) => ({ text: textFromInput(def.input_shape, d.input), notes: d.notes, keep: true })));
+    try {
+      const { status, body } = await post<{ drafts: Array<{ input: unknown; notes: string }> }>(`/api/agents/${agentId}/cases`, { action: "draft", actor: name, request, count, fresh: drafts !== null });
+      if (status >= 400) return setError(errorOf(body, status));
+      setDrafts(body.drafts.map((d) => ({ text: textFromInput(def.input_shape, d.input), notes: d.notes, keep: true })));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setDrafting(false);
+    }
   }
 
   async function add() {
@@ -260,21 +273,26 @@ const truncate = (s: string, n = 300) => (s.length > n ? `${s.slice(0, n)}…` :
 
 function EditCase({ agentId, def, row, expShape, onCancel, onSaved }: { agentId: string; def: DefinitionView; row: CaseRow; expShape: ExpectedShape; onCancel: () => void; onSaved: (m: string) => void }) {
   const [name, setName] = useName();
-  const [question, setQuestion] = useState(textFromInput(def.input_shape, row.input));
-  const [expected, setExpected] = useState(textFromExpected(expShape, row.expected));
-  const [notes, setNotes] = useState(row.notes ?? "");
-  const { busy, error, setError, save } = useSave(agentId, def, onSaved);
+  const initial = { question: textFromInput(def.input_shape, row.input), expected: textFromExpected(expShape, row.expected), notes: row.notes ?? "" };
+  const [question, setQuestion] = useState(initial.question);
+  const [expected, setExpected] = useState(initial.expected);
+  const [notes, setNotes] = useState(initial.notes);
+  // The files as they were when this form opened, so a change made elsewhere since is never silently overwritten.
+  const [base] = useState(def.definition_hash);
+  const { busy, error, setError, save } = useSave(agentId, base, onSaved);
+  const changed = question !== initial.question || expected !== initial.expected || notes !== initial.notes;
 
   async function submit() {
-    let input: unknown;
-    let exp: unknown;
+    // Only what was changed is sent, as typed: an untouched field keeps its exact value (and the case its fingerprint).
+    const patch: Record<string, unknown> = {};
     try {
-      input = inputFromText(def.input_shape, question.trim());
-      exp = expectedFromText(expShape, expected);
+      if (question !== initial.question) patch.input = inputFromText(def.input_shape, question);
+      if (expected !== initial.expected) patch.expected = expectedFromText(expShape, expected) ?? null;
     } catch (e) {
       return setError(e instanceof Error ? e.message : String(e));
     }
-    await save({ action: "update", actor: name, case_id: row.case_id, input, ...(exp !== undefined ? { expected: exp } : { expected: null }), notes: notes.trim() || undefined }, `Saved ${row.case_id}.`);
+    if (notes !== initial.notes) patch.notes = notes.trim();
+    await save({ action: "update", actor: name, case_id: row.case_id, ...patch }, `Saved ${row.case_id}.`);
   }
 
   return (
@@ -291,10 +309,14 @@ function EditCase({ agentId, def, row, expShape, onCancel, onSaved }: { agentId:
         <span className="text-xs font-medium text-slate-700">What it tests</span>
         <input value={notes} onChange={(e) => setNotes(e.target.value)} className={cx(inputCls, "mt-1 w-full")} />
       </label>
-      <p className="text-xs text-slate-500">Changing the question or reference answer means locking the cases as a new version before the next test; earlier tests stay on the old version.</p>
+      {row.split === "heldout" ? (
+        <p className="text-xs text-amber-800">This is a final-exam case you already unlocked. A new question makes it new content: it&apos;s locked again until you unlock it.</p>
+      ) : (
+        <p className="text-xs text-slate-500">Changing the question or reference answer means locking the cases as a new version before the next test. Earlier tests are then marked as on the old cases.</p>
+      )}
       <div className="flex flex-wrap items-center gap-2">
         <NameField name={name} setName={setName} />
-        <Button disabled={busy || !name.trim() || !question.trim()} onClick={submit}>
+        <Button disabled={busy || !name.trim() || !question.trim() || !changed} onClick={submit}>
           Save
         </Button>
         <Button variant="secondary" onClick={onCancel}>
@@ -308,10 +330,10 @@ function EditCase({ agentId, def, row, expShape, onCancel, onSaved }: { agentId:
 
 function RemoveCase({ agentId, def, row, onCancel, onSaved }: { agentId: string; def: DefinitionView; row: CaseRow; onCancel: () => void; onSaved: (m: string) => void }) {
   const [name, setName] = useName();
-  const { busy, error, save } = useSave(agentId, def, onSaved);
+  const { busy, error, save } = useSave(agentId, def.definition_hash, onSaved);
   return (
     <div className="mt-2 rounded border border-rose-200 bg-rose-50 p-2">
-      <div className="text-rose-900">Remove {row.case_id}? Earlier tests keep their answer to it; new tests won&apos;t ask it. Logged under your name.</div>
+      <div className="text-rose-900">Remove {row.case_id}? New tests won&apos;t ask it, and its id is never reused. Logged under your name.</div>
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <NameField name={name} setName={setName} />
         <Button variant="danger" disabled={busy || !name.trim()} onClick={() => save({ action: "remove", actor: name, case_id: row.case_id }, `Removed ${row.case_id}.`)}>

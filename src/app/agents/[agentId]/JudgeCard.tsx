@@ -112,16 +112,23 @@ function JudgeForm({
   const [model, setModel] = useState<Model>(initial?.model ?? "claude-sonnet-5-5");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // The files as they were when this form opened, so a change made elsewhere since is never silently overwritten.
+  const [base] = useState(def.definition_hash);
   const changed = !initial || question !== initial.question || fail !== initial.fail_definition || pass !== initial.pass_definition || model !== initial.model;
   const ready = name.trim() && question.trim().length >= 10 && fail.trim() && pass.trim() && changed;
 
   async function save(judge: unknown, message: string) {
     setBusy(true);
     setError(null);
-    const { status, body } = await post(`/api/agents/${agentId}/judge-config`, { actor: name, base: def.definition_hash, judge });
-    setBusy(false);
-    if (status >= 400) return setError(errorOf(body, status));
-    onDone(message);
+    try {
+      const { status, body } = await post(`/api/agents/${agentId}/judge-config`, { actor: name, base, judge });
+      if (status >= 400) return setError(errorOf(body, status));
+      onDone(message);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (

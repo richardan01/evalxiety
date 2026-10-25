@@ -89,8 +89,9 @@ export async function POST(req: Request, ctx: RouteContext<"/api/agents/[agentId
         case "draft": {
           const agent = await getAgent(agentId);
           if (agent.config.example) throw new EditError("This is the starter kit: connect your own agent to draft rules for it.", 403);
-          const { traces } = await latestAnswers(agent, await getLockState(agent));
-          const draft = await draftRule(agent, body.request, traces, body.fresh);
+          const lock = await getLockState(agent);
+          const { traces } = await latestAnswers(agent, lock);
+          const draft = await draftRule(agent, lock, body.request, traces, body.fresh);
           await agentAudit(agentId, body.actor, "rule_drafted_by_ai", { request: body.request, kind: draft.kind, cost_usd: draft.cost_usd });
           return ok(draft);
         }

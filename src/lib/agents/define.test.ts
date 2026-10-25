@@ -38,6 +38,8 @@ describe("case inputs", () => {
     expect(nextCaseIds([], 2)).toEqual(["c01", "c02"]);
     expect(nextCaseIds(["refund-a"], 1)).toEqual(["c01"]);
     expect(nextCaseIds(["q9", "q10"], 1)).toEqual(["q11"]);
+    // Past what a float counts by one (a 19-digit ticket number): still the next ids, and it returns.
+    expect(nextCaseIds(["t1234567890123456789"], 2)).toEqual(["t1234567890123456790", "t1234567890123456791"]);
   });
 });
 
@@ -47,6 +49,8 @@ describe("reference answers", () => {
     expect(expectedShape([{ answer: "30 days" }])).toBe("answer");
     expect(expectedShape(["30 days"])).toBe("text");
     expect(expectedShape([{ escalate: true }])).toBe("json");
+    // A mix is edited as JSON, so saving one case never turns { answer } into a string or the other way round.
+    expect(expectedShape(["30 days", { answer: "30 days" }])).toBe("json");
     expect(expectedFromText("answer", "30 days")).toEqual({ answer: "30 days" });
     expect(expectedFromText("answer", "  ")).toBeUndefined();
     expect(expectedFromText("json", '{"escalate": true}')).toEqual({ escalate: true });
@@ -76,11 +80,16 @@ describe("rule helpers", () => {
     expect(money.test("it costs $100 a month")).toBe(true);
     expect(money.test("100% sure")).toBe(true);
     expect(new RegExp(phrasesToPattern("a.b")).test("axb")).toBe(false);
+    // One phrase with a symbol at its edge doesn't cost the others their whole-word matching.
+    const mixed = new RegExp(phrasesToPattern("free\n$0"), "i");
+    expect(mixed.test("it's free")).toBe(true);
+    expect(mixed.test("costs $0")).toBe(true);
+    expect(mixed.test("carefree")).toBe(false);
     expect(phrasesToPattern(" \n ")).toBe("");
   });
 
   it("reads phrases back from a pattern it built, and leaves hand-written patterns alone", () => {
-    for (const phrases of ["guarantee\nno questions asked", "refund", "$100\n100%", "a.b (c)"]) {
+    for (const phrases of ["guarantee\nno questions asked", "refund", "$100\n100%", "a.b (c)", "free\n$0"]) {
       expect(patternToPhrases(phrasesToPattern(phrases))).toBe(phrases);
     }
     expect(patternToPhrases("\\b(guarantee|always refund)\\b")).toBe("guarantee\nalways refund");

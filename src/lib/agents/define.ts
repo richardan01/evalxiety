@@ -57,9 +57,11 @@ export type ExpectedShape = "text" | "answer" | "json";
 
 export function expectedShape(values: unknown[]): ExpectedShape {
   const given = values.filter((v) => v !== undefined && v !== null);
-  if (given.some((v) => isPlainObject(v) && !(Object.keys(v).length === 1 && typeof v.answer === "string")) || given.some((v) => typeof v !== "string" && !isPlainObject(v))) return "json";
-  if (given.some((v) => typeof v === "string")) return "text";
-  return "answer";
+  const isAnswer = (v: unknown) => isPlainObject(v) && Object.keys(v).length === 1 && typeof v.answer === "string";
+  if (given.every((v) => typeof v === "string") && given.length) return "text";
+  if (given.every(isAnswer)) return "answer";
+  // Anything richer, or a mix (some text, some { answer }): edit as JSON, so saving never changes a value's type.
+  return "json";
 }
 
 /** The reference answer from what a person typed; blank = no reference answer. Throws on invalid JSON. */
@@ -83,7 +85,8 @@ export function textFromExpected(shape: ExpectedShape, value: unknown): string {
 
 /**
  * `n` new case ids continuing the most common numbering (q07 → q08, q09; c01–c09 beside h01–h03 → c10), skipping any id
- * already taken.
+ * already taken. `existing` should include ids of removed cases that earlier tests answered, so a new question never
+ * inherits an old answer.
  */
 export function nextCaseIds(existing: string[], n: number): string[] {
   const numbered = existing.map((id) => /^(.*?)(\d+)$/.exec(id)).filter((m): m is RegExpExecArray => m !== null);
@@ -91,11 +94,13 @@ export function nextCaseIds(existing: string[], n: number): string[] {
   for (const m of numbered) count.set(m[1], (count.get(m[1]) ?? 0) + 1);
   const prefix = [...count].reduce<[string, number] | null>((best, cur) => (!best || cur[1] >= best[1] ? cur : best), null)?.[0] ?? "c";
   const width = numbered.filter((m) => m[1] === prefix).at(-1)?.[2].length ?? 2;
-  let i = Math.max(0, ...numbered.filter((m) => m[1] === prefix).map((m) => Number(m[2])));
+  // BigInt: a long numeric id (a 19-digit ticket number) is past what a float can count by one.
+  let i = numbered.filter((m) => m[1] === prefix).reduce((max, m) => (BigInt(m[2]) > max ? BigInt(m[2]) : max), BigInt(0));
   const taken = new Set(existing);
   const out: string[] = [];
   while (out.length < n) {
-    const id = `${prefix}${String(++i).padStart(width, "0")}`;
+    i += BigInt(1);
+    const id = `${prefix}${i.toString().padStart(width, "0")}`;
     if (!taken.has(id)) {
       taken.add(id);
       out.push(id);
@@ -129,25 +134,29 @@ export function ruleIdFrom(question: string, taken: string[]): string {
 
 const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-/** Phrases (one per line) as one pattern that finds any of them as whole words: "guarantee\nno questions asked" → \b(guarantee|no questions asked)\b. */
+/**
+ * Phrases (one per line) as one pattern that finds any of them as whole words: "guarantee\nno questions asked" →
+ * \b(guarantee|no\s+questions\s+asked)\b. A word boundary goes only next to a word character, phrase by phrase, so
+ * "$0" is still found and "free" next to it still doesn't match "carefree".
+ */
 export function phrasesToPattern(text: string): string {
   const phrases = [...new Set(text.split("\n").map((p) => p.trim()).filter(Boolean))];
   if (!phrases.length) return "";
-  const parts = phrases.map((p) => escapeRegex(p).replace(/\s+/g, "\\s+"));
-  // \b only next to a word character: a phrase like "$100" or "100%" must still be found.
-  const alt = parts.length === 1 ? parts[0] : `(${parts.join("|")})`;
-  const startWord = phrases.every((p) => /^\w/.test(p));
-  const endWord = phrases.every((p) => /\w$/.test(p));
-  return `${startWord ? "\\b" : ""}${alt}${endWord ? "\\b" : ""}`;
+  const body = (p: string) => escapeRegex(p).replace(/\s+/g, "\\s+");
+  const wordy = (p: string) => /^\w/.test(p) && /\w$/.test(p);
+  if (phrases.every(wordy)) return phrases.length === 1 ? `\\b${body(phrases[0])}\\b` : `\\b(${phrases.map(body).join("|")})\\b`;
+  const parts = phrases.map((p) => `${/^\w/.test(p) ? "\\b" : ""}${body(p)}${/\w$/.test(p) ? "\\b" : ""}`);
+  return parts.length === 1 ? parts[0] : `(${parts.join("|")})`;
 }
 
 /** The phrases a pattern made by phrasesToPattern stands for, or null when it's a hand-written expression. */
 export function patternToPhrases(pattern: string): string | null {
-  const body = pattern.replace(/^\\b/, "").replace(/\\b$/, "");
+  const unb = (s: string) => s.replace(/^\\b/, "").replace(/\\b$/, "");
+  const body = unb(pattern);
   const inner = body.startsWith("(") && body.endsWith(")") ? body.slice(1, -1) : body;
   const phrases = inner
     .split("|")
-    .map((part) => part.replace(/\\s\+/g, " ").replace(/\\([.*+?^${}()|[\]\\])/g, "$1"))
+    .map((part) => unb(part).replace(/\\s\+/g, " ").replace(/\\([.*+?^${}()|[\]\\])/g, "$1"))
     .join("\n");
   // Only if turning the phrases back into a pattern gives this one (anything else is a hand-written expression). A plain
   // space counts as \s+, which the phrases' pattern uses so a line break or double space between words still matches.

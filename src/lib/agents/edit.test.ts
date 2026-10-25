@@ -56,6 +56,10 @@ describe("pure edits", () => {
     expect(withCaseRemoved(CASES, "c01")).toBe('// comment\n\n{"case_id":"c02","input":"bye","notes":"n"}\n');
     expect(() => withCaseRemoved(CASES, "nope")).toThrow(/no test case "nope"/);
     expect(serializeCase({ case_id: "a", input: 1, split: "dev", expected: false })).toBe('{"case_id":"a","input":1,"expected":false}');
+    // A file saved with Windows line endings keeps them.
+    const crlf = CASES.replace(/\n/g, "\r\n");
+    expect(withCaseReplaced(crlf, { case_id: "c01", input: "hey", split: "dev" })).toBe(crlf.replace('"hi"', '"hey"'));
+    expect(withCasesAdded(crlf, [{ case_id: "c03", input: "x", split: "dev" }])).toBe(`${crlf}{"case_id":"c03","input":"x"}\r\n`);
   });
 });
 
