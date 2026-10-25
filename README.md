@@ -11,6 +11,10 @@ running in 30 seconds? Skip to [Run it](#run-it).
 
 ![Evalxiety dashboard: "Absolutely not shipping this."](docs/screenshots/dashboard.png)
 
+## Product decision case study
+
+[Why the agent was not ready to ship — a human-data and launch-gate decision](docs/case-studies/no-ship-human-data-decision.md). This distinguishes demonstrated synthetic results from the independent labeling and user validation still required.
+
 ## The result it caught
 
 I built two versions of the pricing agent and ran both on the same 20 locked test cases with Claude Opus 5.5:
