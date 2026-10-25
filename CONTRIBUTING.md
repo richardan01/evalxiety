@@ -13,10 +13,12 @@ npm ci                         # install exactly what package-lock.json pins
 cp .env.example .env.local     # MOCK_MODE=true: no API key or spend needed
 npm test                       # Vitest suite
 npm run lint                   # ESLint
-npm run typecheck              # optional: tsc --noEmit
+npm run typecheck              # next typegen + tsc --noEmit
+npm run build                  # production build
 ```
 
-CI runs `npm ci`, `npm test` and `npm run lint` on every pull request and on every push to `main`. Please run them
+CI runs `npm ci`, `npm test`, `npm run lint`, `npm run typecheck` and `npm run build` on every pull request and on
+every push to `main`. Please run them
 locally before you open a PR. The tests run in mock mode and need no API key.
 
 This project runs on Next.js 16, which differs from older versions in ways that matter (for example, `params` is a

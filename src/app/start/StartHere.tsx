@@ -1,14 +1,19 @@
 "use client";
 
 /**
- * Start here: the learning path through AgentTrust, what each stage teaches,
- * what to do next (from live state), and how to bring your own agent.
+ * Start here. With an agent of your own: its five steps to a release decision, from live state, with the verdict in
+ * plain words. Always: the learning path through the built-in pricing demo, what to improve next there, and a
+ * glossary.
  */
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getJSON } from "@/lib/client/api";
 import { Badge, InfoTip, PageHeader, cx } from "@/components/ui";
+import { GlossaryList } from "@/components/Term";
 import type { OverviewData } from "@/app/_overview/types";
+import type { AgentOverview, AgentsListView } from "@/app/agents/types";
+import { ANCHOR } from "@/lib/agents/plain";
+import { journeyOf, verdictOf } from "@/lib/agents/report";
 
 type Status = "done" | "active" | "todo";
 
@@ -72,26 +77,90 @@ function Tip({ title, why, href, cta, tone = "slate" }: { title: string; why: st
   );
 }
 
-const GLOSSARY: Array<[string, string]> = [
-  ["Trace", "One recorded run of the agent: input, evidence it was given, its answer, cost and latency."],
-  ["Open coding", "Reading traces and writing down what went wrong in your own words, before any categories exist."],
-  ["Axial coding", "Grouping those notes into failure types, then counting how often each really occurred."],
-  ["Rubric", "What \"good\" means for this agent: the review checklist and the judge's criterion."],
-  ["Code check", "A deterministic pass/fail rule for an objective requirement (e.g. the right policy for the date)."],
-  ["AI judge", "A Claude prompt that answers one narrow yes/no question about an answer. Experimental until it agrees with your labels."],
-  ["TPR / TNR", "How often the judge catches real problems / how often it avoids false alarms, measured against your labels."],
-  ["Gold set", "Human-reviewed answers kept as the reference. Split into dev (for tuning) and held-out (touched once, at the end)."],
-  ["Pass-all", "Share of cases where every code check passes. Never an averaged score."],
-  ["Regression", "A case that passed before the change and fails after it."],
-];
+/** Your own agent's five steps to a decision, with the verdict in plain words. */
+function YourAgent({ view, others }: { view: AgentOverview; others: AgentsListView["agents"] }) {
+  const v = verdictOf(view);
+  const steps = journeyOf(view);
+  const base = `/agents/${view.agent.agent_id}`;
+  const firstOpen = view.gate.unresolved_reviews[0]?.trace_id;
+  const hrefFor = (where: (typeof steps)[number]["where"]) =>
+    where === "review" && firstOpen ? `${base}/traces/${firstOpen}` : where ? `${base}#${ANCHOR[where]}` : base;
+  const tone = { red: "border-rose-300 bg-rose-50", amber: "border-amber-300 bg-amber-50", blue: "border-sky-300 bg-sky-50", green: "border-emerald-300 bg-emerald-50", slate: "border-slate-300 bg-slate-50" }[v.tone];
+  return (
+    <section>
+      <h2 className="mb-2 text-sm font-semibold text-slate-900">
+        Your agent: {view.agent.name}
+        {others.length > 0 && (
+          <span className="ml-2 text-xs font-normal text-slate-500">
+            (also:{" "}
+            {others.map((a, i) => (
+              <span key={a.agent_id}>
+                {i > 0 && ", "}
+                <Link href={`/agents/${a.agent_id}`} className="text-sky-700 hover:underline">
+                  {a.name}
+                </Link>
+              </span>
+            ))}
+            )
+          </span>
+        )}
+      </h2>
+      <div className={cx("mb-3 rounded-xl border p-4", tone)}>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <div className="text-base font-semibold text-slate-900">{v.headline}</div>
+            <p className="mt-0.5 text-sm text-slate-700">{v.summary}</p>
+            {v.next && <p className="mt-1 text-sm text-slate-800"><b>Next:</b> {v.next.text}</p>}
+          </div>
+          <Link href={base} className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700">
+            Open {view.agent.name} →
+          </Link>
+        </div>
+      </div>
+      <ol className="space-y-2">
+        {steps.map((s) => (
+          <li key={s.n} className={cx("flex items-center gap-4 rounded-xl border bg-white p-3 shadow-sm", s.state === "active" ? "border-sky-300 ring-1 ring-sky-200" : "border-slate-200")}>
+            <span
+              className={cx(
+                "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-semibold",
+                s.state === "done" ? "bg-emerald-600 text-white" : s.state === "active" ? "bg-sky-600 text-white" : "bg-slate-100 text-slate-600",
+              )}
+              aria-label={s.state}
+            >
+              {s.state === "done" ? "✓" : s.n}
+            </span>
+            <div className="min-w-0 flex-1">
+              <span className="text-sm font-semibold text-slate-900">{s.title}</span>
+              {s.state === "active" && <Badge tone="blue">you are here</Badge>}
+              <span className="ml-2 text-xs text-slate-500">{s.detail}</span>
+            </div>
+            <Link href={hrefFor(s.where)} className={cx("whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium", s.state === "active" ? "bg-slate-900 text-white hover:bg-slate-700" : "text-sky-700 hover:underline")}>
+              Go →
+            </Link>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
 
 export function StartHere() {
   const [o, setO] = useState<OverviewData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [mine, setMine] = useState<{ view: AgentOverview; others: AgentsListView["agents"] } | null>(null);
   useEffect(() => {
     getJSON<OverviewData>("/api/overview")
       .then(setO)
       .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)));
+    // Your own agent comes first when there is one (the first folder; the others are linked).
+    getJSON<AgentsListView>("/api/agents")
+      .then(async (list) => {
+        const own = list.agents.filter((a) => !a.example);
+        if (!own.length) return;
+        const view = await getJSON<AgentOverview>(`/api/agents/${own[0].agent_id}`);
+        setMine({ view, others: own.slice(1) });
+      })
+      .catch(() => undefined);
   }, []);
 
   if (error) return <p className="text-sm text-rose-700">Could not load progress: {error}</p>;
@@ -115,7 +184,8 @@ export function StartHere() {
     fullRun && o.release_status !== "INSUFFICIENT_EVIDENCE",
   ];
   const activeIdx = dones.findIndex((d) => !d);
-  const st = (i: number): Status => (dones[i] ? "done" : i === activeIdx ? "active" : "todo");
+  // With an agent of your own, "you are here" belongs to that agent's path, not to the demo.
+  const st = (i: number): Status => (dones[i] ? "done" : i === activeIdx && !mine ? "active" : "todo");
 
   // Improvement advice from live state (most important first).
   const tips: Array<{ title: string; why: string; href: string; cta: string; tone: "red" | "amber" | "slate" | "green" }> = [];
@@ -170,17 +240,31 @@ export function StartHere() {
     <div className="space-y-6">
       <PageHeader
         title="Start here"
-        question="Learn the method by running it on the built-in pricing agent — then bring your own."
+        question={
+          mine
+            ? "Get a release decision you can defend for your agent. The pricing demo below shows the same method on a finished example."
+            : "Learn the method on the built-in pricing agent, then connect your own."
+        }
         info="Evalxiety is a nervous quality-control companion: it keeps checking whether your evaluation results can be trusted. It follows Hamel Husain & Shreya Shankar's product-specific evals: real traces first, human error analysis, failure types from what you saw, code checks for objective rules, one narrow AI judge validated against your labels, frozen cases for comparisons, and a release gate with evidence."
         action={
-          <Link href="/" className="rounded-md bg-white px-3 py-1.5 text-sm font-medium text-slate-800 ring-1 ring-inset ring-slate-300 hover:bg-slate-50">
-            Dashboard →
-          </Link>
+          mine ? (
+            <Link href="/agents?connect=1" className="rounded-md bg-white px-3 py-1.5 text-sm font-medium text-slate-800 ring-1 ring-inset ring-slate-300 hover:bg-slate-50">
+              + Connect another agent
+            </Link>
+          ) : (
+            <Link href="/agents?connect=1" className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700">
+              Connect your agent →
+            </Link>
+          )
         }
       />
 
+      {mine && <YourAgent view={mine.view} others={mine.others} />}
+
       <section>
-        <h2 className="mb-2 text-sm font-semibold text-slate-900">The path — 5 stages, about 30 minutes</h2>
+        <h2 className="mb-2 text-sm font-semibold text-slate-900">
+          {mine ? "Learn on the demo: the same method on a built-in pricing agent" : "The path on the built-in pricing demo — 5 stages, about 30 minutes"}
+        </h2>
         <ol className="space-y-2">
           <StageCard
             n={1}
@@ -237,7 +321,7 @@ export function StartHere() {
 
       <section>
         <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-900">
-          Improve next
+          {mine ? "Improve next on the demo" : "Improve next"}
           <InfoTip>Computed from your current traces, labels and runs. The order is by impact: blocking problems first, then evidence gaps.</InfoTip>
         </h2>
         {tips.length === 0 ? (
@@ -255,8 +339,8 @@ export function StartHere() {
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
             Onboard your own agent
-            <Link href="/agents" className="text-xs font-medium text-sky-700 hover:underline">
-              Evaluate your agent →
+            <Link href="/agents?connect=1" className="text-xs font-medium text-sky-700 hover:underline">
+              Connect your agent →
             </Link>
           </h2>
           <p className="mt-1 text-sm text-slate-600">The method is agent-agnostic. To run it on yours you need traces, test cases and objective rules; a judge question and an HTTP endpoint are optional:</p>
@@ -278,24 +362,27 @@ export function StartHere() {
             ))}
           </ol>
           <p className="mt-3 text-xs text-slate-500">
-            Try the starter kit in{" "}
+            <Link href="/agents?connect=1" className="text-sky-700 hover:underline">
+              Connect your agent
+            </Link>{" "}
+            in about 3 minutes: test its endpoint (or choose to upload its answers), keep the suggested rules and paste your test questions. Want to see it first?
+            Try the practice agent (<code>agents/example-support-bot</code>) on{" "}
             <Link href="/agents" className="text-sky-700 hover:underline">
               Your agents
-            </Link>{" "}
-            (<code>agents/example-support-bot</code>), then copy the blank template <code>agents/_template</code> for your own agent. Guide:{" "}
-            <code>docs/use-your-agent.md</code>. Not built yet: a CI command that fails a build on No ship.
+            </Link>
+            . Guide: <code>docs/use-your-agent.md</code>. Not built yet: a CI command that fails a build on No ship.
           </p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="text-sm font-semibold text-slate-900">Words you&apos;ll meet</h2>
-          <dl className="mt-2 grid gap-x-4 gap-y-1.5 text-sm sm:grid-cols-[110px_1fr]">
-            {GLOSSARY.map(([term, def]) => (
-              <div key={term} className="contents">
-                <dt className="font-medium text-slate-800">{term}</dt>
-                <dd className="text-slate-600">{def}</dd>
-              </div>
-            ))}
-          </dl>
+          <div className="mt-2 text-sm">
+            <GlossaryList />
+          </div>
+          <p className="mt-3 text-xs text-slate-500">
+            The demo&apos;s pages also use <b>open coding</b> (writing down what went wrong in your own words), <b>axial coding</b> (grouping those notes into
+            problem types and counting them), the <b>rubric</b> (the review checklist and the AI reviewer&apos;s question) and the <b>gold set</b> (reviewed
+            answers kept as the reference).
+          </p>
         </div>
       </section>
     </div>

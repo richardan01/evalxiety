@@ -27,6 +27,8 @@ import type { Selection } from "./AgentWorkspace";
 import { ErrorList, inputCls, NameField, useName } from "./shared";
 
 const LEVEL_TONE = { NO_SHIP: "red", INSUFFICIENT_EVIDENCE: "amber", WARNING: "neutral" } as const;
+const LEVEL_LABEL = { NO_SHIP: "BLOCKS", INSUFFICIENT_EVIDENCE: "NEEDED", WARNING: "NOTE" } as const;
+const CHANGE_LABEL = { fixed: "fixed", regressed: "got worse", still_failing: "still failing", still_passing: "still passing", incomplete: "can't compare" } as const;
 const runLabel = (r: RunRow | undefined) => (r ? `${r.agent_version} · ${fmtDateTime(r.created_at)}` : "—");
 
 // ---------------------------------------------------------------------------
@@ -43,8 +45,8 @@ export function GateCard({ view, url, onSelect, onChanged }: { view: AgentOvervi
   const sel = view.selected;
   return (
     <Card
-      title="Release gate"
-      subtitle="Can the candidate ship? No ship › Not enough evidence › Ready for approval › Approved (by a named human)."
+      title="Release checklist"
+      subtitle="Everything the verdict above is based on: No ship › Not enough evidence › Ready for approval › Approved (by a named person)."
       actions={<StatusPill status={g.status} approvedLabel="Approved" />}
     >
       <div className="rounded-md bg-slate-50 px-3 py-2 text-sm">
@@ -68,7 +70,9 @@ export function GateCard({ view, url, onSelect, onChanged }: { view: AgentOvervi
       <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
         {(["candidate", "baseline"] as const).map((k) => (
           <label key={k} className="flex items-center gap-2">
-            <span className="w-20 text-slate-600">{k === "candidate" ? "Candidate" : "Baseline"}</span>
+            <span className="w-28 text-slate-600" title={k === "candidate" ? "The change you want to ship (candidate)" : "The version you ship today (baseline)"}>
+              {k === "candidate" ? "New version" : "Current version"}
+            </span>
             <select
               value={sel[k] ?? (k === "baseline" ? "none" : "")}
               onChange={(e) => {
@@ -81,7 +85,7 @@ export function GateCard({ view, url, onSelect, onChanged }: { view: AgentOvervi
               }}
               className={cx(inputCls, "max-w-xs")}
             >
-              {k === "baseline" && <option value="none">(no baseline)</option>}
+              {k === "baseline" && <option value="none">(none)</option>}
               {k === "candidate" && !sel.candidate && <option value="">(none yet)</option>}
               {done.map((r) => (
                 <option key={r.run_id} value={r.run_id}>
@@ -116,7 +120,7 @@ export function GateCard({ view, url, onSelect, onChanged }: { view: AgentOvervi
             <ul className="space-y-1.5 text-sm">
               {g.reasons.map((r) => (
                 <li key={r.code} className="flex items-start gap-2">
-                  <Badge tone={LEVEL_TONE[r.level]}>{r.level === "INSUFFICIENT_EVIDENCE" ? "EVIDENCE" : r.level.replace("_", " ")}</Badge>
+                  <Badge tone={LEVEL_TONE[r.level]}>{LEVEL_LABEL[r.level]}</Badge>
                   <span>
                     {r.message}
                     {r.case_ids.length > 0 && <span className="ml-1 font-mono text-xs text-slate-500">{r.case_ids.slice(0, 8).join(", ")}{r.case_ids.length > 8 ? "…" : ""}</span>}
@@ -181,7 +185,7 @@ function Approval({ view, onChanged }: { view: AgentOverview; onChanged: () => v
     <div className="mt-4 rounded-md border border-sky-200 bg-sky-50 p-3">
       <div className="text-sm font-semibold text-sky-950">Ready for a human decision{g.approval_state === "stale" ? " (the evidence changed since the last decision)" : ""}</div>
       <div className="mt-1 text-sm text-sky-950">
-        You are deciding on <b>{runLabel(cand)}</b> (candidate) against <b>{runLabel(base)}</b> (baseline).
+        You are deciding on <b>{runLabel(cand)}</b> (new version) against <b>{runLabel(base)}</b> (current version).
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-3">
         <NameField name={name} setName={setName} />
@@ -210,8 +214,8 @@ export function RunsCard({ view, url, onSelect, onChanged }: { view: AgentOvervi
   const sel = view.selected;
   if (view.runs.length === 0) {
     return (
-      <Card title="Runs">
-        <EmptyState title="No runs yet">Add your first run above: import a file or call your agent.</EmptyState>
+      <Card title="Tests">
+        <EmptyState title="No tests yet">Add your first test above: import your agent&apos;s answers, or let Evalxiety call it.</EmptyState>
       </Card>
     );
   }
@@ -229,7 +233,7 @@ export function RunsCard({ view, url, onSelect, onChanged }: { view: AgentOvervi
     onChanged();
   }
   return (
-    <Card title="Runs" subtitle="Each run is one version of your agent on the frozen cases. Check results are recomputed from the traces on every load.">
+    <Card title="Tests" subtitle="Each test is one version of your agent answering every test case. Rule results are recomputed from the answers on every load.">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="text-left text-xs text-slate-500">
@@ -237,8 +241,8 @@ export function RunsCard({ view, url, onSelect, onChanged }: { view: AgentOvervi
               <th className="py-1 pr-3">Version</th>
               <th className="py-1 pr-3">Source</th>
               <th className="py-1 pr-3">Cases</th>
-              <th className="py-1 pr-3">Pass every check</th>
-              <th className="py-1 pr-3">Judge flagged</th>
+              <th className="py-1 pr-3">Passed every rule</th>
+              <th className="py-1 pr-3">AI reviewer flagged</th>
               <th className="py-1 pr-3">Cost</th>
               <th className="py-1 pr-3" />
             </tr>
@@ -262,7 +266,7 @@ export function RunsCard({ view, url, onSelect, onChanged }: { view: AgentOvervi
                       {r.data_origin === "example" && <ExampleBadge />}
                       {r.status !== "completed" && <Badge tone={r.status === "failed" ? "red" : "blue"}>{r.status}</Badge>}
                       {r.stale && <Badge tone="amber">old cases</Badge>}
-                      {role && <Badge tone="slate">{role}</Badge>}
+                      {role && <Badge tone="slate">{role === "candidate" ? "new version" : "current version"}</Badge>}
                     </span>
                   </td>
                   <td className="py-1.5 pr-3 tabular-nums">
@@ -291,18 +295,18 @@ export function RunsCard({ view, url, onSelect, onChanged }: { view: AgentOvervi
                         </Link>
                       )}
                       {view.agent.judge && (s.judge.not_run > 0 || s.judge.ERROR > 0) && r.status === "completed" && (
-                        <Button variant="ghost" disabled={!name.trim()} title={name.trim() ? undefined : "Enter your name (in Add a run) first"} onClick={() => judge(r.run_id, false)}>
-                          Run judge
+                        <Button variant="ghost" disabled={!name.trim()} title={name.trim() ? undefined : "Enter your name (in Add a test) first"} onClick={() => judge(r.run_id, false)}>
+                          Run AI reviewer
                         </Button>
                       )}
                       {r.status === "completed" && role !== "candidate" && (
                         <Button variant="ghost" onClick={() => onSelect(sel.baseline === r.run_id ? { candidate: r.run_id, baseline: sel.candidate ?? "none" } : { candidate: r.run_id, baseline: url.baseline })}>
-                          As candidate
+                          Use as new
                         </Button>
                       )}
                       {r.status === "completed" && role !== "baseline" && (
                         <Button variant="ghost" onClick={() => onSelect(sel.candidate === r.run_id ? { candidate: sel.baseline ?? "", baseline: r.run_id } : { candidate: url.candidate, baseline: r.run_id })}>
-                          As baseline
+                          Use as current
                         </Button>
                       )}
                     </div>
@@ -339,20 +343,20 @@ export function CompareCard({ view }: { view: AgentOverview }) {
   const cand = byId.get(view.selected.candidate ?? "");
   if (!c) {
     return (
-      <Card title="Baseline vs candidate">
-        <p className="text-sm text-slate-500">Pick a baseline and a candidate on the same cases (in the gate above) to compare them case by case.</p>
+      <Card title="Current vs new version">
+        <p className="text-sm text-slate-500">Test the version you ship today and your new version on the same cases to compare them case by case.</p>
       </Card>
     );
   }
   const changeTone = { fixed: "green", regressed: "red", still_failing: "amber", still_passing: "neutral", incomplete: "purple" } as const;
   return (
-    <Card title="Baseline vs candidate" subtitle={`${runLabel(base)} → ${runLabel(cand)}. Read regressions case by case; an average hides them.`}>
+    <Card title="Current vs new version" subtitle={`${runLabel(base)} → ${runLabel(cand)}. Read what got worse case by case; an average hides it.`}>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         <Stat label="Fixed" value={c.fixed.length} tone={c.fixed.length ? "green" : undefined} />
-        <Stat label="Regressed" value={c.regressed.length} tone={c.regressed.length ? "red" : undefined} />
+        <Stat label="Got worse" value={c.regressed.length} tone={c.regressed.length ? "red" : undefined} />
         <Stat label="Still failing" value={c.still_failing.length} tone={c.still_failing.length ? "amber" : undefined} />
         <Stat label="Still passing" value={c.still_passing.length} />
-        <Stat label="New check regressions" value={c.new_regressions.length} tone={c.new_regressions.length ? "red" : undefined} hint={`${c.new_critical_regressions.length} critical`} />
+        <Stat label="Rules newly failing" value={c.new_regressions.length} tone={c.new_regressions.length ? "red" : undefined} hint={`${c.new_critical_regressions.length} critical`} />
       </div>
       <div className="mt-4 overflow-x-auto">
         <table className="w-full text-xs">
@@ -380,7 +384,7 @@ export function CompareCard({ view }: { view: AgentOverview }) {
                   )}
                 </td>
                 <td className="py-1 pr-2">
-                  <Badge tone={changeTone[p.change]}>{p.change.replace("_", " ")}</Badge>
+                  <Badge tone={changeTone[p.change]}>{CHANGE_LABEL[p.change]}</Badge>
                 </td>
                 {p.evaluator_changes.map((e) => (
                   <td key={e.evaluator_id} className={cx("py-1 pr-2", e.kind === "regressed" && "bg-rose-50", e.kind === "fixed" && "bg-emerald-50")}>
@@ -412,8 +416,8 @@ export function ReviewCard({ view }: { view: AgentOverview }) {
   const need = view.agent.min_reviewed_traces;
   return (
     <Card
-      title="Human review"
-      subtitle="Read traces and label them before you trust any automated number. Automated results stay hidden until you save."
+      title="Your review"
+      subtitle="Read the agent's answers and mark each one before you trust any automated number. Automated results stay hidden until you save."
       actions={
         first ? (
           <Link href={`/agents/${view.agent.agent_id}/traces/${first}`} className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700">
@@ -423,17 +427,17 @@ export function ReviewCard({ view }: { view: AgentOverview }) {
       }
     >
       <div className="grid gap-4 md:grid-cols-[200px_1fr]">
-        <Stat label="Traces reviewed" value={`${view.reviewed_trace_count} / ${need}`} tone={view.reviewed_trace_count >= need ? "green" : "amber"} hint="minimum for error analysis" />
+        <Stat label="Answers reviewed" value={`${view.reviewed_trace_count} / ${need}`} tone={view.reviewed_trace_count >= need ? "green" : "amber"} hint="minimum before deciding" />
         <div>
           <h3 className="mb-1 flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Failure types (from your labels)
+            Problems you found
             <InfoTip>
-              Name each failure in plain words when you label a trace, then reuse names to group them. The most frequent types are what to fix first — and the objective ones
-              are what to turn into code checks.
+              Name each problem in plain words when you review an answer, then reuse names to group them. The most frequent ones are what to fix first, and the objective
+              ones are what to turn into rules.
             </InfoTip>
           </h3>
           {view.failure_types.length === 0 ? (
-            <p className="text-sm text-slate-500">No failures labelled yet.</p>
+            <p className="text-sm text-slate-500">No problems marked yet.</p>
           ) : (
             <ul className="space-y-1 text-sm">
               {view.failure_types.map((f) => (
@@ -458,10 +462,10 @@ export function ReviewCard({ view }: { view: AgentOverview }) {
 export function ChecksCard({ view }: { view: AgentOverview }) {
   const cand = view.runs.find((r) => r.run_id === view.selected.candidate);
   return (
-    <Card title="Code checks" subtitle={<>Defined in <code>agents/{view.agent.agent_id}/agent.json</code>. Each answers one yes/no question.</>}>
+    <Card title="Rules (code checks)" subtitle={<>Automatic yes/no tests on every answer, defined in <code>agents/{view.agent.agent_id}/agent.json</code>. No AI involved.</>}>
       {view.checks.length === 0 ? (
-        <EmptyState title="No code checks yet">
-          Add objective rules to <code>checks</code> in agent.json — see <code>docs/use-your-agent.md</code> for the check types.
+        <EmptyState title="No rules yet">
+          Add objective rules to <code>checks</code> in agent.json — see <code>docs/use-your-agent.md</code> for the rule types.
         </EmptyState>
       ) : (
         <ul className="divide-y divide-slate-100">
@@ -477,7 +481,7 @@ export function ChecksCard({ view }: { view: AgentOverview }) {
                   {d.validation === "custom" && <Badge tone="purple" title="Your own TypeScript in agents/custom-checks.ts — force it to FAIL once to prove it can">custom code</Badge>}
                   {t && (
                     <span className="ml-auto text-xs text-slate-600">
-                      candidate: {t.pass} pass · <span className={cx(t.fail > 0 && "font-semibold text-rose-700")}>{t.fail} fail</span> · {t.not_applicable} n/a
+                      new version: {t.pass} pass · <span className={cx(t.fail > 0 && "font-semibold text-rose-700")}>{t.fail} fail</span> · {t.not_applicable} n/a
                       {t.error ? <span className="text-purple-700"> · {t.error} error</span> : null}
                     </span>
                   )}
@@ -503,25 +507,25 @@ export function JudgeCard({ view }: { view: AgentOverview; onChanged: () => void
   const cal = view.calibration;
   if (!j) {
     return (
-      <Card title="LLM judge (optional)">
+      <Card title="AI reviewer (optional)">
         <p className="text-sm text-slate-600">
-          No judge configured. For a subjective failure your code checks can&apos;t catch, add one binary question under <code>judge</code> in agent.json. It is
-          always experimental: its agreement with your labels is reported once there are 30+ labelled failures and 30+ passes, and it never replaces your
+          No AI reviewer set up. For a subjective problem your rules can&apos;t catch, add one yes/no question under <code>judge</code> in agent.json. It is
+          always experimental: how often it agrees with you is reported once you&apos;ve labelled 30+ problems and 30+ fine answers, and it never replaces your
           review.
         </p>
       </Card>
     );
   }
   return (
-    <Card title="LLM judge (experimental)" subtitle="One yes/no question, measured against your human labels. Never counts toward pass-all." actions={<Badge tone="purple">{j.model}</Badge>}>
+    <Card title="AI reviewer (experimental)" subtitle="Claude answering one yes/no question about each answer, measured against your own labels. Never counts toward “passed every rule”." actions={<Badge tone="purple">{j.model}</Badge>}>
       <p className="text-sm font-medium">{j.question}</p>
       <p className="mt-1 text-xs text-slate-500">
         Version <code>{j.version}</code> · runs in {view.mode === "live" ? "live mode (billed)" : "mock mode: example traces only — real traces need MOCK_MODE=false and an API key"}
       </p>
       <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="Labelled pairs" value={cal.pairs} hint={`need ${cal.min_per_class} per class`} />
-        <Stat label="Catches real failures (TPR)" value={<Ratio value={cal.tpr} undefinedReason={cal.undefined_reasons[0]} />} hint={`${cal.matrix.positives} human failures`} />
-        <Stat label="Passes real passes (TNR)" value={<Ratio value={cal.tnr} undefinedReason={cal.undefined_reasons[1] ?? cal.undefined_reasons[0]} />} hint={`${cal.matrix.negatives} human passes`} />
+        <Stat label="Answers you labelled" value={cal.pairs} hint={`need ${cal.min_per_class} problems and ${cal.min_per_class} fine`} />
+        <Stat label="Catches real problems (TPR)" value={<Ratio value={cal.tpr} undefinedReason={cal.undefined_reasons[0]} />} hint={`${cal.matrix.positives} human failures`} />
+        <Stat label="Avoids false alarms (TNR)" value={<Ratio value={cal.tnr} undefinedReason={cal.undefined_reasons[1] ?? cal.undefined_reasons[0]} />} hint={`${cal.matrix.negatives} human passes`} />
         <Stat label="Disagreements" value={cal.disagreements.length} />
       </div>
       <p className={cx("mt-2 text-xs", cal.insufficient ? "text-amber-800" : "text-slate-600")}>{cal.status_label}</p>
@@ -558,21 +562,21 @@ export function CasesCard({ view, onChanged }: { view: AgentOverview; onChanged:
 
   return (
     <Card
-      title="Cases"
+      title="Test cases"
       subtitle={
         <>
-          {view.cases.length} cases in <code>agents/{view.agent.agent_id}/cases.jsonl</code> · {latest ? `frozen v${latest.version} (${latest.content_hash.slice(0, 10)})` : "not frozen yet (the first run freezes v1)"}
+          {view.cases.length} cases in <code>agents/{view.agent.agent_id}/cases.jsonl</code> · {latest ? `locked as v${latest.version} (${latest.content_hash.slice(0, 10)})` : "not locked yet (the first test locks them as v1)"}
         </>
       }
     >
       {view.frozen.changed_since_latest && (
-        <Callout tone="amber" title="cases.jsonl changed since the last freeze">
-          New runs are blocked until you freeze a new version, so old and new runs are never compared as if they ran on the same cases.
+        <Callout tone="amber" title="cases.jsonl changed since the cases were locked">
+          New tests are blocked until you lock the new set, so old and new tests are never compared as if they ran on the same questions.
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <NameField name={name} setName={setName} />
             <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="What changed?" className={cx(inputCls, "min-w-64")} />
             <Button disabled={busy || !name.trim() || note.trim().length < 3} onClick={() => act(`/api/agents/${view.agent.agent_id}/freeze`, { actor: name, note })}>
-              Freeze v{(latest?.version ?? 0) + 1}
+              Lock as v{(latest?.version ?? 0) + 1}
             </Button>
           </div>
         </Callout>
@@ -594,20 +598,23 @@ export function CasesCard({ view, onChanged }: { view: AgentOverview; onChanged:
         <div className="mt-4 rounded-md border border-violet-200 bg-violet-50 p-3 text-sm">
           {view.heldout.revealed && (
             <div className={cx(locked.length > 0 && "mb-2")}>
-              Last reveal by <b>{view.heldout.revealed_by}</b> on {fmtDateTime(view.heldout.revealed_at!)} — “{view.heldout.reason}” ({view.heldout.revealed_cases.length} case(s) revealed so far).
+              Last unlocked by <b>{view.heldout.revealed_by}</b> on {fmtDateTime(view.heldout.revealed_at!)} — “{view.heldout.reason}” ({view.heldout.revealed_cases.length} case(s) revealed so far).
             </div>
           )}
           {locked.length > 0 && (
             <>
-              <div className="font-medium text-violet-950">{locked.length} held-out case(s) are locked: {locked.map((c) => c.case_id).join(", ")}</div>
+              <div className="font-medium text-violet-950">
+                {locked.length} final-exam (held-out) case(s) are locked: {locked.map((c) => c.case_id).join(", ")}
+              </div>
               <p className="mt-0.5 text-violet-900">
-                Keep them locked while you tune, so your final check is on cases you never optimised for. Reveal once, when you are done: it&apos;s logged and can&apos;t be undone.
+                Keep them locked while you improve the agent, so the final check is on questions nobody tuned for. Unlock them once, when you are done: it&apos;s logged
+                and can&apos;t be undone.
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <NameField name={name} setName={setName} />
                 <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Why now? (at least 10 characters)" className={cx(inputCls, "min-w-72")} />
                 <Button variant="danger" disabled={busy || !name.trim() || reason.trim().length < 10} onClick={() => act(`/api/agents/${view.agent.agent_id}/heldout`, { actor: name, reason, case_ids: locked.map((c) => c.case_id) })}>
-                  Reveal {locked.length} held-out case(s)
+                  Unlock {locked.length} final-exam case(s)
                 </Button>
               </div>
             </>

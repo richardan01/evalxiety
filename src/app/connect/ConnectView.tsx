@@ -43,7 +43,8 @@ function desktopSnippet(d: ConnectData): string {
   );
 }
 
-const codeCommand = (d: ConnectData) => `claude mcp add evalxiety -- node ${d.server_path}`;
+// Pass the URL the app is really on: the MCP server otherwise assumes port 3123.
+const codeCommand = (d: ConnectData) => `claude mcp add evalxiety -e AGENTTRUST_URL=${d.api_base_url} -- node ${d.server_path}`;
 
 function CopyButton({ text }: { text: string }) {
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
@@ -398,7 +399,7 @@ export function ConnectView() {
         <div className="space-y-5">
           <Card title="Bring your own agent">
             <p className="text-sm text-slate-700">
-              Connect your agent from <Link href="/agents" className="text-sky-700 hover:underline">Your agents</Link>: add its endpoint in <code className="font-mono text-xs">agents/&lt;id&gt;/agent.json</code> (kept in a file you control, not in the browser, so a web page can never point Evalxiety at an arbitrary URL), or import its traces. MCP tools <code className="font-mono text-xs">list_my_agents</code>,{" "}
+              Use <Link href="/agents?connect=1" className="text-sky-700 hover:underline">Connect your agent</Link>: it tests the endpoint once and writes a new <code className="font-mono text-xs">agents/&lt;id&gt;/agent.json</code> for you (only a same-origin request on this machine can create one, and an existing agent is never overwritten). No endpoint? Import its traces instead. MCP tools <code className="font-mono text-xs">list_my_agents</code>,{" "}
               <code className="font-mono text-xs">get_agent_status</code> and <code className="font-mono text-xs">get_agent_trace</code> read them from Claude.
             </p>
             <ul className="mt-2 space-y-1 text-sm text-slate-600">

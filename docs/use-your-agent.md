@@ -18,6 +18,11 @@ traces. Turn it off with `npx next telemetry disable`.
 
 You don't need an Anthropic API key unless you turn on the judge.
 
+**The fastest way in.** If your agent has an HTTP endpoint, click **Connect your agent** in the sidebar: name it, test
+the endpoint with one sample question, keep the suggested rules, and paste your test questions. Nothing is written
+until you click **Create agent**, and it never overwrites an existing folder. The rest of this guide covers what the
+wizard writes for you, the file formats, and every rule behind the release decision.
+
 ## Try the starter kit (about 5 minutes)
 
 You need Node.js 22.12+ or 24.
@@ -40,16 +45,18 @@ expected.
 - **The verdict is "Not enough evidence", not "No ship".** This is by design: starter-kit data is labelled EXAMPLE
   and never counts as evidence. On your own agent, the same regression means No ship.
 
-1. Under **Add a run → Import a file**, enter your name (it's recorded on what you do) and the version label `v1`.
-2. Upload `agents/example-support-bot/traces.v1-baseline.jsonl` and click **Import run**.
-3. Do the same with `traces.v2-candidate.jsonl`, labelled `v2`.
-4. Read the **Release gate** card at the top:
-   - three grey **WARNING** lines starting "(example data — not evidence)" name c09;
-   - the **EVIDENCE** lines list what a real release would still need: reviews, the judge, the held-out check.
-5. Read the **Baseline vs candidate** card: 7 fixed, 1 regressed (c09), 1 still passing (c08).
+1. Under **Add a test → Import a file**, enter your name (it's recorded on what you do) and the version name `v1`.
+2. Upload `agents/example-support-bot/traces.v1-baseline.jsonl` and click **Import answers**.
+3. Do the same with `traces.v2-candidate.jsonl`, named `v2`.
+4. Read the verdict at the top of the page:
+   - it says this is a practice run that can never be approved;
+   - **Worth knowing** lists what would block a real release, all naming c09;
+   - **Still needed** lists what a real release would still need: reviews, the AI reviewer, the final-exam check.
+5. Read the **Current vs new version** card: 7 fixed, 1 got worse (c09), 1 still passing (c08).
+6. Click **Release report** for the one-page summary you'd share.
 
 To try HTTP mode instead, start the toy agent in a second terminal (`npm run example-agent -- --version=v1`), use
-**Call my agent (HTTP)** and label that run `v1`. Then restart the agent with `--version=v2` and run again, labelled
+**Call my agent (HTTP)** and name that test `v1`. Then restart the agent with `--version=v2` and run again, named
 `v2`.
 
 **Next:** [set up your own agent](#set-up-your-agent). [The loop](#the-loop) covers the review and final-check steps
@@ -57,17 +64,19 @@ this tour skipped.
 
 ## The loop
 
-Words used here:
-- **case:** one test input. **Dev cases** are the ones you look at and tune against.
-- **held-out case:** a case you set aside and don't look at until the final check.
-- **trace:** your agent's output for one case, plus the evidence it was given (retrieved documents, tool results).
-- **run:** one version of your agent on every case.
-- **baseline / candidate:** the version you ship today, and your change.
+Words used here (the app uses the plain word first, with the technical one on hover):
+- **case** (test case): one test input. **Dev cases** are the ones you look at and tune against.
+- **held-out case** (final-exam case): a case you set aside and don't look at until the final check.
+- **trace** (answer): your agent's output for one case, plus the evidence it was given (retrieved documents, tool
+  results).
+- **run** (test): one version of your agent on every case.
+- **baseline / candidate** (current version / new version): the version you ship today, and your change.
+- **code check** (rule) and **judge** (AI reviewer).
 
 The steps:
 
 1. **Baseline.** Get your cases right first: **the first run freezes them.** If you later change a case's `input`,
-   `expected` or `split`, you must click **Freeze v2** and re-run the baseline too. Then import or run the version you
+   `expected` or `split`, you must click **Lock as v2** and re-run the baseline too. Then import or run the version you
    ship today. Label it with something you'll recognise, such as
    `prompt-v3` or a git SHA. Tag it in git (or keep it runnable): you'll run it again at the final check. While it is
    your only version, it is shown as the baseline. Until you approve a release, the first version you import stays the
@@ -86,8 +95,8 @@ The steps:
    the change worked. If you have held-out cases, the final run in step 5 replaces this one, so this review isn't the
    one the gate counts. If you don't, this is your final run: review every trace of it.
 5. **Final check.** When you've stopped tuning:
-   - on the agent page, in the **Cases** card, enter your name and a reason (at least 10 characters), then click
-     **Reveal N held-out case(s)** (this can't be undone);
+   - on the agent page, in the **Test cases** card, enter your name and a reason (at least 10 characters), then click
+     **Unlock N final-exam case(s)** (this can't be undone);
    - run both versions again on every case, re-using their exact labels. With the template script, add
      `--include-heldout`;
    - review **every** trace of the new candidate run: the gate needs a human look at each one;
@@ -97,8 +106,11 @@ The steps:
 
    **Budget:** for a 20-case set, plan on up to 20 reviews of your first run (at least 10; fewer once new failure
    types stop appearing), plus 20 on the final run: about 40.
-6. **Decide.** Read the gate. Only a named person's approval of that exact evidence turns "Ready for approval" into
-   **Approved**. If the evidence changes later, the approval goes stale.
+6. **Decide.** Read the verdict and the checklist under it. Only a named person's approval of that exact evidence
+   turns "Ready for approval" into **Approved**. If the evidence changes later, the approval goes stale.
+7. **Share it.** **Release report** (top of the agent page) is a one-page summary: the verdict, what was compared, what
+   got fixed and worse, the reviews, the rules, the decision and the evidence fingerprint. Print it, save it as PDF,
+   download it as Markdown, or copy it as text.
 
 **Which runs are compared.** Only completed runs count. Labels match ignoring case and leading or trailing spaces
 (`v1` = `V1 `, but not `v 1`).
@@ -107,8 +119,8 @@ The steps:
 - **Re-runs:** re-running the baseline under its *exact* label keeps the roles; the label box suggests the labels
   you've used.
 - **Scratch runs:** runs labelled `scratch-…` are never picked by default.
-- **Changing them:** use the Candidate and Baseline pickers on the Release gate card, or **As candidate** and **As
-  baseline** in the Runs table.
+- **Changing them:** use the New version and Current version pickers on the **Release checklist** card, or **Use as
+  new** and **Use as current** in the **Tests** table.
 
 "Not enough evidence" is a real answer, not a failure of the tool. It tells you what to collect next.
 
@@ -164,7 +176,7 @@ A misspelled field is reported with its line number. Use 10–30 real inputs tha
 quarter.
 
 **Freezing.** The first run freezes the cases as version 1. If you later change a case's `case_id`, `input`,
-`expected` or `split`, new runs are blocked until you click **Freeze v2** on the agent page. Editing `notes` doesn't
+`expected` or `split`, new runs are blocked until you click **Lock as v2** on the agent page. Editing `notes` doesn't
 need a new freeze. Runs on different versions are never compared.
 
 **Held-out cases.**
@@ -195,7 +207,7 @@ node agents/my-agent/run-my-agent.mjs > agents/my-agent/v1.jsonl
 npm run validate -- my-agent agents/my-agent/v1.jsonl
 ```
 
-Upload the file on the agent page under **Add a run → Import a file**. In this repo, writing it inside
+Upload the file on the agent page under **Add a test → Import a file**. In this repo, writing it inside
 `agents/my-agent/` keeps it git-ignored. If you set `EVALXIETY_AGENTS_DIR`, add your trace files to that repo's
 `.gitignore`, or write them somewhere else. The script skips held-out cases: add `--include-heldout` after you've revealed them.
 
@@ -230,8 +242,8 @@ It stops at the first broken file, and exits 1 if anything is wrong. It reads `.
 your agent folder must be in the checkout, and held-out cases count as locked. It checks files; it doesn't run the
 gate.
 
-The **Check file** button on the import screen runs the same file checks, and needs no name or version label.
-Imports are all or nothing: one bad line and nothing is saved. Importing the same file under the same version label
+The **Check file** button on the import screen runs the same file checks, and needs no name or version name.
+Imports are all or nothing: one bad line and nothing is saved. Importing the same file under the same version name
 twice doesn't create a second run.
 
 #### Let Evalxiety call your agent (HTTP)
@@ -354,10 +366,10 @@ Use the judge for **one** subjective failure that code can't catch:
 - **It needs an API key.** The judge calls Claude, so set `MOCK_MODE=false` and `ANTHROPIC_API_KEY` in `.env.local`
   and restart the app. Without them, it only runs on starter-kit data, using a labelled mock.
 - **The gate waits for it.** Once a judge is configured, the gate needs it run on every candidate trace that didn't
-  error. When it flags a trace, open it and answer the judge's question; the Release gate card lists those traces
+  error. When it flags a trace, open it and answer the judge's question; the **Release checklist** card lists those traces
   under **Still to review**.
 - **You confirm the cost.** Judging more than one trace shows an estimated cost and asks you to confirm.
-- **Errors are retried.** Click **Run judge** again to retry errored verdicts (a rate limit, say).
+- **Errors are retried.** Click **Run AI reviewer** again to retry errored verdicts (a rate limit, say).
 - **Spend cap.** `LIVE_SPEND_CAP_USD` caps Evalxiety's estimated Claude spend. It does not cap what your own agent
   costs over HTTP.
 - **Cached responses** quote your agent's output, so they are kept under `data/agents/<id>/llm_cache`, which is
@@ -436,5 +448,6 @@ output trigger.
 ## Not built yet
 
 - A CI command that fails a build on No ship.
-- A setup wizard. Setup is editing two files.
-- Deleting runs, or editing cases, checks or the judge question in the app. They are files you review like code.
+- Importing a spreadsheet (CSV) of questions and answers.
+- Deleting runs, or editing cases, checks or the judge question in the app. The wizard creates a new agent's files;
+  after that they are files you review like code.

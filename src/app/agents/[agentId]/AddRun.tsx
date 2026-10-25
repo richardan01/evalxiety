@@ -1,6 +1,6 @@
 "use client";
 
-/** Add a run: import a JSONL file, or call the agent's HTTP endpoint on every visible case. */
+/** Add a test (a run): import a JSONL file of answers, or call the agent's HTTP endpoint on every visible case. */
 import { useState } from "react";
 import { Button, Callout, Card, cx, fmtUsd } from "@/components/ui";
 import type { AgentOverview } from "../types";
@@ -97,8 +97,8 @@ export function AddRun({ view, onDone }: { view: AgentOverview; onDone: () => vo
   const conn = view.agent.connection;
   return (
     <Card
-      title="Add a run"
-      subtitle="Run the version you ship today as the baseline, then your change as the candidate."
+      title="Add a test"
+      subtitle="First test the version you ship today (the current version), then your change (the new version)."
       actions={
         <div className="flex rounded-md bg-slate-100 p-0.5 text-xs">
           {(["import", "http"] as const).map((t) => (
@@ -119,7 +119,7 @@ export function AddRun({ view, onDone }: { view: AgentOverview; onDone: () => vo
       <div className="flex flex-wrap items-center gap-4">
         <NameField name={name} setName={setName} />
         <label className="flex items-center gap-2 text-sm">
-          <span className="text-slate-600">Version label</span>
+          <span className="text-slate-600">Version name</span>
           <input value={version} onChange={(e) => setVersion(e.target.value)} list="version-labels" placeholder="e.g. prompt-v2 or a git SHA" className={cx(inputCls, "w-56")} />
           <datalist id="version-labels">
             {labels.map((l) => (
@@ -127,7 +127,7 @@ export function AddRun({ view, onDone }: { view: AgentOverview; onDone: () => vo
             ))}
           </datalist>
         </label>
-        <span className="text-xs text-slate-500">Re-running a version? Reuse its exact label. Testing a check? Start the label with scratch- so it&apos;s never a default.</span>
+        <span className="text-xs text-slate-500">Testing the same version again? Reuse its exact name. Just trying out a rule? Start the name with scratch- so it&apos;s never picked by default.</span>
       </div>
 
       {tab === "import" ? (
@@ -149,8 +149,8 @@ export function AddRun({ view, onDone }: { view: AgentOverview; onDone: () => vo
             <Button variant="secondary" disabled={busy || !text.trim()} onClick={() => importFile(true)}>
               Check file
             </Button>
-            <Button disabled={busy || !text.trim() || !ready} onClick={() => importFile(false)} title={ready ? undefined : "Enter your name and a version label"}>
-              Import run
+            <Button disabled={busy || !text.trim() || !ready} onClick={() => importFile(false)} title={ready ? undefined : "Enter your name and a version name"}>
+              Import answers
             </Button>
           </div>
         </div>
@@ -200,7 +200,7 @@ export function AddRun({ view, onDone }: { view: AgentOverview; onDone: () => vo
               </div>
             </div>
           ) : (
-            <Button disabled={busy || !ready || conn.missing_env.length > 0 || !!conn.unsafe} onClick={() => runHttp(false)} title={ready ? undefined : "Enter your name and a version label"}>
+            <Button disabled={busy || !ready || conn.missing_env.length > 0 || !!conn.unsafe} onClick={() => runHttp(false)} title={ready ? undefined : "Enter your name and a version name"}>
               Run on {view.cases.filter((c) => !c.locked).length} cases
             </Button>
           )}

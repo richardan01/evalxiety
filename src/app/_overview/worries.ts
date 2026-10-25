@@ -41,7 +41,7 @@ export function worries(o: OverviewData): Worry[] {
 
   if (o.executions.total === 0) out.push({ level: "evidence", text: "Nothing has been run. I have no evidence at all.", href: "/review" });
   if (o.executions.live === 0 && o.executions.total > 0) {
-    out.push({ level: "evidence", text: "Every result is MOCK. None of it says anything about the real model.", href: "/" });
+    out.push({ level: "evidence", text: "Every result is MOCK. None of it says anything about the real model.", href: "/demo" });
   }
   const reviewed = o.review.reviewed_traces;
   if (reviewed < o.review.target_min) {

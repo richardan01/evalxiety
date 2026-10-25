@@ -303,9 +303,9 @@ function nextStep(reasons: GateReason[], input: AgentGateInput, approval: AgentG
   const has = (c: string) => reasons.some((r) => r.code === c);
   const reviewOpen = has("insufficient_human_review") || has("unresolved_required_reviews");
   if (has("example_data")) {
-    if (!input.candidate && !input.baseline) return "Starter kit: import traces.v1-baseline.jsonl as v1 (Add a run → Import a file).";
+    if (!input.candidate && !input.baseline) return "Starter kit: import traces.v1-baseline.jsonl as v1 (Add a test → Import a file).";
     if (!input.candidate) return "Now import traces.v2-candidate.jsonl as v2.";
-    return "This is the starter kit: compare the runs and try reviewing a trace. To evaluate your own agent, copy the blank template: cp -r agents/_template agents/<your-agent>.";
+    return "This is the starter kit: compare the runs and try reviewing a trace. To evaluate your own agent, use Connect your agent on the Your agents page (or copy the blank template agents/_template).";
   }
   if (has("no_checks") && !reasons.some((r) => r.level === "NO_SHIP")) return "Add at least one code check to agent.json.";
   if (has("heldout_moved_to_dev")) return "A never-revealed held-out case is now a dev case: move it back to \"split\": \"heldout\" and freeze a new version.";
