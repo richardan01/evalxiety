@@ -26,6 +26,8 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      # Nothing that must stay private (env files, keys, data/private, your own agents, spreadsheets, credentials).
+      - run: npm run check:files
       - run: npm test
       - run: npm run lint
       - run: npm run typecheck

@@ -15,6 +15,7 @@
     "typecheck": "next typegen && tsc --noEmit -p .",
     "mcp": "node mcp/server.mjs",
     "validate": "tsx scripts/validate.ts",
+    "check:files": "node scripts/check-tracked.mjs",
     "example-agent": "node agents/example-support-bot/server.mjs"
   },
   "dependencies": {

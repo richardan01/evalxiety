@@ -22,13 +22,33 @@
 
 # misc
 .DS_Store
+Thumbs.db
+*.swp
+*~
+
+# editors (personal settings)
+.idea/
+.vscode/
+
+# keys and certificates
 *.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
 
 # debug
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+
+# browser-test output
+/test-results/
+/playwright-report/
+/blob-report/
 
 # env files (can opt-in for committing if needed)
 .env*
@@ -62,5 +82,19 @@ next-env.d.ts
 # A Claude API key connected from the UI (data/ is tracked, so keep secrets out of it).
 /data/private/
 
-# Claude Code local scheduler lock
+# Claude Code: personal settings, local memory and lock files (the shared launch config stays tracked)
 /.claude/scheduled_tasks.lock
+/.claude/*.lock
+/.claude/settings.local.json
+CLAUDE.local.md
+
+# Spreadsheets of test questions or agent answers can hold customer data, so they never go in by accident.
+# Need one as a fixture? Add it on purpose with `git add -f`.
+*.csv
+*.tsv
+*.xlsx
+*.xls
+
+# Release reports you download or print from the app
+release-report-*.md
+release-report-*.pdf
