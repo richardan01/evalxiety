@@ -5,7 +5,10 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { demoSteps, type DemoStep } from "@/app/_overview/demoPath";
 import type { ModeData, OverviewData } from "@/app/_overview/types";
+import type { AgentOverview } from "@/app/agents/types";
+import { verdictOf } from "@/lib/agents/report";
 import { nextStep } from "@/lib/guide/next";
+import { agentIdOf, isDemoPath } from "@/lib/guide/pages";
 import { Mascot, moodFor } from "../Mascot";
 import { cx } from "../ui";
 import { Markdown } from "./Markdown";
@@ -18,7 +21,20 @@ interface Msg {
 const STORE_KEY = "agenttrust.guide.chat";
 const SEEN_KEY = "agenttrust.guide.seen";
 
+/**
+ * Off the demo pages, the guide talks about your own agent (the one whose page you're on, else your first): its
+ * verdict and the next thing to do. On the demo pages it walks the demo path.
+ */
+interface AgentHint {
+  agent_id: string;
+  name: string;
+  headline: string;
+  next: string | null;
+  status: string;
+}
+
 const PAGE_SUGGESTIONS: Array<[string, string[]]> = [
+  ["/agents/", ["Why can't this ship yet?", "What should I review first?", "How do I share this decision?"]],
   ["/review/taxonomy", ["How do I group my notes into failure modes?", "Why are seed categories only hypotheses?"]],
   ["/review/gold", ["What makes a trace gold?", "Dev vs held-out — what's the difference?"]],
   ["/review", ["Walk me through reviewing my first trace", "What should I write as the first failure?"]],
@@ -27,6 +43,7 @@ const PAGE_SUGGESTIONS: Array<[string, string[]]> = [
   ["/release", ["Why is my release blocked?", "What do I need for demo approval?"]],
   ["/start", ["Where should I begin?", "Explain the 5 stages"]],
   ["/connect", ["How do I connect Claude Code?", "What can the MCP tools do?"]],
+  ["/demo", ["Give me the 5-minute tour", "What does each page do?"]],
   ["/", ["Give me the 5-minute tour", "What does each page do?"]],
 ];
 
@@ -47,6 +64,7 @@ export function GuideAgent() {
   const [open, setOpen] = useState(false);
   const [seen, setSeen] = useState(true);
   const [steps, setSteps] = useState<DemoStep[] | null>(null);
+  const [agentHint, setAgentHint] = useState<AgentHint | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [mode, setMode] = useState<ModeData | null>(null);
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -56,6 +74,8 @@ export function GuideAgent() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  // Navigation can outrun these fetches: only the latest refresh may set the agent hint.
+  const hintSeq = useRef(0);
 
   // Restore chat + first-visit flag.
   useEffect(() => {
@@ -76,7 +96,27 @@ export function GuideAgent() {
     }
   }, [messages]);
 
+  const pathAgent = agentIdOf(pathname);
+  const demoPage = isDemoPath(pathname);
   const refresh = useCallback(() => {
+    const seq = ++hintSeq.current;
+    const pick: Promise<string | null> = pathAgent
+      ? Promise.resolve(pathAgent)
+      : demoPage
+        ? Promise.resolve(null)
+        : fetch("/api/agents", { cache: "no-store" })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((d: { agents?: Array<{ agent_id: string; example: boolean }> } | null) => d?.agents?.find((a) => !a.example)?.agent_id ?? null)
+            .catch(() => null);
+    pick
+      .then((id) => (id ? fetch(`/api/agents/${id}`, { cache: "no-store" }).then((r) => (r.ok ? (r.json() as Promise<AgentOverview>) : null)) : null))
+      .then((v) => {
+        if (seq !== hintSeq.current) return;
+        if (!v) return setAgentHint(null);
+        const verdict = verdictOf(v);
+        setAgentHint({ agent_id: v.agent.agent_id, name: v.agent.name, headline: verdict.headline, next: verdict.next?.text ?? null, status: v.gate.status });
+      })
+      .catch(() => seq === hintSeq.current && setAgentHint(null));
     fetch("/api/overview", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((o: OverviewData | null) => {
@@ -89,7 +129,7 @@ export function GuideAgent() {
       .then((r) => r.json())
       .then(setMode)
       .catch(() => undefined);
-  }, []);
+  }, [pathAgent, demoPage]);
 
   useEffect(() => {
     refresh();
@@ -176,7 +216,8 @@ export function GuideAgent() {
   const done = steps?.filter((s) => s.state === "done").length ?? 0;
   const next = steps ? nextStep(steps) : null;
   const live = mode?.mode === "live";
-  const mood = status ? moodFor(status) : "worried";
+  const shownStatus = agentHint?.status ?? status;
+  const mood = shownStatus ? moodFor(shownStatus) : "worried";
 
   return (
     <>
@@ -187,7 +228,7 @@ export function GuideAgent() {
         aria-expanded={open}
         aria-controls="guide-panel"
         className={cx(
-          "fixed bottom-5 right-5 z-40 flex items-center gap-3 rounded-full bg-slate-900 py-2.5 pl-3 pr-5 text-left text-white shadow-lg shadow-slate-900/20 ring-1 ring-white/10 transition hover:-translate-y-0.5 hover:bg-slate-800",
+          "fixed bottom-5 right-5 z-40 flex items-center gap-3 rounded-full bg-slate-900 py-2.5 pl-3 pr-5 text-left text-white shadow-lg shadow-slate-900/20 ring-1 ring-white/10 transition hover:-translate-y-0.5 hover:bg-slate-800 print:hidden",
           open && "pointer-events-none translate-y-2 opacity-0",
         )}
       >
@@ -199,7 +240,15 @@ export function GuideAgent() {
         <span>
           <span className="block text-sm font-semibold leading-tight">Ask the Guide</span>
           <span className="block text-[11px] leading-tight text-slate-300">
-            {next ? `Next: step ${next.n} · ${next.title}` : steps ? "All tracked steps done" : "How to use Evalxiety"}
+            {agentHint
+              ? agentHint.next
+                ? <span className="block max-w-56 truncate">Next: {agentHint.next}</span>
+                : agentHint.headline
+              : next
+                ? `Next: step ${next.n} · ${next.title}`
+                : steps
+                  ? "All tracked steps done"
+                  : "How to use Evalxiety"}
           </span>
         </span>
       </button>
@@ -212,7 +261,7 @@ export function GuideAgent() {
         id="guide-panel"
         aria-label="Evalxiety Guide"
         className={cx(
-          "fixed inset-y-0 right-0 z-50 flex w-full max-w-[440px] flex-col border-l border-slate-200 bg-white shadow-2xl transition-transform duration-300 ease-out",
+          "fixed inset-y-0 right-0 z-50 flex w-full max-w-[440px] flex-col border-l border-slate-200 bg-white shadow-2xl transition-transform duration-300 ease-out print:hidden",
           open ? "translate-x-0" : "pointer-events-none translate-x-full",
         )}
       >
@@ -250,8 +299,17 @@ export function GuideAgent() {
             </div>
           </div>
 
+          {agentHint && (
+            <div className="mt-4 rounded-lg bg-white/10 px-3 py-2 text-xs">
+              <div className="font-semibold text-white">
+                {agentHint.name}: {agentHint.headline}
+              </div>
+              {agentHint.next && <div className="mt-0.5 text-indigo-100">Next: {agentHint.next}</div>}
+            </div>
+          )}
+
           {/* Progress */}
-          {steps && (
+          {steps && !agentHint && (
             <div className="mt-4">
               <button type="button" onClick={() => setShowSteps((s) => !s)} className="flex w-full items-center justify-between text-xs">
                 <span className="font-medium text-indigo-100">
@@ -275,7 +333,7 @@ export function GuideAgent() {
           )}
         </header>
 
-        {steps && showSteps && (
+        {steps && showSteps && !agentHint && (
           <div className="max-h-[38%] shrink-0 overflow-y-auto border-b border-slate-200 bg-slate-50 px-3 py-2">
             <ol className="space-y-1">
               {steps.map((s) => {

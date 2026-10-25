@@ -16,7 +16,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <div className="flex min-w-0 flex-1 flex-col">
           <MockBanner />
           <main className="mx-auto w-full max-w-7xl flex-1 px-8 py-7">{children}</main>
-          <footer className="border-t border-slate-200 bg-white px-8 py-3 text-xs text-slate-500">
+          <footer className="border-t border-slate-200 bg-white px-8 py-3 text-xs text-slate-500 print:hidden">
             Evalxiety · results describe the test cases you ran, not a production certification.
           </footer>
         </div>

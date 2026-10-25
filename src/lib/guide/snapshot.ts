@@ -3,20 +3,60 @@
  * the app is in mock mode (or a live call can't be made).
  */
 import { overviewView } from "../services";
+import { loadAgents } from "../agents/config";
+import { agentOverview } from "../agents/services";
+import { verdictOf } from "../agents/report";
 import { getHeldoutState } from "../storage/repos";
 import { modeInfo, readLedger } from "../llm/client";
 import { demoSteps, type DemoStep } from "@/app/_overview/demoPath";
 import { nextStep } from "./next";
+import { agentIdOf, isDemoPath } from "./pages";
+
+export interface GuideAgentState {
+  agent_id: string;
+  name: string;
+  headline: string;
+  summary: string;
+  /** The single next thing to do on this agent, in plain words, or null when only the decision is left. */
+  next: string | null;
+  href: string;
+}
 
 export interface GuideState {
   mode: "live" | "mock";
   page: string;
   steps: DemoStep[];
+  /** The user's own agent the advice is about: the one whose page they're on, else (off the demo pages) their first. */
+  agent: GuideAgentState | null;
   text: string;
 }
 
+async function agentState(page: string): Promise<{ state: GuideAgentState; lines: string[] } | null> {
+  try {
+    const id = agentIdOf(page) ?? (isDemoPath(page) ? null : ((await loadAgents()).agents.find((a) => !a.config.example)?.agent_id ?? null));
+    if (!id) return null;
+    const view = await agentOverview(id);
+    const v = verdictOf(view);
+    const state: GuideAgentState = { agent_id: id, name: view.agent.name, headline: v.headline, summary: v.summary, next: v.next?.text ?? null, href: `/agents/${id}` };
+    const lines = [
+      `<agent_state> (the user's own agent: advise on THIS agent unless they ask about the pricing demo)`,
+      `Agent: ${view.agent.name} (agents/${id})${view.agent.example ? " — starter kit, practice data only" : ""}.`,
+      `Verdict: ${v.headline}. ${v.summary}`,
+      `Must fix: ${v.blockers.map((b) => b.text).join(" | ") || "nothing"}`,
+      `Still needed: ${v.todo.map((t) => t.text).join(" | ") || "nothing"}`,
+      `Worth knowing: ${v.notes.map((n) => n.text).join(" | ") || "nothing"}`,
+      `Reviewed answers: ${view.reviewed_trace_count} (at least ${view.agent.min_reviewed_traces} needed). Tests: ${view.runs.length}. Test cases: ${view.cases.length}.`,
+      `Next step: ${state.next ?? "a named person approves or rejects the release"}`,
+      `</agent_state>`,
+    ];
+    return { state, lines };
+  } catch {
+    return null;
+  }
+}
+
 export async function guideState(page: string): Promise<GuideState> {
-  const [o, ledger, heldout] = await Promise.all([overviewView(), readLedger(), getHeldoutState()]);
+  const [o, ledger, heldout, agent] = await Promise.all([overviewView(), readLedger(), getHeldoutState(), agentState(page)]);
   const info = modeInfo();
   const steps = demoSteps(o);
   const text = [
@@ -32,13 +72,16 @@ export async function guideState(page: string): Promise<GuideState> {
     `Demo path:`,
     ...steps.map((s) => `  ${s.n}. [${s.state}] ${s.title} (${s.href}) — ${s.detail}`),
     `</app_state>`,
+    ...(agent?.lines ?? []),
   ].join("\n");
-  return { mode: info.mode, page, steps, text };
+  return { mode: info.mode, page, steps, agent: agent?.state ?? null, text };
 }
 
 const PAGE_HELP: Record<string, string> = {
   "/start":
     "**Start here** shows the 5-stage path (Run → Review → Define what good means → Check automatically → Compare and ship), what to improve next based on your data, how to bring your own agent, and a glossary.",
+  "/agents/": "**Your agent's page** puts the answer first: a plain-language verdict (can the new version ship?), what got fixed and what got worse, and what's still needed, each with a link to where you do it. Below it are the full checklist, adding tests, your reviews, the rules, the AI reviewer and the test cases. **Release report** turns it into a one-page summary you can print or paste.",
+  "/demo": "**Dashboard** (pricing demo) compares Baseline and Corrected side by side: headline numbers as *baseline → corrected*, eval trends across runs, two bars per check, what changed, and how far you are through the pipeline.",
   "/": "**Dashboard** compares Baseline and Corrected side by side: headline numbers as *baseline → corrected*, eval trends across runs, two bars per check (Baseline grey, Corrected blue), what changed, and how far you are through the pipeline.",
   "/review":
     "**Review traces** is where you run a case and judge it yourself. A *trace* is one recorded run of the agent. Pick a case and config, run it, open the trace, then answer the 5-question checklist (✓ / ✗ / ?), mark Pass or Fail, and on Fail add one line on the first failure plus a severity.",
@@ -66,9 +109,11 @@ function pageHelp(page: string): string {
 export function mockReply(question: string, state: GuideState, why: string): string {
   const q = question.toLowerCase();
   const next = nextStep(state.steps);
-  const nextLine = next
-    ? `**Next step (${next.n}/9): ${next.title}** — ${next.detail} → [Go there](${next.href})`
-    : "You've completed every tracked step. Review the [Release Gate](/release) and its limitations.";
+  const nextLine = state.agent
+    ? `**${state.agent.name}: ${state.agent.headline}.** ${state.agent.next ? `Next: ${state.agent.next}` : "Only the decision is left."} → [Open ${state.agent.name}](${state.agent.href})`
+    : next
+      ? `**Next step (${next.n}/9): ${next.title}** — ${next.detail} → [Go there](${next.href})`
+      : "You've completed every tracked step. Review the [Release Gate](/release) and its limitations.";
 
   let body: string;
   if (/(own|my) agent|evaluate (my|an?|your)/.test(q)) {
@@ -81,7 +126,7 @@ export function mockReply(question: string, state: GuideState, why: string): str
       "5. Check any LLM judge against human labels (TPR/TNR), then confirm on held-out data.",
       "6. Compare old vs. new agent on the same frozen cases; look for regressions.",
       "7. Set release rules up front and require a named human sign-off.",
-      "Then open [Your agents](/agents): try the starter kit, then `cp -r agents/_template agents/<your-agent>`, add your cases to `cases.jsonl`, and either import the file `run-my-agent.mjs` writes or add a `\"connection\": {\"type\": \"http\", \"url\": \"...\"}` block to `agent.json`. Guide: `docs/use-your-agent.md`.",
+      "Then open [Your agents](/agents) and click **Connect your agent**: name it, test its endpoint (or choose to upload its answers), keep the suggested rules and paste your test questions. Then add a test of the version you ship today, review its answers, add your new version, and read the verdict at the top of the agent's page. Guide: `docs/use-your-agent.md`.",
     ].join("\n");
   } else if (/page|here|this tab|what is this/.test(q)) {
     body = `${pageHelp(state.page)}\n\n${nextLine}`;

@@ -5,8 +5,9 @@
 Evalxiety tests an AI agent before you ship it. It runs the agent on test cases, has a human review the answers,
 checks the evidence, and refuses to say "ship it" until the evidence holds up.
 
-I built it in one day for a Claude hackathon. The agent under test is a Claude-powered **merchant pricing agent** working
-on synthetic business data. Want it running in 30 seconds? Skip to [Run it](#run-it).
+I built it in one day for a Claude hackathon. The built-in example is a Claude-powered **merchant pricing agent** working
+on synthetic business data, and you can [connect your own agent](#use-it-on-your-own-agent) the same way. Want it
+running in 30 seconds? Skip to [Run it](#run-it).
 
 ![Evalxiety dashboard: "Absolutely not shipping this."](docs/screenshots/dashboard.png)
 
@@ -63,8 +64,12 @@ Evalxiety follows the eval method from Hamel Husain and Shreya Shankar:
   or Opus as the judge model, and each one is calibrated separately.
 - **Credit controls.** Mock mode by default, cached responses (re-runs are free), a spend cap, and confirmation before
   paid batches. Held-out cases stay locked until an audited, irreversible reveal.
+- **A verdict in plain words, and a report to share.** Your agent's page opens with what got fixed, what got worse and
+  what's still needed. **Release report** turns that into one page you can print, save as PDF or paste into a doc.
 
 ## Run it
+
+You need [Node.js](https://nodejs.org) 22.12 or newer (24 works too).
 
 ```bash
 npm install
@@ -84,6 +89,23 @@ at another port. Then:
 claude mcp add evalxiety -- node /absolute/path/to/mcp/server.mjs
 ```
 
+## Use it on your own agent
+
+No code is needed if your agent already has an HTTP endpoint.
+
+1. Start the app (above) and click **Connect your agent** in the sidebar. Name it, paste its URL and one sample
+   question, and click **Test connection**. Evalxiety shows the reply and suggests starter rules.
+2. Paste 10–30 real questions your agent gets, one per line. Every fifth one is kept back as a final exam that stays
+   locked while you improve the agent.
+3. On the agent's page, test the version you ship today, then your change, and review the answers yourself.
+4. Read the verdict at the top: what got fixed, what got worse, and what's still needed before anyone can approve.
+   **Release report** gives you a one-page summary.
+
+No endpoint? Choose **I'll upload its traces** and import a file with one JSON line per answer instead. Once you've
+connected an agent, home opens on your agents; the pricing demo stays under **Learn on the demo**. The full guide,
+including the file formats and everything the release decision checks, is
+[docs/use-your-agent.md](docs/use-your-agent.md).
+
 The project was called AgentTrust during the hackathon. That name survives in the package name, the `AGENTTRUST_URL`
 variable and some internal docs.
 
@@ -99,8 +121,9 @@ Protocol SDK · local JSON storage. Built with Claude Code.
   production reliability.
 - **The AI judge is uncalibrated.** It has 3 human labels against a 30-per-class minimum, so treat its verdicts as
   unvalidated.
-- **Only the built-in pricing agent is supported today.** Next steps are trace import, an HTTP adapter for your own
-  agent, and a CI gate command.
+- **Your own agent's answers need a set format.** Over HTTP, the endpoint must accept `{"case_id", "input"}`; a file
+  needs one JSON line per answer. Still to come: spreadsheet import, editing test cases and rules in the app, and a CI
+  command that fails a build on No ship.
 
 ## Credits
 

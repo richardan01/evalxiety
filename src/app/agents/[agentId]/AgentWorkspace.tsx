@@ -1,8 +1,9 @@
 "use client";
 
 /**
- * One agent's workspace: release gate first (the answer), then the steps that feed it — add runs, compare,
- * review, checks, judge, cases. The candidate/baseline selection lives in the URL so links are shareable.
+ * One agent's workspace: the verdict in plain words first (the answer), then the checklist behind it and the steps
+ * that feed it — add tests, compare, review, rules, AI reviewer, test cases. The new/current version selection lives
+ * in the URL so links are shareable. Each section has an anchor the verdict's "do this next" links point at.
  */
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -11,6 +12,7 @@ import { getJSON } from "@/lib/client/api";
 import { Button, Callout, ExampleBadge, PageHeader, StatusPill } from "@/components/ui";
 import { AddRun } from "./AddRun";
 import { CasesCard, ChecksCard, CompareCard, GateCard, JudgeCard, ReviewCard, RunsCard } from "./sections";
+import { VerdictCard } from "./VerdictCard";
 import type { AgentOverview } from "../types";
 
 export interface Selection {
@@ -103,19 +105,39 @@ export function AgentWorkspace({ agentId, candidate, baseline }: { agentId: stri
       />
       {view.agent.example && (
         <Callout tone="amber" title="This is the starter kit">
-          Its traces come from a toy rule-based bot, so the gate will never say &quot;Ready&quot;. Use it to learn the flow, then start your own agent from the
-          blank template: <code>cp -r agents/_template agents/my-agent</code>. Don&apos;t copy this folder: its checks, judge and URL are for the toy bot.
+          Its answers come from a toy rule-based bot, so it can never be approved. Use it to learn the flow, then{" "}
+          <Link href="/agents?connect=1" className="font-medium text-amber-950 underline">
+            connect your own agent
+          </Link>
+          . Don&apos;t copy this folder: its rules, AI reviewer and URL are for the toy bot.
         </Callout>
       )}
       <div className="mt-4 space-y-4">
-        <GateCard view={view} url={{ candidate, baseline }} onSelect={select} onChanged={refresh} />
-        <AddRun view={view} onDone={refresh} />
-        <RunsCard view={view} url={{ candidate, baseline }} onSelect={select} onChanged={refresh} />
-        <CompareCard view={view} />
-        <ReviewCard view={view} />
-        <ChecksCard view={view} />
-        <JudgeCard view={view} onChanged={refresh} />
-        <CasesCard view={view} onChanged={refresh} />
+        <VerdictCard view={view} />
+        <div id="checklist" className="scroll-mt-4">
+          <GateCard view={view} url={{ candidate, baseline }} onSelect={select} onChanged={refresh} />
+        </div>
+        <div id="add-run" className="scroll-mt-4">
+          <AddRun view={view} onDone={refresh} />
+        </div>
+        <div id="runs" className="scroll-mt-4">
+          <RunsCard view={view} url={{ candidate, baseline }} onSelect={select} onChanged={refresh} />
+        </div>
+        <div id="compare" className="scroll-mt-4">
+          <CompareCard view={view} />
+        </div>
+        <div id="review" className="scroll-mt-4">
+          <ReviewCard view={view} />
+        </div>
+        <div id="rules" className="scroll-mt-4">
+          <ChecksCard view={view} />
+        </div>
+        <div id="judge" className="scroll-mt-4">
+          <JudgeCard view={view} onChanged={refresh} />
+        </div>
+        <div id="cases" className="scroll-mt-4">
+          <CasesCard view={view} onChanged={refresh} />
+        </div>
       </div>
     </div>
   );

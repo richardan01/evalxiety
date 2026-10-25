@@ -278,15 +278,15 @@ export function AgentWizard({ onCreated, onCancel }: { onCreated: () => void; on
           </div>
         ) : (
           <p className="mt-2 text-xs text-slate-500">
-            After it&apos;s created, use <span className="font-medium">Add a run → Import</span> on the agent&apos;s page. <code>agents/_template/run-my-agent.mjs</code> shows the
+            After it&apos;s created, use <span className="font-medium">Add a test → Import a file</span> on the agent&apos;s page. <code>agents/_template/run-my-agent.mjs</code> shows the
             JSONL format.
           </p>
         )}
       </Step>
 
-      <Step n={3} title="Checks to start with" done={tested && keptChecks.length > 0}>
+      <Step n={3} title="Rules to start with" done={tested && keptChecks.length > 0}>
         {mode === "http" && !test ? (
-          <p className="text-xs text-slate-500">Test the connection and Evalxiety suggests checks that fit your agent&apos;s reply.</p>
+          <p className="text-xs text-slate-500">Test the connection and Evalxiety suggests rules (automatic checks) that fit your agent&apos;s reply.</p>
         ) : (
           <>
             <ul className="space-y-1.5">

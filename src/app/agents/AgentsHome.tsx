@@ -8,10 +8,10 @@ import { Badge, Button, Callout, Card, EmptyState, ExampleBadge, PageHeader, Sta
 import { AgentWizard } from "./AgentWizard";
 import type { AgentsListView } from "./types";
 
-export function AgentsHome() {
+export function AgentsHome({ openWizard = false }: { openWizard?: boolean }) {
   const [view, setView] = useState<AgentsListView | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [wizard, setWizard] = useState(false);
+  const [wizard, setWizard] = useState(openWizard);
   const [reload, setReload] = useState(0);
 
   useEffect(() => {
@@ -30,11 +30,11 @@ export function AgentsHome() {
     <div>
       <PageHeader
         title="Your agents"
-        question="Evaluate any agent: import its runs, or let Evalxiety call it over HTTP."
+        question="Find out whether a change to your agent is safe to ship: test it, review its answers, and get a decision you can defend."
         info={
           <>
-            Each agent is a folder: <code>agents/&lt;id&gt;/agent.json</code> (checks, judge question, optional HTTP endpoint) and{" "}
-            <code>cases.jsonl</code> (test cases). The built-in pricing agent lives in the other tabs.
+            Each agent is a folder: <code>agents/&lt;id&gt;/agent.json</code> (rules, AI reviewer question, optional HTTP endpoint) and{" "}
+            <code>cases.jsonl</code> (test cases). The built-in pricing demo lives under &quot;Learn on the demo&quot; in the sidebar.
           </>
         }
         action={!wizard && <Button onClick={() => setWizard(true)}>+ Connect your agent</Button>}
@@ -46,8 +46,8 @@ export function AgentsHome() {
       )}
       {!wizard && view && ownAgents === 0 && (
         <Callout tone="blue" title="Bring your own agent">
-          Only the starter kit is here so far. <button type="button" onClick={() => setWizard(true)} className="font-medium text-sky-800 underline">Connect your agent</button> to
-          test its endpoint, pick starter checks and paste test cases. It takes about 3 minutes.
+          Only the starter kit (a practice agent) is here so far. <button type="button" onClick={() => setWizard(true)} className="font-medium text-sky-800 underline">Connect your agent</button> to
+          test its endpoint, pick starter rules and paste test questions. It takes about 3 minutes.
         </Callout>
       )}
       {error && <Callout tone="red" title="Couldn't load agents">{error}</Callout>}
@@ -82,11 +82,11 @@ export function AgentsHome() {
             {a.description && <p className="mt-2 line-clamp-2 text-sm text-slate-600">{a.description}</p>}
             <div className="mt-3 flex flex-wrap gap-1.5">
               <Badge>{a.cases} cases</Badge>
-              <Badge>{a.checks} code checks</Badge>
-              <Badge>{a.runs} runs</Badge>
-              <Badge>{a.reviewed} reviewed</Badge>
+              <Badge>{a.checks} rules</Badge>
+              <Badge>{a.runs} tests</Badge>
+              <Badge>{a.reviewed} answers reviewed</Badge>
               {a.has_connection && <Badge tone="blue">HTTP</Badge>}
-              {a.has_judge && <Badge tone="purple">judge</Badge>}
+              {a.has_judge && <Badge tone="purple">AI reviewer</Badge>}
             </div>
           </Link>
         ))}
