@@ -12,6 +12,8 @@ const SECURITY_HEADERS = [
 ];
 
 const nextConfig: NextConfig = {
+  // The npm package (`npx evalxiety`) ships a prebuilt, self-contained server: scripts/build-npm.mjs sets this.
+  ...(process.env.EVALXIETY_STANDALONE === "1" ? { output: "standalone" as const } : {}),
   async headers() {
     return [{ source: "/:path*", headers: SECURITY_HEADERS }];
   },

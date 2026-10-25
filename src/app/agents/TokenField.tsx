@@ -54,7 +54,8 @@ export function TokenField({ agentId, suffix = "TOKEN", saved, onSaved }: { agen
       </div>
       {error && <div className="text-xs text-rose-700">{error}</div>}
       <div className="text-[11px] text-slate-500">
-        Stored in <code>data/private</code> (never committed, never shown again) as <code>{name}</code>. Prefer files? Set it in <code>.env.local</code> instead and
+        Stored on this computer in the app&apos;s private data folder (never committed, never shown again) as <code>{name}</code>. Prefer a file? Put{" "}
+        <code>{name}=…</code> in <code>.env.local</code> (or <code>settings.env</code> in your Evalxiety folder, if you started it with <code>npx evalxiety</code>) and
         restart the app.
       </div>
     </div>

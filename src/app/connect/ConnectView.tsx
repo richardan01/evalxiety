@@ -10,9 +10,12 @@ import { getJSON, postJSON } from "@/lib/client/api";
 import { Badge, Button, Callout, Card, InfoTip, MockBadge, PageHeader, cx } from "@/components/ui";
 
 interface ConnectData {
+  /** npx = started with `npx evalxiety`; repo = a clone (npm run dev). */
+  launcher: "npx" | "repo";
   server_path: string;
   server_exists: boolean;
-  node_path: string;
+  /** What starts the MCP server: node + mcp/server.mjs in a clone, npx -y evalxiety mcp otherwise. */
+  command: { command: string; args: string[] };
   sdk_installed: boolean;
   api_base_url: string;
   tools: Array<{ name: string; description: string }>;
@@ -32,8 +35,8 @@ function desktopSnippet(d: ConnectData): string {
     {
       mcpServers: {
         evalxiety: {
-          command: d.node_path,
-          args: [d.server_path],
+          command: d.command.command,
+          args: d.command.args,
           env: { AGENTTRUST_URL: d.api_base_url },
         },
       },
@@ -44,7 +47,9 @@ function desktopSnippet(d: ConnectData): string {
 }
 
 // Pass the URL the app is really on: the MCP server otherwise assumes port 3123.
-const codeCommand = (d: ConnectData) => `claude mcp add evalxiety -e AGENTTRUST_URL=${d.api_base_url} -- node ${d.server_path}`;
+const codeCommand = (d: ConnectData) =>
+  `claude mcp add evalxiety -e AGENTTRUST_URL=${d.api_base_url} -- ${d.launcher === "npx" ? "npx -y evalxiety mcp" : `node ${d.server_path}`}`;
+const runCommand = (d: ConnectData | null) => (d?.launcher === "npx" ? "npx evalxiety" : "npm run dev");
 
 function CopyButton({ text }: { text: string }) {
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
@@ -214,7 +219,7 @@ function AiConnectionCard({ onChange }: { onChange: () => void }) {
           Your AI
           <InfoTip>
             Evalxiety runs the agent under test and the AI judge with <em>your</em> Claude API key, so usage is billed to
-            your own API credit. The key is stored on this machine only (data/private, git-ignored) and is never shown
+            your own API credit. The key is stored on this machine only (in the app&apos;s private data folder, never committed) and is never shown
             again or sent anywhere except Anthropic.
           </InfoTip>
         </span>
@@ -304,7 +309,9 @@ export function ConnectView() {
         <Callout tone="red" title="MCP server not found">Expected at {data.server_path}.</Callout>
       )}
       {data && data.server_exists && !data.sdk_installed && (
-        <Callout tone="amber" title="MCP SDK missing">Run npm install in the Evalxiety folder.</Callout>
+        <Callout tone="amber" title="MCP SDK missing">
+          {data.launcher === "npx" ? "Run npx evalxiety mcp once in a terminal: npx installs it." : "Run npm install in the Evalxiety folder."}
+        </Callout>
       )}
 
       <AiConnectionCard onChange={() => void loadConnect()} />
@@ -318,8 +325,8 @@ export function ConnectView() {
               Claude Desktop
               <InfoTip>
                 Merge the <code>evalxiety</code> entry into <code>mcpServers</code> if the file already has other
-                servers. The command is the absolute path of node because Claude Desktop does not use your shell PATH.
-                Evalxiety must be running (<code>npm run dev</code>) when you ask.
+                servers. The command is an absolute path because Claude Desktop does not use your shell PATH.
+                Evalxiety must be running (<code>{runCommand(data)}</code>) when you ask.
               </InfoTip>
             </span>
           }

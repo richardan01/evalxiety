@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The npm package build (a copy of the built app) and the app's working data.
+    "dist/**",
+    ".data/**",
   ]),
 ]);
 

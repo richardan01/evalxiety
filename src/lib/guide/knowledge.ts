@@ -53,7 +53,7 @@ The sidebar puts "Your agents" first (each of the user's own agents by name, "Al
 # Costs and modes
 - MOCK mode: a deterministic fake agent/judge, free, always labelled MOCK, never counts as release evidence.
 - LIVE mode: real Claude calls. Roughly $0.07 per agent call and $0.045 per judge call; re-running an identical case is served from cache for free. Multi-case batches ask for confirmation, and a spend cap blocks calls beyond LIVE_SPEND_CAP_USD.
-- To switch modes the user edits .env.local (MOCK_MODE=false plus ANTHROPIC_API_KEY) and restarts \`npm run dev\`.
+- To switch to live mode, the user connects an API key on the [Connect](/connect) page (no restart), or sets MOCK_MODE=false plus ANTHROPIC_API_KEY in .env.local and restarts \`npm run dev\`. Started with \`npx evalxiety\`, that file is settings.env in their Evalxiety folder (~/Evalxiety by default; \`npx evalxiety where\` prints it), and they restart \`npx evalxiety\`.
 
 # Evaluating your own agent (teach this when asked)
 The method transfers, and the app supports it: [Your agents](/agents). Explain the method first, then where it plugs in:

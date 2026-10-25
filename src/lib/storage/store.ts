@@ -8,8 +8,12 @@ import path from "node:path";
 import crypto from "node:crypto";
 import type { z } from "zod";
 
+/**
+ * Where the app reads and writes. Default: .data/, the working copy `npm run dev` makes from the tracked data/ (see
+ * scripts/seed-data.mjs), so using the app never changes tracked files. `npx evalxiety` points it at ~/Evalxiety/data.
+ */
 export function dataDir(): string {
-  return process.env.EVALXIETY_DATA_DIR || process.env.AGENTTRUST_DATA_DIR || path.join(/*turbopackIgnore: true*/ process.cwd(), "data");
+  return process.env.EVALXIETY_DATA_DIR || process.env.AGENTTRUST_DATA_DIR || path.join(/*turbopackIgnore: true*/ process.cwd(), ".data");
 }
 
 function abs(rel: string): string {

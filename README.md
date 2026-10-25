@@ -73,7 +73,18 @@ Evalxiety follows the eval method from Hamel Husain and Shreya Shankar:
 
 ## Run it
 
-You need [Node.js](https://nodejs.org) 22.12 or newer (24 works too).
+You need [Node.js](https://nodejs.org) 22.12 or newer (24 works too). Then one command, no clone:
+
+```bash
+npx evalxiety
+```
+
+It opens in your browser, on this computer only (127.0.0.1). Your agents, tests and reviews live in `~/Evalxiety`
+(`npx evalxiety where` prints the folders; `--data <folder>` uses another one). The demo and the starter kit are in it
+on the first run. Nothing calls the Claude API until you connect a key on the **Connect** page. `npx evalxiety --help`
+lists the rest: the MCP connection, the offline checker and the starter kit's toy agent.
+
+**From a clone,** to change the code:
 
 ```bash
 npm install
@@ -83,14 +94,16 @@ npm test                      # Vitest suite
 ```
 
 This repo includes the data from my live run, so the dashboard, experiments and release gate show real results
-immediately. For live Claude calls, set `MOCK_MODE=false` and `ANTHROPIC_API_KEY` in `.env.local`.
-`LIVE_SPEND_CAP_USD` caps spend.
+immediately. The first `npm run dev` copies it from `data/` to `.data/` (git-ignored), and the app only ever writes
+there: delete `.data/` to reset the demo. For live Claude calls, connect a key on the **Connect** page, or set
+`MOCK_MODE=false` and `ANTHROPIC_API_KEY` in `.env.local`. `LIVE_SPEND_CAP_USD` caps spend.
 
-To connect Claude Code over MCP (read-only, no spend), keep the app running on port 3123, or point `AGENTTRUST_URL`
-at another port. Then:
+To connect Claude Code over MCP (read-only, no spend), keep the app running. The **Connect** page shows the exact
+command for your setup:
 
 ```bash
-claude mcp add evalxiety -- node /absolute/path/to/mcp/server.mjs
+claude mcp add evalxiety -e AGENTTRUST_URL=http://127.0.0.1:3123 -- npx -y evalxiety mcp     # with npx
+claude mcp add evalxiety -- node /absolute/path/to/mcp/server.mjs                              # from a clone
 ```
 
 ## Use it on your own agent

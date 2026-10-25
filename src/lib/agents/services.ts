@@ -5,6 +5,7 @@
 import { calibrationReport, MIN_PER_CLASS, type CalibrationPair } from "../metrics/calibration";
 import { summarizeRun, type CaseEvaluation, passAll, type RunSummary } from "../metrics/experiments";
 import { modeInfo } from "../llm/client";
+import { launcher } from "../launcher";
 import { newId, sha256 } from "../storage/store";
 import type { DeterministicResult, ReleaseApproval } from "../domain/schemas";
 import { judgeCallEstimate } from "../experiments/runner";
@@ -393,6 +394,8 @@ export async function agentOverview(agentId: string, opts: { candidate?: string 
     failure_types: failureTypes(l.annotations),
     reviewed_trace_count: new Set(l.annotations.map((a) => a.trace_id)).size,
     mode: modeInfo().mode,
+    /** How this copy was started, so instructions name the right commands and settings file. */
+    launcher: launcher(),
   };
 }
 
