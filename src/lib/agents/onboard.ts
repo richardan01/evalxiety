@@ -13,6 +13,7 @@ import path from "node:path";
 import { z } from "zod";
 import { agentsDir, parseAgentConfig, parseCases } from "./config";
 import { agentEnvPrefix, assertSafeConnection, callAgent, resolveHeaders } from "./http";
+import { agentEnv } from "./secrets";
 import { AgentId, CheckConfig, HttpConnection, type AgentConfig } from "./schemas";
 import { suggestChecks } from "./suggest";
 
@@ -60,7 +61,7 @@ export const TestBody = z.object({
 export async function testConnection(body: z.infer<typeof TestBody>, fetchImpl: typeof fetch = fetch) {
   const conn = HttpConnection.parse({ type: "http", url: body.connection.url, timeout_ms: body.connection.timeout_ms, headers: connectionHeaders(body.agent_id, body.connection.auth) });
   assertSafeConnection(body.agent_id, conn.url, conn.headers);
-  const { headers, secrets } = resolveHeaders(conn.headers);
+  const { headers, secrets } = resolveHeaders(conn.headers, agentEnv());
   const result = await callAgent(conn, { case_id: "wizard-test", input: body.sample_input, split: "dev" }, headers, fetchImpl, { secrets });
   return {
     result: { output: result.output, evidence: result.evidence, model_id: result.model_id, latency_ms: Math.round(result.latency_ms), error: result.error },

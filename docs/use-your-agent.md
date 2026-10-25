@@ -197,6 +197,28 @@ Two ways, and you can mix them:
 - **Import** fits if you already log your agent's runs, or it's easier to call it from your own code.
 - **HTTP** fits if your agent has (or can get) an endpoint, so Evalxiety calls it for you on every run.
 
+#### Import a spreadsheet
+
+If your agent's answers are already in a sheet (an export from your logs, or answers collected by hand), upload it on
+the agent page under **Add a test → Import a file**, or paste the cells straight from Google Sheets or Excel with the
+header row. CSV, tab-separated and semicolon-separated files all work.
+
+- **Pick the answer column**, then how to match each row to a test case: by **question text** (ignoring capitals and
+  extra spaces) or by a **case id** column.
+- **Final-exam rows are left out** while those cases are locked, and the import says how many. Nothing about them is
+  saved.
+- **All or nothing:** a row whose question matches no test case (or more than one) is listed with its line number,
+  and nothing is imported until it's fixed. **Check file** shows this without saving.
+- **Where the answer goes:** if your rules read a field (say `answer`, as the wizard's rules do when your endpoint
+  replies with `{"answer": ...}`), the import stores each answer in that field, so spreadsheet answers and HTTP answers
+  have the same shape. Choose **plain text** if your agent replies with plain text. Import every version the same way,
+  or a difference in format shows up as a fix or a regression.
+- For evidence, tool calls, cost or errors per answer, use a JSONL file (below).
+
+The wizard takes a spreadsheet too, for your test questions: **Upload a spreadsheet (CSV)** in step 4, then pick the
+question column and, optionally, columns for what each case tests and an expected answer (shown to reviewers, and
+stored as `expected.answer` for a `matches_expected` rule).
+
 #### Import a file
 
 Edit `callMyAgent()` in `agents/my-agent/run-my-agent.mjs` to call your agent: import your code, call your
@@ -261,7 +283,7 @@ Add a connection to `agent.json`:
 }
 ```
 
-Leave out `headers` if your endpoint needs no auth; if you keep it, set the variable in `.env.local` first. Your
+Leave out `headers` if your endpoint needs no auth; if you keep it, save the token first (see **Secrets** below). Your
 endpoint must accept the body `{"case_id": ..., "input": {...}}`. If it has its own request format, use **Import** and
 call it from `callMyAgent()` instead.
 
@@ -284,7 +306,10 @@ Each of these is recorded on its case as an error, and the run carries on:
 - a reply over 2 MB.
 
 **Secrets.**
-- **Where they live:** put secrets in `.env.local` and refer to them in header values as `${env:NAME}`.
+- **Where they live:** header values refer to secrets as `${env:NAME}`. Either paste the token in the app (the wizard,
+  or the **Your agent's token is missing** box under **Add a test**), which saves it in `data/private/agent-secrets.json`
+  (git-ignored, readable only by you, never shown again), or set it in `.env.local` and restart the app. A token saved
+  in the app wins over the same name in `.env.local`.
 - **Allowed names:** NAME must be `EVALXIETY_AGENT_<AGENT_ID>_<SUFFIX>`.
   - `<AGENT_ID>` is the folder name in capitals with `_` for `-`.
   - `<SUFFIX>` is capital letters and digits only.
@@ -448,6 +473,5 @@ output trigger.
 ## Not built yet
 
 - A CI command that fails a build on No ship.
-- Importing a spreadsheet (CSV) of questions and answers.
 - Deleting runs, or editing cases, checks or the judge question in the app. The wizard creates a new agent's files;
   after that they are files you review like code.

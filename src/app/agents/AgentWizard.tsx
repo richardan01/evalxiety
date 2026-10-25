@@ -1,16 +1,20 @@
 "use client";
 
 /**
- * "Connect your agent" wizard: name it, test its endpoint once, keep the suggested checks, paste test cases, and the
- * server writes a new agents/<id>/ folder. Nothing is created until the last step.
+ * "Connect your agent" wizard: name it, test its endpoint once (pasting its token if it needs one), keep the suggested
+ * checks, paste test questions or upload a spreadsheet of them, and the server writes a new agents/<id>/ folder.
+ * Nothing is created until the last step except a pasted token, which is saved so the test call can use it.
  */
 import Link from "next/link";
 import { useMemo, useState, type ReactNode } from "react";
 import { postJSON } from "@/lib/client/api";
 import type { CheckConfig } from "@/lib/agents/schemas";
 import { suggestChecks } from "@/lib/agents/suggest";
+import { casesFromTable, guessColumn, parseTable, QUESTION_WORDS, type Table } from "@/lib/agents/csv";
 import { Badge, Button, Callout, Card, InfoTip, cx } from "@/components/ui";
 import { inputCls } from "./[agentId]/shared";
+import { ColumnSelect } from "./ColumnSelect";
+import { envNameFor, TokenField } from "./TokenField";
 
 interface TestResponse {
   result: { output: unknown; evidence: Array<{ id: string; text: string }>; model_id: string | null; latency_ms: number; error: string | null };
@@ -31,8 +35,6 @@ const slugify = (s: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 64);
-
-const envName = (id: string) => `EVALXIETY_AGENT_${id.toUpperCase().replace(/-/g, "_")}_TOKEN`;
 
 function parseSample(text: string): { value: unknown; error: string | null } {
   try {
@@ -99,6 +101,11 @@ export function AgentWizard({ onCreated, onCancel }: { onCreated: () => void; on
 
   const [casesText, setCasesText] = useState("");
   const [holdout, setHoldout] = useState(true);
+  // A spreadsheet of questions, when uploaded, replaces the typed list.
+  const [sheet, setSheet] = useState<{ table: Table; question: number | null; notes: number | null; expected: number | null } | null>(null);
+  const [sheetError, setSheetError] = useState<string | null>(null);
+  // The agent id a token was saved for (saving is keyed to the id, so renaming the agent needs a new save).
+  const [tokenSavedFor, setTokenSavedFor] = useState<string | null>(null);
 
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
@@ -115,9 +122,28 @@ export function AgentWizard({ onCreated, onCancel }: { onCreated: () => void; on
   const checks: CheckConfig[] = mode === "http" ? (test?.suggested_checks ?? []) : suggestChecks(null);
   const keptChecks = mode === "http" ? checks.filter((c) => keep.has(c.id)) : checks;
 
-  const caseLines = casesText.split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("//"));
-  const isJsonl = caseLines.length > 0 && caseLines.every((l) => l.startsWith("{"));
-  const heldoutCount = !isJsonl && holdout && caseLines.length >= 5 ? Math.floor(caseLines.length / 5) : 0;
+  const fromSheet = sheet && sheet.question !== null ? casesFromTable(sheet.table, { question: sheet.question, notes: sheet.notes, expected: sheet.expected, input_key: inputKey, holdout }) : null;
+  const effectiveCases = sheet ? (fromSheet?.jsonl ?? "") : casesText;
+  const caseLines = effectiveCases.split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("//"));
+  const isJsonl = !sheet && caseLines.length > 0 && caseLines.every((l) => l.startsWith("{"));
+  const heldoutCount = fromSheet ? fromSheet.heldout : !isJsonl && holdout && caseLines.length >= 5 ? Math.floor(caseLines.length / 5) : 0;
+
+  const onSheet = async (f: File | undefined) => {
+    if (!f) return;
+    setSheetError(null);
+    try {
+      const table = parseTable(await f.text());
+      setSheet({
+        table,
+        question: guessColumn(table.header, QUESTION_WORDS) ?? 0,
+        notes: guessColumn(table.header, /note|tests|why|scenario|category/i),
+        expected: guessColumn(table.header, /expected|ideal|reference|correct|gold/i),
+      });
+    } catch (e) {
+      setSheet(null);
+      setSheetError(e instanceof Error ? e.message : String(e));
+    }
+  };
 
   // A test only counts for the exact id, endpoint and sample it ran with.
   const testKey = JSON.stringify({ id, connection, sample: sample.value });
@@ -151,7 +177,7 @@ export function AgentWizard({ onCreated, onCancel }: { onCreated: () => void; on
           description: description.trim(),
           connection,
           checks: keptChecks,
-          cases_text: casesText,
+          cases_text: effectiveCases,
           input_key: inputKey,
           holdout,
         }),
@@ -171,10 +197,10 @@ export function AgentWizard({ onCreated, onCancel }: { onCreated: () => void; on
           Wrote <code className="font-mono text-xs">agents/{created.agent_id}/</code> with {created.cases} cases ({created.heldout} held out) and {created.checks}{" "}
           checks. Edit those files any time to refine them.
         </p>
-        {created.token_env && (
+        {created.token_env && tokenSavedFor !== created.agent_id && (
           <Callout tone="amber" title="One more step: add the token">
-            Put your agent&apos;s token in <code>.env.local</code> as <code>{created.token_env}=…</code>, then restart the app. The token is never stored in
-            agent.json.
+            <p className="mb-2">Paste your agent&apos;s token. It&apos;s never written into agent.json.</p>
+            <TokenField agentId={created.agent_id} onSaved={() => setTokenSavedFor(created.agent_id)} />
           </Callout>
         )}
         <div className="mt-3 flex gap-2">
@@ -221,7 +247,7 @@ export function AgentWizard({ onCreated, onCancel }: { onCreated: () => void; on
           {(["http", "import"] as const).map((m) => (
             <label key={m} className="flex items-center gap-1.5">
               <input type="radio" checked={mode === m} onChange={() => setMode(m)} />
-              {m === "http" ? "It has an HTTP endpoint" : "I'll upload its traces (JSONL)"}
+              {m === "http" ? "It has an HTTP endpoint" : "I'll upload its answers (spreadsheet or JSONL)"}
             </label>
           ))}
         </div>
@@ -247,10 +273,14 @@ export function AgentWizard({ onCreated, onCancel }: { onCreated: () => void; on
                   <input value={authName} onChange={(e) => setAuthName(e.target.value)} className={cx(inputCls, "w-36 font-mono text-xs")} />
                   value
                   <input value={authPrefix} onChange={(e) => setAuthPrefix(e.target.value)} className={cx(inputCls, "w-20 font-mono text-xs")} />
-                  <code className="font-mono">{`\${env:${envName(id || "my-agent")}}`}</code>
+                  <code className="font-mono">{`\${env:${envNameFor(id || "my-agent")}}`}</code>
                 </div>
-                <div className="mt-1">
-                  Don&apos;t paste the token here. Put it in <code>.env.local</code> as <code>{envName(id || "my-agent")}</code> and restart the app before testing.
+                <div className="mt-2">
+                  {idValid ? (
+                    <TokenField agentId={id} saved={tokenSavedFor === id} onSaved={() => setTokenSavedFor(id)} />
+                  ) : (
+                    <span>Name the agent first, then paste its token here.</span>
+                  )}
                 </div>
               </div>
             )}
@@ -278,8 +308,8 @@ export function AgentWizard({ onCreated, onCancel }: { onCreated: () => void; on
           </div>
         ) : (
           <p className="mt-2 text-xs text-slate-500">
-            After it&apos;s created, use <span className="font-medium">Add a test → Import a file</span> on the agent&apos;s page. <code>agents/_template/run-my-agent.mjs</code> shows the
-            JSONL format.
+            After it&apos;s created, use <span className="font-medium">Add a test → Import a file</span> on the agent&apos;s page: a spreadsheet with a question column and
+            an answer column, or JSONL (<code>agents/_template/run-my-agent.mjs</code> shows the format).
           </p>
         )}
       </Step>
@@ -321,33 +351,70 @@ export function AgentWizard({ onCreated, onCancel }: { onCreated: () => void; on
       </Step>
 
       <Step n={4} title="Test cases" done={caseLines.length > 0}>
-        <div className="mb-1 flex items-center gap-1.5 text-xs text-slate-500">
-          {isJsonl ? (
-            <>JSONL detected: each line is used as written.</>
-          ) : (
-            <>
-              One input per line (10–30 real ones is a good start). Each line becomes{" "}
-              <code className="font-mono">{inputKey ? `{"${inputKey}": "<line>"}` : `"<line>"`}</code>.
-            </>
-          )}
-          <InfoTip>
-            Need expected answers or structured input? Paste JSONL instead: <code>{`{"case_id": "q1", "input": {...}, "expected": {...}}`}</code>.
-          </InfoTip>
+        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+          <label className="cursor-pointer rounded border border-slate-300 bg-white px-2 py-1 font-medium text-slate-700 hover:bg-slate-50">
+            Upload a spreadsheet (CSV)
+            <input type="file" accept=".csv,.tsv,.txt" className="hidden" onChange={(e) => onSheet(e.target.files?.[0])} />
+          </label>
+          <span>or type one question per line. From Google Sheets or Excel: File → Download → CSV.</span>
         </div>
-        <textarea
-          value={casesText}
-          onChange={(e) => setCasesText(e.target.value)}
-          rows={6}
-          placeholder={"How do I reset my password?\nCan I get a refund after 45 days?\nMy lawyer will be in touch about the outage."}
-          className={cx(inputCls, "w-full font-mono text-xs")}
-        />
+        {sheetError && <div className="mb-2 text-xs text-rose-700">Couldn&apos;t read that spreadsheet: {sheetError}</div>}
+        {sheet ? (
+          <div className="space-y-2 rounded-md border border-slate-200 bg-slate-50 p-2 text-xs">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-slate-700">
+                Spreadsheet with {sheet.table.rows.length} row{sheet.table.rows.length === 1 ? "" : "s"}. Pick which columns to use:
+              </span>
+              <button type="button" onClick={() => setSheet(null)} className="font-medium text-sky-700 hover:underline">
+                Type questions instead
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <ColumnSelect label="Question" header={sheet.table.header} value={sheet.question} onChange={(v) => setSheet({ ...sheet, question: v })} />
+              <ColumnSelect label="What it tests (optional)" header={sheet.table.header} value={sheet.notes} onChange={(v) => setSheet({ ...sheet, notes: v })} optional />
+              <ColumnSelect label="Expected answer (optional)" header={sheet.table.header} value={sheet.expected} onChange={(v) => setSheet({ ...sheet, expected: v })} optional />
+            </div>
+            {fromSheet && (
+              <>
+                <pre className="max-h-32 overflow-auto whitespace-pre-wrap rounded bg-white p-2 font-mono text-[11px] text-slate-700">
+                  {fromSheet.jsonl.split("\n").slice(0, 4).join("\n")}
+                  {fromSheet.count > 4 ? `\n… ${fromSheet.count - 4} more` : ""}
+                </pre>
+                {fromSheet.skipped_blank > 0 && <div className="text-slate-500">{fromSheet.skipped_blank} row(s) with no question are left out.</div>}
+              </>
+            )}
+          </div>
+        ) : (
+          <>
+          <div className="mb-1 flex items-center gap-1.5 text-xs text-slate-500">
+            {isJsonl ? (
+              <>JSONL detected: each line is used as written.</>
+            ) : (
+              <>
+                One input per line (10–30 real ones is a good start). Each line becomes{" "}
+                <code className="font-mono">{inputKey ? `{"${inputKey}": "<line>"}` : `"<line>"`}</code>.
+              </>
+            )}
+            <InfoTip>
+              Need expected answers or structured input? Paste JSONL instead: <code>{`{"case_id": "q1", "input": {...}, "expected": {...}}`}</code>.
+            </InfoTip>
+          </div>
+          <textarea
+            value={casesText}
+            onChange={(e) => setCasesText(e.target.value)}
+            rows={6}
+            placeholder={"How do I reset my password?\nCan I get a refund after 45 days?\nMy lawyer will be in touch about the outage."}
+            className={cx(inputCls, "w-full font-mono text-xs")}
+          />
+          </>
+        )}
         <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-slate-600">
           <span>{caseLines.length} cases</span>
           {!isJsonl && (
             <label className="flex items-center gap-1.5">
               <input type="checkbox" checked={holdout} onChange={(e) => setHoldout(e.target.checked)} />
-              Hold out every 5th case for the final check{heldoutCount ? ` (${heldoutCount})` : ""}
-              <InfoTip>Held-out cases stay locked while you tune, so the final run measures cases you never optimised for.</InfoTip>
+              Keep every 5th question as a final exam{heldoutCount ? ` (${heldoutCount})` : ""}
+              <InfoTip>Final-exam (held-out) questions stay locked while you improve the agent, so the final check measures questions nobody tuned for.</InfoTip>
             </label>
           )}
         </div>

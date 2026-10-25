@@ -12,6 +12,7 @@ import { checkDefinitions, hasPath, isEmptyOutput, runChecks, type AgentCheckDef
 import { getAgent, loadAgents } from "./config";
 import { evaluateAgentGate, type AgentGateResult } from "./gate";
 import { assertSafeConnection, referencedEnv } from "./http";
+import { agentEnv } from "./secrets";
 import { caseInputHash, computeLockState, hashAgentCases, revealableCases } from "./ingest";
 import { maxRunDurationMs } from "./runs";
 import { agentJudgeVersion, judgeAgentTrace } from "./judge";
@@ -335,6 +336,7 @@ export async function agentOverview(agentId: string, opts: { candidate?: string 
   const runs: RunRow[] = l.runs.map((r) => ({ ...r, summary: summarizeRun(evalRun(l, r), defs), stale: r.frozen_hash !== currentHash }));
   const conn = l.agent.config.connection;
   const envNames = conn ? referencedEnv(conn.headers) : [];
+  const env = agentEnv();
   let unsafe: string | null = null;
   if (conn) {
     try {
@@ -359,11 +361,14 @@ export async function agentOverview(agentId: string, opts: { candidate?: string 
             env_sent: envNames,
             timeout_ms: conn.timeout_ms,
             cost_per_call_usd: conn.cost_per_call_usd,
-            missing_env: envNames.filter((n) => !process.env[n]),
+            missing_env: envNames.filter((n) => !env[n]),
             unsafe,
           }
         : null,
       judge: l.agent.config.judge ? { ...l.agent.config.judge, version: l.judgeVersion } : null,
+      /** The top-level output field the agent's rules read the answer from (e.g. "answer"), if any: spreadsheet imports store answers there. */
+      answer_field:
+        l.agent.config.checks.map((c) => ("field" in c && typeof c.field === "string" ? c.field : "")).find((f) => /^[A-Za-z0-9_-]+$/.test(f)) ?? null,
     },
     checks: defs,
     cases: l.agent.cases.map((c) => ({ case_id: c.case_id, split: c.split, has_expected: c.expected !== undefined, notes: c.notes ?? null, locked: lock.locked.has(c.case_id), lock_reason: lock.locked.get(c.case_id) ?? null })),

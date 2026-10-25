@@ -107,7 +107,9 @@ export function resolveHeaders(headers: Record<string, string>, env: Record<stri
     });
   }
   if (missing.size) {
-    throw new MissingEnvError(`Set ${[...missing].join(", ")} in .env.local (used in agent.json connection.headers), then restart the app.`);
+    throw new MissingEnvError(
+      `Your agent's token isn't set (${[...missing].join(", ")}). Paste it with "Save token", or set it in .env.local and restart the app.`,
+    );
   }
   if (invalid.size) {
     throw new UnsafeConnectionError(
