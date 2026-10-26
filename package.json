@@ -6,17 +6,22 @@
     "node": ">=22.12"
   },
   "scripts": {
+    "predev": "node scripts/seed-data.mjs",
     "dev": "next dev -H 127.0.0.1",
     "build": "next build",
+    "prestart": "node scripts/seed-data.mjs",
     "start": "next start -H 127.0.0.1",
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "next typegen && tsc --noEmit -p .",
     "mcp": "node mcp/server.mjs",
+    "prevalidate": "node scripts/seed-data.mjs",
     "validate": "tsx scripts/validate.ts",
     "check:files": "node scripts/check-tracked.mjs",
-    "example-agent": "node agents/example-support-bot/server.mjs"
+    "example-agent": "node agents/example-support-bot/server.mjs",
+    "build:npm": "node scripts/build-npm.mjs",
+    "smoke:npm": "node scripts/smoke-npm.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",
@@ -31,6 +36,7 @@
     "@types/node": "^24.19.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.4.2",
     "tailwindcss": "^4",

@@ -60,10 +60,14 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# AgentTrust local data (traces, labels, LLM cache). Delete to reset.
-# data/ is tracked so experiment runs, traces, labels and the LLM cache are recoverable.
-# Temporary run artefacts only:
+# The demo's data. data/ is the tracked seed (the live run's traces, labels and LLM cache); the app works on a copy in
+# .data/ (made from data/ on first `npm run dev` or `npm start`), so using it never changes tracked files. Delete .data/
+# to reset the demo.
+/.data/
 /data/**/*.tmp
+
+# The npm package built by `npm run build:npm` (published from dist/npm).
+/dist/
 .env.local
 !.env.example
 

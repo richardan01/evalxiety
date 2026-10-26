@@ -14,13 +14,14 @@ cp .env.example .env.local     # MOCK_MODE=true: no API key or spend needed
 npm test                       # Vitest suite
 npm run lint                   # ESLint
 npm run typecheck              # next typegen + tsc --noEmit
-npm run build                  # production build
 npm run check:files            # nothing private is tracked (env files, keys, data/private, your agents, credentials)
+npm run build:npm              # production build, as the npm package (dist/npm); checks every file in it
+npm run smoke:npm              # starts that package on a temporary folder, like a first-time `npx evalxiety`
 ```
 
-CI runs `npm ci`, `npm run check:files`, `npm test`, `npm run lint`, `npm run typecheck` and `npm run build` on every
-pull request and on every push to `main`. Please run them
-locally before you open a PR. The tests run in mock mode and need no API key.
+CI runs `npm ci`, `npm run check:files`, `npm test`, `npm run lint`, `npm run typecheck`, `npm run build:npm` and
+`npm run smoke:npm` on every pull request and on every push to `main`. Please run them locally before you open a PR.
+The tests run in mock mode and need no API key.
 
 **What never goes to GitHub.** `.gitignore` keeps out `.env*` (except `.env.example`), keys and certificates,
 `data/private/` (the connected API key and saved agent tokens), `data/agents/` and your own `agents/<id>/` folders
@@ -33,8 +34,27 @@ key. To check before every commit, add it as a hook:
 printf '#!/bin/sh\nnpm run -s check:files -- --staged\n' > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 ```
 
-`data/` itself is tracked on purpose: it holds the pricing demo's runs, so the dashboard shows real results on a fresh
-clone. If you run the demo yourself, your runs change those files; commit them only if you mean to share them.
+**`data/` is the seed; the app works on `.data/`.** `data/` is tracked on purpose: it holds the pricing demo's runs, so
+the dashboard shows real results on a fresh clone. The app never writes to it: the first `npm run dev`, `npm start` or
+`npm run validate` copies it to `.data/` (git-ignored), and the app reads and writes there. Delete `.data/` to reset the
+demo. To change the demo's data on purpose, change `data/` itself (and say where the data came from, below). Upgrading
+from a version that wrote to `data/`: the first copy brings your agents' results and a connected key along.
+
+## Release to npm
+
+`npx evalxiety` runs the package built by `npm run build:npm`:
+- **app/:** the prebuilt server (Next.js `output: "standalone"`, switched on by `EVALXIETY_STANDALONE=1`).
+- **bin/:** the launcher (`bin/launcher.mjs`). **mcp/:** the MCP server. **cli/:** `validate`, bundled with esbuild.
+- **seed/:** the demo's data and the starter kit, from the last commit (`git archive HEAD`). Nothing from your own use
+  of the app can get in, and the spend ledger starts at $0.
+
+To release: bump `version` in `package.json`, commit, then:
+
+```bash
+npm run build:npm && npm run smoke:npm
+cd dist/npm && npm pack && npx --yes ./evalxiety-<version>.tgz --data /tmp/evx-try   # try exactly what ships
+npm publish                                                                           # checks every file again first
+```
 
 This project runs on Next.js 16, which differs from older versions in ways that matter (for example, `params` is a
 Promise). Read [AGENTS.md](AGENTS.md) and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) before you change routes or
@@ -113,8 +133,8 @@ PR, with the before and after numbers from the Experiments tab.
 
 - Keep each PR to one change, and explain why in the description.
 - Add or update tests for any logic you change.
-- Don't commit `.env.local`, API keys, your own agents' folders or anything under `data/` that came from a live run you
-  didn't intend to share. (`agents/*` and `data/agents/` are git-ignored by default for this reason.)
+- Don't commit `.env.local`, API keys, your own agents' folders, or changes to `data/` you didn't intend to share.
+  (`agents/*`, `.data/` and `data/agents/` are git-ignored by default for this reason.)
 - Changes to `data/` (traces, labels, experiment runs) need a note on where the data came from.
 
 By contributing, you agree that your contributions are licensed under the [MIT License](LICENSE).

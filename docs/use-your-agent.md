@@ -5,18 +5,22 @@ Evalxiety runs your old and new versions on the same test cases and shows, case 
 got worse. Then it gives a verdict: **No ship**, **Not enough evidence** or **Ready for approval**. It works with any
 agent, built with any stack, because it only needs your agent's outputs.
 
-**What leaves your machine.** Evalxiety runs locally and stores everything as JSON files under `data/`. Your cases,
-traces and labels leave your machine only when you choose:
+**What leaves your machine.** Evalxiety runs locally and stores everything as JSON files in its data folder:
+`~/Evalxiety/data` if you started it with `npx evalxiety`, `.data/` in a clone. Your cases, traces and labels leave your
+machine only when you choose:
 - **HTTP mode** sends each test input to your agent's URL.
 - **The optional LLM judge** sends each trace (input, evidence, output) to the Anthropic API.
+- **Drafting with Claude** (a rule, or practice questions) sends your request and your agent's name and description to
+  the Anthropic API, plus the field names of its answers (for a rule) or up to 20 practice questions (for questions).
+  Final-exam questions are never sent.
 - **The optional MCP server** hands traces to the Claude client you connect it to.
 - **The in-app guide chat** (bottom right) sends your question and a summary of the app's state to the Anthropic API,
   in live mode only.
 
-Separately, Next.js (the framework Evalxiety runs on) sends its own anonymous usage telemetry, with no cases or
-traces. Turn it off with `npx next telemetry disable`.
+Separately, in a clone, Next.js (the framework Evalxiety runs on) sends its own anonymous usage telemetry, with no
+cases or traces. Turn it off with `npx next telemetry disable`. `npx evalxiety` turns it off for you.
 
-You don't need an Anthropic API key unless you turn on the judge.
+You don't need an Anthropic API key unless you use the AI reviewer (the judge) or drafting with Claude.
 
 **The fastest way in.** If your agent has an HTTP endpoint, click **Connect your agent** in the sidebar: name it, test
 the endpoint with one sample question, keep the suggested rules, and paste your test questions. Nothing is written
@@ -26,6 +30,12 @@ wizard writes for you, the file formats, and every rule behind the release decis
 ## Try the starter kit (about 5 minutes)
 
 You need Node.js 22.12+ or 24.
+
+```bash
+npx evalxiety
+```
+
+Or from a clone, to change the code:
 
 ```bash
 git clone https://github.com/richardan01/evalxiety.git && cd evalxiety
@@ -46,7 +56,8 @@ expected.
   and never counts as evidence. On your own agent, the same regression means No ship.
 
 1. Under **Add a test → Import a file**, enter your name (it's recorded on what you do) and the version name `v1`.
-2. Upload `agents/example-support-bot/traces.v1-baseline.jsonl` and click **Import answers**.
+2. Upload `agents/example-support-bot/traces.v1-baseline.jsonl` (with `npx`, it's in `~/Evalxiety/agents/`) and click
+   **Import answers**.
 3. Do the same with `traces.v2-candidate.jsonl`, named `v2`.
 4. Read the verdict at the top of the page:
    - it says this is a practice run that can never be approved;
@@ -55,7 +66,8 @@ expected.
 5. Read the **Current vs new version** card: 7 fixed, 1 got worse (c09), 1 still passing (c08).
 6. Click **Release report** for the one-page summary you'd share.
 
-To try HTTP mode instead, start the toy agent in a second terminal (`npm run example-agent -- --version=v1`), use
+To try HTTP mode instead, start the toy agent in a second terminal (`npx evalxiety example-agent --version=v1`, or
+`npm run example-agent -- --version=v1` in a clone), use
 **Call my agent (HTTP)** and name that test `v1`. Then restart the agent with `--version=v2` and run again, named
 `v2`.
 
@@ -130,9 +142,16 @@ comparison.
 
 ## Set up your agent
 
+The wizard (**Connect your agent**) writes the folder for you. By hand, copy the blank template. Your agents' folder
+is `~/Evalxiety/agents` with `npx evalxiety` (`npx evalxiety where` prints it), and `agents/` in a clone:
+
 ```bash
-cp -r agents/_template agents/my-agent
+cp -r ~/Evalxiety/agents/_template ~/Evalxiety/agents/my-agent    # npx evalxiety
+cp -r agents/_template agents/my-agent                            # a clone
 ```
+
+The commands below use a clone's paths; with `npx`, put `~/Evalxiety/` in front of `agents/`, and run
+`npx evalxiety validate` instead of `npm run validate --`.
 
 The template has three files:
 - `agent.json`: one `non_empty` check that works for any agent. If your agent returns JSON, set its `field` to your
@@ -152,7 +171,8 @@ To keep agent folders in your own repo instead:
 - use that path in the commands below.
 
 That setting replaces `./agents`, so the starter kit no longer appears. Custom checks still live in this repo's
-`agents/custom-checks.ts`, which git tracks.
+`agents/custom-checks.ts`, which git tracks. They're compiled into the app, so `npx evalxiety` runs only the starter
+kit's: for your own custom checks, run Evalxiety from a clone.
 
 ### Test cases: `cases.jsonl`
 

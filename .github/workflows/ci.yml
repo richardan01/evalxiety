@@ -31,4 +31,7 @@ jobs:
       - run: npm test
       - run: npm run lint
       - run: npm run typecheck
-      - run: npm run build
+      # The app as `npx evalxiety` ships it (a prebuilt server in dist/npm; also checks every file in the package),
+      # then started the way a first-time user would.
+      - run: npm run build:npm
+      - run: npm run smoke:npm

@@ -7,6 +7,7 @@
 import { useMemo, useState } from "react";
 import { ANSWER_WORDS, CASE_ID_WORDS, guessColumn, looksLikeTable, parseTable, QUESTION_WORDS, type Table } from "@/lib/agents/csv";
 import { Button, Callout, Card, cx, fmtUsd } from "@/components/ui";
+import { runWords } from "@/lib/launcher";
 import { ColumnSelect } from "../ColumnSelect";
 import { TokenField } from "../TokenField";
 import type { AgentOverview } from "../types";
@@ -254,7 +255,7 @@ export function AddRun({ view, onDone }: { view: AgentOverview; onDone: () => vo
             {conn.env_sent.length > 0 && (
               <>
                 {" "}
-                Sends <code>{conn.env_sent.join(", ")}</code> from <code>.env.local</code> to <b>{conn.host}</b>.
+                Sends <code>{conn.env_sent.join(", ")}</code> (your agent&apos;s token) to <b>{conn.host}</b>.
               </>
             )}
           </p>
@@ -272,7 +273,7 @@ export function AddRun({ view, onDone }: { view: AgentOverview; onDone: () => vo
                     <TokenField key={n} agentId={view.agent.agent_id} suffix={n.slice(prefix.length)} onSaved={onDone} />
                   ) : (
                     <div key={n}>
-                      Set <code>{n}</code> in <code>.env.local</code> and restart the app.
+                      Set <code>{n}</code> in {runWords(view.launcher).settingsFile} and restart the app.
                     </div>
                   );
                 })}
@@ -281,7 +282,7 @@ export function AddRun({ view, onDone }: { view: AgentOverview; onDone: () => vo
           )}
           {view.agent.example && (
             <p className="text-xs text-slate-500">
-              Start the toy agent first: <code>npm run example-agent -- --version=v1</code> (then <code>--version=v2</code> for the candidate).
+              Start the toy agent first: <code>{runWords(view.launcher).exampleAgent} --version=v1</code> (then <code>--version=v2</code> for the candidate).
             </p>
           )}
           {confirm ? (

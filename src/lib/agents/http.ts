@@ -12,6 +12,7 @@
  * token can't be forwarded to another host; responses are capped in size.
  */
 import { z } from "zod";
+import { launcher, runWords } from "../launcher";
 import { isEmptyOutput } from "./checks";
 import { formatZodIssues } from "./config";
 import { EvidenceRef, ToolCall, type AgentCase, type HttpConnection } from "./schemas";
@@ -71,7 +72,7 @@ export function assertSafeConnection(agentId: string, url: string, headers: Reco
   const bad = refs.filter((n) => !envNameBelongsTo(agentId, n));
   if (bad.length) {
     throw new UnsafeConnectionError(
-      `agents/${agentId}/agent.json headers may only read environment variables named ${prefix}<NAME>, where NAME is letters and digits only (found: ${bad.join(", ")}). Rename the variable in .env.local, e.g. ${prefix}TOKEN.`,
+      `agents/${agentId}/agent.json headers may only read environment variables named ${prefix}<NAME>, where NAME is letters and digits only (found: ${bad.join(", ")}). Rename the variable in ${runWords(launcher()).settingsFile}, e.g. ${prefix}TOKEN.`,
     );
   }
   if (refs.length && new URL(url).protocol === "http:" && !isLoopback(url)) {
@@ -108,12 +109,12 @@ export function resolveHeaders(headers: Record<string, string>, env: Record<stri
   }
   if (missing.size) {
     throw new MissingEnvError(
-      `Your agent's token isn't set (${[...missing].join(", ")}). Paste it with "Save token", or set it in .env.local and restart the app.`,
+      `Your agent's token isn't set (${[...missing].join(", ")}). Paste it with "Save token", or set it in ${runWords(launcher()).settingsFile} and restart the app.`,
     );
   }
   if (invalid.size) {
     throw new UnsafeConnectionError(
-      `${[...invalid].join(", ")} must be one line, at least ${MIN_SECRET_LENGTH} characters, with no leading or trailing spaces (otherwise it can't be safely redacted from stored traces). Fix it in .env.local.`,
+      `${[...invalid].join(", ")} must be one line, at least ${MIN_SECRET_LENGTH} characters, with no leading or trailing spaces (otherwise it can't be safely redacted from stored traces). Fix it where you set it ("Save token", or ${runWords(launcher()).settingsFile}).`,
     );
   }
   return { headers: out, secrets };
