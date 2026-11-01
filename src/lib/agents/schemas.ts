@@ -311,7 +311,11 @@ export const AgentAnnotation = z.object({
   label_source: z.literal("human"),
   created_at: z.string(),
   updated_at: z.string(),
-  task_outcome: z.enum(["pass", "fail"]),
+  /**
+   * pass / fail, or unsure: the reviewer read it and couldn't decide (their note says why). An unsure label is kept and
+   * shown, but it isn't a review: the answer still needs someone to decide pass or fail.
+   */
+  task_outcome: z.enum(["pass", "fail", "unsure"]),
   notes: z.string(),
   /** The first thing that went wrong, in the reviewer's words (open coding). */
   first_failure: z.string().nullable(),

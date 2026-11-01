@@ -9,7 +9,7 @@ import { Severity } from "@/lib/domain/schemas";
 const Body = z.object({
   trace_id: z.string().min(1),
   reviewer: z.string().trim().min(1, "a named reviewer is required"),
-  task_outcome: z.enum(["pass", "fail"]),
+  task_outcome: z.enum(["pass", "fail", "unsure"]),
   notes: z.string().max(5000).default(""),
   first_failure: z.string().max(2000).nullable().default(null),
   failure_type: z.string().max(120).nullable().default(null),

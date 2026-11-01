@@ -18,6 +18,7 @@ import { caseInputHash, computeLockState, hashAgentCases, revealableCases, type 
 import { getLockState, maxRunDurationMs } from "./runs";
 import { agentJudgeVersion, judgeAgentTrace } from "./judge";
 import { inputShape } from "./define";
+import { agreement, answerStatus, isDecided, progressOf, type QueueItem } from "./review";
 import { answerShape } from "./draft";
 import { readDefinition, STARTER_KIT_READ_ONLY } from "./edit";
 import { CUSTOM_CHECKS } from "./registry";
@@ -152,6 +153,22 @@ function failureTypes(annotations: AgentAnnotation[]) {
   return [...counts.values()].sort((a, b) => b.count - a.count);
 }
 
+/** Answers someone decided (pass or fail) — "not sure" isn't a review yet. */
+const decidedTraceCount = (annotations: AgentAnnotation[]) => new Set(annotations.filter(isDecided).map((a) => a.trace_id)).size;
+
+function reviewSummary(l: Loaded, run: AgentRun | null) {
+  const queue = reviewQueueFrom(l, run?.run_id ?? null);
+  return {
+    run_id: queue.run_id,
+    agent_version: run?.agent_version ?? null,
+    progress: queue.progress,
+    /** Where "Continue reviewing" goes: the first answer that still needs a decision. */
+    next_trace_id: queue.items.find((i) => !i.reviewed)?.trace_id ?? queue.items[0]?.trace_id ?? null,
+    /** How often reviewers agree, over every answer two or more people decided. */
+    agreement: agreement(l.annotations),
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Overview
 // ---------------------------------------------------------------------------
@@ -271,7 +288,7 @@ async function gateFor(l: Loaded, candidate: AgentRun | null, baseline: AgentRun
     latest_frozen_hash: frozen[frozen.length - 1]?.content_hash ?? null,
     candidate: cand,
     baseline: base,
-    reviewed_trace_count: new Set(l.annotations.map((a) => a.trace_id)).size,
+    reviewed_trace_count: decidedTraceCount(l.annotations),
     candidate_annotations: candidateAnnotations,
     judge: { version: l.judgeVersion, calibrated: !cal.insufficient },
     approvals,
@@ -392,7 +409,9 @@ export async function agentOverview(agentId: string, opts: { candidate?: string 
     evidence_snapshot_hash: snapshot,
     calibration: cal,
     failure_types: failureTypes(l.annotations),
-    reviewed_trace_count: new Set(l.annotations.map((a) => a.trace_id)).size,
+    reviewed_trace_count: decidedTraceCount(l.annotations),
+    /** The answers to review now (the new version's, or before there is one, the first test's), and how far along. */
+    review: reviewSummary(l, candidate ?? baseline ?? l.runs.find((r) => r.status === "completed") ?? null),
     mode: modeInfo().mode,
     /** How this copy was started, so instructions name the right commands and settings file. */
     launcher: launcher(),
@@ -469,28 +488,33 @@ export async function agentTraceDetail(agentId: string, traceId: string, reviewe
     annotations: l.annotations.filter((a) => a.trace_id === traceId),
     my_annotation: reviewer ? l.annotations.find((a) => a.trace_id === traceId && a.reviewer === reviewer) ?? null : null,
     failure_types: [...new Set(l.annotations.map((a) => a.failure_type).filter((x): x is string => !!x))].sort(),
-    queue: reviewQueueFrom(l, run?.run_id ?? null),
+    queue: reviewQueueFrom(l, run?.run_id ?? null, reviewer ?? null),
   };
 }
 
-function reviewQueueFrom(l: Loaded, runId: string | null) {
+function reviewQueueFrom(l: Loaded, runId: string | null, reviewer: string | null = null) {
   const run = runId ? l.runs.find((r) => r.run_id === runId) : l.runs[0];
-  if (!run) return { run_id: null, items: [] as Array<{ case_id: string; trace_id: string; reviewed: boolean }> };
-  // "Reviewed" uses the gate's rule: labelled, and if the judge flagged it, the judge's question answered too.
-  const labelled = new Set(l.annotations.map((a) => a.trace_id));
-  const answered = new Set(l.annotations.filter((a) => a.judge_label !== "not_assessed").map((a) => a.trace_id));
+  if (!run) return { run_id: null, items: [] as QueueItem[], progress: progressOf([]) };
+  // "Reviewed" uses the gate's rule: decided (pass or fail; "not sure" isn't a decision), and if the judge flagged it,
+  // the judge's question answered too.
+  const byTrace = new Map<string, AgentAnnotation[]>();
+  for (const a of l.annotations) byTrace.set(a.trace_id, [...(byTrace.get(a.trace_id) ?? []), a]);
   const flagged = (tid: string) => ["FAIL", "REQUIRES_REVIEW", "ERROR"].includes(l.judge.get(tid)?.verdict ?? "");
-  return {
-    run_id: run.run_id,
-    items: Object.entries(run.trace_ids)
-      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-      .map(([case_id, trace_id]) => ({ case_id, trace_id, reviewed: labelled.has(trace_id) && (!flagged(trace_id) || answered.has(trace_id)) })),
-  };
+  const items: QueueItem[] = Object.entries(run.trace_ids)
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(([case_id, trace_id]) => {
+      const labels = byTrace.get(trace_id) ?? [];
+      const status = answerStatus(labels);
+      const decided = status === "decided" || status === "disputed";
+      const answered = labels.some((a) => isDecided(a) && a.judge_label !== "not_assessed");
+      return { case_id, trace_id, status, reviewed: decided && (!flagged(trace_id) || answered), mine: reviewer !== null && labels.some((a) => a.reviewer === reviewer) };
+    });
+  return { run_id: run.run_id, items, progress: progressOf(items) };
 }
 
-export async function agentReviewQueue(agentId: string, runId: string | null) {
+export async function agentReviewQueue(agentId: string, runId: string | null, reviewer: string | null = null) {
   const l = await loadAll(agentId);
-  return reviewQueueFrom(l, runId);
+  return reviewQueueFrom(l, runId, reviewer);
 }
 
 // ---------------------------------------------------------------------------

@@ -13,6 +13,8 @@ import type { AgentAnnotation, AgentRun } from "./schemas";
 
 const JUDGE_NEEDS_REVIEW = ["FAIL", "REQUIRES_REVIEW", "ERROR"];
 
+const NOT_SURE = "Marked not sure: needs a decision";
+
 export interface AgentGateInput {
   agent: { name: string; example: boolean; pass_all_threshold: number; min_reviewed_traces: number; judge_configured: boolean };
   defs: AgentCheckDefinition[];
@@ -177,8 +179,11 @@ export function evaluateAgentGate(input: AgentGateInput): AgentGateResult {
   if (input.reviewed_trace_count < input.agent.min_reviewed_traces) {
     add("insufficient_human_review", "INSUFFICIENT_EVIDENCE", `${input.reviewed_trace_count} trace(s) have human review; error analysis needs at least ${input.agent.min_reviewed_traces}.`);
   }
-  const annotated = new Set(input.candidate_annotations.map((a) => a.trace_id));
-  const assessed = new Set(input.candidate_annotations.filter((a) => a.judge_label !== "not_assessed").map((a) => a.trace_id));
+  // A review is a decision: pass or fail. "Not sure" is kept and shown, but the answer still needs someone to decide.
+  const decided = input.candidate_annotations.filter((a) => a.task_outcome !== "unsure");
+  const annotated = new Set(decided.map((a) => a.trace_id));
+  const unsureOnly = new Set(input.candidate_annotations.filter((a) => a.task_outcome === "unsure" && !annotated.has(a.trace_id)).map((a) => a.trace_id));
+  const assessed = new Set(decided.filter((a) => a.judge_label !== "not_assessed").map((a) => a.trace_id));
   // Every candidate case needs a human look. A judge PASS can miss a failure just as a FAIL can be wrong, and "enough
   // labels" is a sample-size convention, not proof the judge is good — so the judge never exempts a case.
   const unresolved = evals
@@ -186,6 +191,7 @@ export function evaluateAgentGate(input: AgentGateInput): AgentGateResult {
     .flatMap((e) => {
       const tid = e.trace_id!;
       const flagged = e.judge_verdict !== null && JUDGE_NEEDS_REVIEW.includes(e.judge_verdict);
+      if (unsureOnly.has(tid)) return [{ trace_id: tid, case_id: e.case_id, reason: NOT_SURE }];
       if (!annotated.has(tid)) return [{ trace_id: tid, case_id: e.case_id, reason: "No human review yet" }];
       if (flagged && !assessed.has(tid)) {
         return [{ trace_id: tid, case_id: e.case_id, reason: `Judge said ${e.judge_verdict}; the reviewer hasn't answered the judge's question on this trace` }];
@@ -193,13 +199,22 @@ export function evaluateAgentGate(input: AgentGateInput): AgentGateResult {
       return [];
     });
   const noReview = unresolved.filter((u) => u.reason === "No human review yet");
-  const judgeUnanswered = unresolved.filter((u) => u.reason !== "No human review yet");
+  const notSure = unresolved.filter((u) => u.reason === NOT_SURE);
+  const judgeUnanswered = unresolved.filter((u) => u.reason !== "No human review yet" && u.reason !== NOT_SURE);
   if (noReview.length) {
     add(
       "unresolved_required_reviews",
       "INSUFFICIENT_EVIDENCE",
       `${noReview.length} candidate case(s) still need human review (every candidate case gets a human look).`,
       noReview.map((u) => u.case_id),
+    );
+  }
+  if (notSure.length) {
+    add(
+      "reviews_not_sure",
+      "INSUFFICIENT_EVIDENCE",
+      `${notSure.length} candidate case(s) were marked "not sure": someone needs to decide pass or fail (the reviewer's note says what's unclear).`,
+      notSure.map((u) => u.case_id),
     );
   }
   if (judgeUnanswered.length) {
@@ -234,6 +249,15 @@ export function evaluateAgentGate(input: AgentGateInput): AgentGateResult {
   if (humanCritical.length) add("human_confirmed_critical", "NO_SHIP", `A reviewer marked ${humanCritical.length} candidate trace(s) as a critical failure.`, [...new Set(humanCritical.map((a) => a.case_id))]);
   const humanOther = input.candidate_annotations.filter((a) => a.task_outcome === "fail" && a.severity !== "critical");
   if (humanOther.length) add("human_confirmed_noncritical", "WARNING", `Reviewers marked ${humanOther.length} candidate trace(s) as failed (not critical). Shown to the approver.`, [...new Set(humanOther.map((a) => a.case_id))]);
+  // Two people decided the same answer differently. Any fail already counts above, so nothing is hidden; the approver
+  // sees where the team doesn't agree on what good means.
+  const verdicts = new Map<string, Set<string>>();
+  for (const a of decided) verdicts.set(a.trace_id, (verdicts.get(a.trace_id) ?? new Set()).add(a.task_outcome));
+  const disputed = decided.filter((a) => (verdicts.get(a.trace_id)?.size ?? 0) > 1);
+  if (disputed.length) {
+    const cases = [...new Set(disputed.map((a) => a.case_id))];
+    add("reviewers_disagree", "WARNING", `Reviewers disagree on ${cases.length} candidate case(s): one said pass, another fail. The fail counts.`, cases);
+  }
   const judgeFound = input.candidate_annotations.filter((a) => a.judge_label === "present");
   if (judgeFound.length) add("human_found_judge_failure", "WARNING", `A reviewer found the judge's failure on ${judgeFound.length} candidate trace(s).`, [...new Set(judgeFound.map((a) => a.case_id))]);
 

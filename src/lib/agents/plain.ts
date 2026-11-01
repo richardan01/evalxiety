@@ -129,6 +129,10 @@ export function plainReason(r: GateReason, input: PlainInput): PlainItem {
     }
     case "unresolved_required_reviews":
       return item(`Read and mark the new version's remaining ${plural(n, "answer")}: every answer gets a human look before release.`, "review");
+    case "reviews_not_sure":
+      return item(`${plural(n, "answer")} of the new version ${n === 1 ? "was" : "were"} marked “not sure”. Someone needs to decide pass or fail: the note says what's unclear.`, "review");
+    case "reviewers_disagree":
+      return item(`Reviewers disagree on ${plural(n, "answer")} of the new version (one said pass, another fail). The fail counts; agree on what good means for ${n === 1 ? "it" : "them"}.`, "review");
     case "judge_flags_unanswered":
       return item(`The AI reviewer flagged ${plural(n, "answer")} you've reviewed. Open each one and answer its question.`, "review");
     case "critical_check_failed":

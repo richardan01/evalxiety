@@ -138,6 +138,15 @@ describe("plainReason", () => {
   });
 });
 
+describe("review reasons in plain words", () => {
+  it("says what a 'not sure' or a disagreement needs, and points at the review", () => {
+    const unsure = plainReason({ code: "reviews_not_sure", level: "INSUFFICIENT_EVIDENCE", message: "", case_ids: ["c3"] }, input());
+    expect(unsure).toMatchObject({ where: "review", text: expect.stringMatching(/^1 answer of the new version was marked “not sure”\. Someone needs to decide pass or fail/) });
+    const disagree = plainReason({ code: "reviewers_disagree", level: "WARNING", message: "", case_ids: ["c2", "c4"] }, input());
+    expect(disagree).toMatchObject({ where: "review", text: expect.stringMatching(/^Reviewers disagree on 2 answers .* The fail counts; agree on what good means for them\.$/) });
+  });
+});
+
 describe("agentJourney", () => {
   const base = { has_completed_run: false, has_comparison: false, heldout_exists: true, heldout_revealed: false, cases: 12 };
   it("marks the first unfinished step as current", () => {
