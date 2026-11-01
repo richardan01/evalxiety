@@ -134,6 +134,41 @@ describe("eligible and approved paths", () => {
   });
 });
 
+describe("not sure, and reviewers who disagree", () => {
+  it("a 'not sure' label isn't a review: the case still needs a decision, with its own reason", () => {
+    const g = evaluateAgentGate(input({ candidate_annotations: [ann("cand", "c1"), ann("cand", "c2"), ann("cand", "c3", { task_outcome: "unsure", notes: "Policy is ambiguous" })] }));
+    expect(g.status).toBe("INSUFFICIENT_EVIDENCE");
+    expect(g.reasons.find((r) => r.code === "reviews_not_sure")).toMatchObject({ level: "INSUFFICIENT_EVIDENCE", case_ids: ["c3"] });
+    expect(g.reasons.some((r) => r.code === "unresolved_required_reviews")).toBe(false);
+    expect(g.checks.find((c) => c.id === "reviews_resolved")?.status).toBe("fail");
+  });
+
+  it("someone else's decision settles a 'not sure'", () => {
+    const g = evaluateAgentGate(
+      input({ candidate_annotations: [...CASES.map((c) => ann("cand", c)), ann("cand", "c3", { annotation_id: "a2", reviewer: "Alex", task_outcome: "unsure", notes: "?" })] }),
+    );
+    expect(g.status).toBe("ELIGIBLE_FOR_DEMO_APPROVAL");
+  });
+
+  it("a disagreement is shown to the approver, and the fail still counts", () => {
+    const g = evaluateAgentGate(
+      input({
+        candidate_annotations: [
+          ...CASES.map((c) => ann("cand", c)),
+          ann("cand", "c2", { annotation_id: "a2", reviewer: "Alex", task_outcome: "fail", first_failure: "Wrong refund window", severity: "major" }),
+        ],
+      }),
+    );
+    expect(g.reasons.find((r) => r.code === "reviewers_disagree")).toMatchObject({ level: "WARNING", case_ids: ["c2"] });
+    expect(g.reasons.find((r) => r.code === "human_confirmed_noncritical")?.case_ids).toEqual(["c2"]);
+    // A critical fail from one reviewer blocks, whatever the other said.
+    const critical = evaluateAgentGate(
+      input({ candidate_annotations: [...CASES.map((c) => ann("cand", c)), ann("cand", "c2", { annotation_id: "a2", reviewer: "Alex", task_outcome: "fail", first_failure: "x", severity: "critical" })] }),
+    );
+    expect(critical.status).toBe("NO_SHIP");
+  });
+});
+
 describe("human review cannot be skipped", () => {
   it("a 'calibrated' judge (enough labels) still does not exempt any candidate case from human review", () => {
     const g = evaluateAgentGate(

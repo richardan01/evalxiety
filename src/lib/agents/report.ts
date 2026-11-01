@@ -35,6 +35,26 @@ export function journeyOf(view: ReportView): JourneyStep[] {
   });
 }
 
+/** "Not sure" answers and how far reviewers agree, in plain words (the report page and its Markdown share these). */
+export function reviewLines(view: ReportView): string[] {
+  const r = view.review;
+  const lines: string[] = [];
+  if (r.progress.unsure) lines.push(`${plural(r.progress.unsure, "answer")} of ${r.agent_version ?? "this version"} marked “not sure”: still to be decided.`);
+  const a = r.agreement;
+  if (!a.shared) {
+    lines.push("Each answer was reviewed by one person, so agreement between reviewers isn't measured.");
+    return lines;
+  }
+  const range = a.interval ? `, likely between ${pct(a.interval.low)} and ${pct(a.interval.high)}` : "";
+  const kappa = a.kappa !== null ? `; ${a.kappa.toFixed(2)} beyond chance (Cohen's kappa)` : "";
+  const few = a.enough ? "" : ` Too few to rely on yet: ${plural(a.shared, "answer")} reviewed by two people, at least 10 needed.`;
+  lines.push(`Reviewers (${a.reviewers.join(", ")}) agree on ${a.agreeing} of ${a.pairs} shared verdicts (${pct(a.rate)}${range}${kappa}).${few}`);
+  if (a.disputes.length) {
+    lines.push(`They disagree on: ${a.disputes.map((d) => `${d.case_id} (${d.labels.map((l) => `${l.reviewer}: ${l.task_outcome}`).join(", ")})`).join("; ")}.`);
+  }
+  return lines;
+}
+
 export function selectedRuns(view: ReportView): { candidate: Run | null; baseline: Run | null } {
   const byId = new Map(view.runs.map((r) => [r.run_id, r]));
   return { candidate: byId.get(view.selected.candidate ?? "") ?? null, baseline: byId.get(view.selected.baseline ?? "") ?? null };
@@ -98,7 +118,7 @@ export function reportMarkdown(view: ReportView, now: Date = new Date()): string
   if (v.todo.length) out.push("", "## Still needed before a decision", "", ...items(v.todo));
   if (v.notes.length) out.push("", "## Worth knowing", "", ...items(v.notes));
 
-  out.push("", "## Human review", "", `- ${plural(view.reviewed_trace_count, "answer")} reviewed by a person (at least ${view.agent.min_reviewed_traces} needed).`);
+  out.push("", "## Human review", "", `- ${plural(view.reviewed_trace_count, "answer")} reviewed by a person (at least ${view.agent.min_reviewed_traces} needed).`, ...reviewLines(view).map((l) => `- ${l}`));
   if (view.failure_types.length) {
     out.push(`- Problems found, most common first: ${view.failure_types.map((f) => `${f.name} (${f.count}${f.critical ? `, ${f.critical} critical` : ""})`).join("; ")}.`);
   } else {

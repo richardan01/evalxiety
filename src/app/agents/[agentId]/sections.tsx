@@ -23,6 +23,7 @@ import {
 } from "@/components/ui";
 import type { AgentOverview, DefinitionView, RunRow } from "../types";
 import { CaseEditor } from "./CaseEditor";
+import { ReviewProgress } from "./ReviewProgress";
 import type { Selection } from "./AgentWorkspace";
 import { ErrorList, inputCls, NameField, useName } from "./shared";
 
@@ -407,25 +408,31 @@ const short = (o: string | null) => (o === null ? "—" : o === "NOT_APPLICABLE"
 // ---------------------------------------------------------------------------
 
 export function ReviewCard({ view }: { view: AgentOverview }) {
-  // Review the candidate; before there is one, the baseline (your first run).
-  const cand =
-    view.runs.find((r) => r.run_id === view.selected.candidate) ??
-    view.runs.find((r) => r.run_id === view.selected.baseline) ??
-    view.runs.find((r) => r.status === "completed");
-  const first = cand ? Object.values(cand.trace_ids)[0] : null;
+  const r = view.review;
   const need = view.agent.min_reviewed_traces;
+  const left = r.progress.total - r.progress.reviewed;
+  const a = r.agreement;
+  const pct = (x: number) => `${Math.round(x * 100)}%`;
   return (
     <Card
       title="Your review"
       subtitle="Read the agent's answers and mark each one before you trust any automated number. Automated results stay hidden until you save."
       actions={
-        first ? (
-          <Link href={`/agents/${view.agent.agent_id}/traces/${first}`} className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700">
-            Start reviewing
+        r.next_trace_id ? (
+          <Link href={`/agents/${view.agent.agent_id}/traces/${r.next_trace_id}`} className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700">
+            {r.progress.reviewed === 0 ? "Start reviewing" : left > 0 ? `Continue reviewing (${left} left)` : "Open the answers"}
           </Link>
         ) : null
       }
     >
+      {r.progress.total > 0 && (
+        <div className="mb-4">
+          <ReviewProgress progress={r.progress} label={r.agent_version ? `${r.agent_version}'s answers` : "Answers"} />
+          <p className="mt-1 text-xs text-slate-500">
+            Keyboard: <b>P</b> pass, <b>F</b> fail, <b>U</b> not sure, <b>Enter</b> save &amp; next, <b>?</b> all shortcuts.
+          </p>
+        </div>
+      )}
       <div className="grid gap-4 md:grid-cols-[200px_1fr]">
         <Stat label="Answers reviewed" value={`${view.reviewed_trace_count} / ${need}`} tone={view.reviewed_trace_count >= need ? "green" : "amber"} hint="minimum before deciding" />
         <div>
@@ -450,6 +457,44 @@ export function ReviewCard({ view }: { view: AgentOverview }) {
             </ul>
           )}
         </div>
+      </div>
+      <div className="mt-4 border-t border-slate-100 pt-3">
+        <h3 className="mb-1 flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Do reviewers agree?
+          <InfoTip>
+            When two people review the same answer, this shows how often they give the same verdict. Low agreement means &quot;good&quot; isn&apos;t defined clearly
+            enough yet: settle the disagreements, then turn what you agreed into rules or the AI reviewer&apos;s question. Kappa is agreement beyond what chance alone
+            would give (1 = perfect, 0 = chance), shown when exactly two people reviewed.
+          </InfoTip>
+        </h3>
+        {a.shared === 0 ? (
+          <p className="text-sm text-slate-500">Nobody has reviewed the same answer as someone else yet. Ask a teammate to review a few of the same answers to see whether you agree.</p>
+        ) : (
+          <>
+            <p className="text-sm">
+              <b>{a.rate !== null ? pct(a.rate) : "—"}</b> agreement: {a.agreeing} of {a.pairs} shared verdicts
+              {a.interval ? ` (likely between ${pct(a.interval.low)} and ${pct(a.interval.high)})` : ""}
+              {a.kappa !== null ? `, kappa ${a.kappa.toFixed(2)}` : ""}. Reviewers: {a.reviewers.join(", ")}.
+            </p>
+            {!a.enough && (
+              <p className="text-xs text-amber-800">
+                Too few to rely on yet: {a.shared} {a.shared === 1 ? "answer" : "answers"} reviewed by two people, at least 10 needed.
+              </p>
+            )}
+            {a.disputes.length > 0 && (
+              <ul className="mt-1 space-y-0.5 text-sm">
+                {a.disputes.map((d) => (
+                  <li key={d.trace_id}>
+                    <Link href={`/agents/${view.agent.agent_id}/traces/${d.trace_id}`} className="font-mono text-sky-700 hover:underline">
+                      {d.case_id}
+                    </Link>{" "}
+                    <span className="text-slate-600">{d.labels.map((l) => `${l.reviewer}: ${l.task_outcome}`).join(" · ")}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
+        )}
       </div>
     </Card>
   );

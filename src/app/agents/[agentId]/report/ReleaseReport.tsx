@@ -10,7 +10,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { getJSON } from "@/lib/client/api";
 import { Button, Callout, StatusPill, cx, fmtDateTime } from "@/components/ui";
 import type { PlainItem } from "@/lib/agents/plain";
-import { judgeLine, reportMarkdown, selectedRuns, verdictOf } from "@/lib/agents/report";
+import { judgeLine, reportMarkdown, reviewLines, selectedRuns, verdictOf } from "@/lib/agents/report";
 import type { AgentOverview, RunRow } from "../../types";
 
 function query(candidate: string, baseline: string): string {
@@ -220,6 +220,11 @@ export function ReleaseReport({ agentId, candidate, baseline }: { agentId: strin
           <p>
             {view.reviewed_trace_count} answer{view.reviewed_trace_count === 1 ? "" : "s"} reviewed by a person (at least {view.agent.min_reviewed_traces} needed).
           </p>
+          {reviewLines(view).map((l) => (
+            <p key={l} className="mt-1">
+              {l}
+            </p>
+          ))}
           {view.failure_types.length > 0 ? (
             <ul className="mt-1 list-disc pl-5">
               {view.failure_types.map((f) => (

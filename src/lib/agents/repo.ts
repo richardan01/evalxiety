@@ -90,8 +90,11 @@ export function validateAgentAnnotation(input: AgentAnnotationInput): AgentAnnot
     if (!first) throw new Error("A failed trace needs a description of the first thing that went wrong");
     if (!input.severity) throw new Error("A failed trace needs a severity");
   } else if (first || type || input.severity) {
-    throw new Error("A passing trace cannot record a failure, failure type or severity");
+    throw new Error(`A ${input.task_outcome === "unsure" ? "\"not sure\"" : "passing"} trace cannot record a failure, failure type or severity`);
   }
+  // "Not sure" is only useful if it says what's unclear: that's what someone needs to settle it (and often a gap in
+  // what "good" means).
+  if (input.task_outcome === "unsure" && !notes) throw new Error("Say what makes it unclear in the note, so someone can settle it");
   return { ...input, reviewer, notes, first_failure: first, failure_type: type };
 }
 

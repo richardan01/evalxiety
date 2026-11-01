@@ -93,11 +93,18 @@ The steps:
    `prompt-v3` or a git SHA. Tag it in git (or keep it runnable): you'll run it again at the final check. While it is
    your only version, it is shown as the baseline. Until you approve a release, the first version you import stays the
    default baseline.
-2. **Read and label.** Click **Start reviewing**. For each trace:
+2. **Read and label.** Click **Start reviewing** (then **Continue reviewing**). For each trace:
    - mark it pass or fail;
    - write down the *first* thing that went wrong;
    - give that failure a short type name ("missed hand-off"). Reuse names so failures group together;
    - pick a severity. **Critical** on a candidate trace means No ship. Major and minor are shown to the approver.
+   - can't decide? Mark it **Not sure** and say what's unclear. It's kept and shown, but it isn't a review: the trace
+     still needs someone to decide pass or fail, and the gate says so. Unclear traces often point at a gap in what
+     "good" means: settle it, then turn it into a rule.
+
+   It's built for the keyboard: **P** pass, **F** fail, **U** not sure, **1 2 3** severity, **Y N S** for the judge's
+   question, **Enter** to save and go to the next trace you haven't marked, **J**/**K** to move, **?** for the list.
+   A progress bar shows how much of the run is reviewed, how many are "not sure", and where reviewers disagree.
 
    Review at least 10 (the gate's minimum; reviews of any run count toward it), and keep going until new traces stop
    showing new kinds of failure. With a 10–30-case set, that usually means reading every trace of your first run.
@@ -136,8 +143,14 @@ The steps:
 
 "Not enough evidence" is a real answer, not a failure of the tool. It tells you what to collect next.
 
-**On the review screen, check and judge results stay hidden until you save your label**, so they don't anchor
-your judgement. The agent page does show check results for each case, so do your review pass before you study the
+**On the review screen, check and judge results, and other reviewers' labels, stay hidden until you save your
+label**, so they don't anchor your judgement.
+
+**Two reviewers.** Ask a teammate to review some of the same traces under their own name. The **Your review** card then
+shows how often you agree: the share of shared verdicts that match, a likely range, and Cohen's kappa (agreement beyond
+chance) when exactly two of you overlap. It needs at least 10 traces reviewed by both before the number means much.
+Where you disagree, it lists the traces, the gate warns the approver, and the fail counts. Low agreement means "good"
+isn't written down clearly enough yet. The agent page does show check results for each case, so do your review pass before you study the
 comparison.
 
 ## Set up your agent
